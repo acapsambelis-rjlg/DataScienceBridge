@@ -212,10 +212,14 @@ namespace DataScienceWorkbench
                     return;
                 }
 
-                if (e.KeyChar == '\r' || e.KeyChar == '\n')
+                if (e.KeyChar == '\r')
                 {
                     e.Handled = true;
                     HandleAutoIndent();
+                }
+                else if (e.KeyChar == '\n')
+                {
+                    e.Handled = true;
                 }
 
                 if (e.KeyChar == '\t')
