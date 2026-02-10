@@ -41,6 +41,9 @@ Keep them in sync when making changes.
 
 ## DataScienceControl Public API
 - **LoadData(...)** - Replace dummy data with custom datasets
+- **ExportCustomData(name, values, columnName)** - Export any IEnumerable (e.g., List<int>) to CSV for Python access
+- **ExportCustomData(name, DataTable)** - Export a DataTable to CSV for Python access
+- **ExportCustomData<T>(name, List<T>)** - Export a typed list of objects to CSV for Python access
 - **RunScript()** - Execute the current Python script
 - **ScriptText** - Get/set the Python editor text
 - **OutputText** - Get the output panel text
@@ -77,6 +80,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-10: Added ExportCustomData API (3 overloads: IEnumerable, DataTable, List<T>) with demo of static List<int> from MainForm, plus "Read .NET Custom Data" snippet
 - 2026-02-10: Added Python symbol analyzer for undefined name detection (yellow squiggly lines), tracks definitions (assignments, def, class, for, import, with, except) and flags undefined references
 - 2026-02-10: Added autocomplete popup (Python keywords, builtins, pandas/numpy/matplotlib methods), bracket auto-closing with matching highlight, current line highlighting, and auto-indentation after colon
 - 2026-02-10: Added custom undo/redo system (survives syntax highlighting), full Edit menu with keyboard shortcuts, Find & Replace dialog

@@ -535,6 +535,56 @@ namespace DataScienceWorkbench
             OnDatasetChanged(null, null);
         }
 
+        public void ExportCustomData(string name, System.Collections.IEnumerable values, string columnName = "value")
+        {
+            if (string.IsNullOrEmpty(dataExportDir))
+            {
+                dataExportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
+                if (!Directory.Exists(dataExportDir))
+                    Directory.CreateDirectory(dataExportDir);
+            }
+            string path = Path.Combine(dataExportDir, name + ".csv");
+            var lines = new List<string>();
+            lines.Add(columnName);
+            foreach (var item in values)
+                lines.Add(item != null ? item.ToString() : "");
+            File.WriteAllLines(path, lines);
+        }
+
+        public void ExportCustomData(string name, System.Data.DataTable table)
+        {
+            if (string.IsNullOrEmpty(dataExportDir))
+            {
+                dataExportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
+                if (!Directory.Exists(dataExportDir))
+                    Directory.CreateDirectory(dataExportDir);
+            }
+            string path = Path.Combine(dataExportDir, name + ".csv");
+            var lines = new List<string>();
+            var headers = new List<string>();
+            foreach (System.Data.DataColumn col in table.Columns)
+                headers.Add(col.ColumnName);
+            lines.Add(string.Join(",", headers));
+            foreach (System.Data.DataRow row in table.Rows)
+            {
+                var vals = new List<string>();
+                foreach (var item in row.ItemArray)
+                {
+                    string s = item != null ? item.ToString() : "";
+                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                    vals.Add(s);
+                }
+                lines.Add(string.Join(",", vals));
+            }
+            File.WriteAllLines(path, lines);
+        }
+
+        public void ExportCustomData<T>(string name, List<T> data) where T : class
+        {
+            ExportCsv(data, name);
+        }
+
         public void RunScript()
         {
             OnRunScript(this, EventArgs.Empty);
@@ -668,6 +718,7 @@ namespace DataScienceWorkbench
             insertSnippetBtn.DropDownItems.Add("Group By Analysis", null, (s, e) => InsertSnippet(GetGroupBySnippet()));
             insertSnippetBtn.DropDownItems.Add("Correlation Matrix", null, (s, e) => InsertSnippet(GetCorrelationSnippet()));
             insertSnippetBtn.DropDownItems.Add("Time Series Plot", null, (s, e) => InsertSnippet(GetTimeSeriesSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Read .NET Custom Data", null, (s, e) => InsertSnippet(GetCustomDataSnippet()));
         }
 
         private void ExportAllData()
@@ -1165,6 +1216,10 @@ AVAILABLE DATASETS (as CSV files):
   stock_prices.csv  - 365 days of 10 stock symbols
   web_events.csv    - 2000 web analytics events
 
+CUSTOM .NET DATA:
+  measurements.csv  - Static list of integers from .NET
+  (Any .NET control can export data via ExportCustomData)
+
 HOW TO USE:
   1. Write Python code in the editor
   2. Press F5 or click Run to execute
@@ -1182,7 +1237,8 @@ TIPS:
   - Use 'Insert Snippet' for ready-made code
   - Matplotlib plots save as PNG files
   - All standard Python libraries available
-  - Install any pip package via Package Manager";
+  - Install any pip package via Package Manager
+  - .NET controls can push data via ExportCustomData()";
 
             MessageBox.Show(help, "Quick Start Guide", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -1389,6 +1445,28 @@ plt.xticks(rotation=45)
 plt.tight_layout()
 plt.savefig('timeseries.png', dpi=100)
 print('Time series chart saved to timeseries.png')
+";
+        }
+
+        private string GetCustomDataSnippet()
+        {
+            return @"
+import pandas as pd
+import numpy as np
+
+# Read custom .NET data (e.g., a static List<int> from another control)
+measurements = pd.read_csv('measurements.csv')
+print('=== .NET Custom Data: Measurements ===')
+print(f'Count: {len(measurements)}')
+print(f'Values: {measurements[""value""].tolist()}')
+print()
+print('Statistics:')
+print(f'  Sum:    {measurements[""value""].sum()}')
+print(f'  Mean:   {measurements[""value""].mean():.2f}')
+print(f'  Median: {measurements[""value""].median():.1f}')
+print(f'  Std:    {measurements[""value""].std():.2f}')
+print(f'  Min:    {measurements[""value""].min()}')
+print(f'  Max:    {measurements[""value""].max()}')
 ";
         }
     }
