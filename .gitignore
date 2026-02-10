@@ -1,0 +1,31 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Mono / .NET
+*.exe
+*.dll
+*.pdb
+*.mdb
+*.cache
+bin/
+obj/
+
+# IDE
+.vs/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Replit
+.cache/
