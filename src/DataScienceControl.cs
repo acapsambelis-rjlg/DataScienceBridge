@@ -27,9 +27,57 @@ namespace DataScienceWorkbench
 
         public event EventHandler<string> StatusChanged;
 
+        private static Font ResolveMonoFont(float size)
+        {
+            string[] preferred = { "Consolas", "DejaVu Sans Mono", "Liberation Mono", "Courier New" };
+            foreach (var name in preferred)
+            {
+                using (var test = new Font(name, size))
+                {
+                    if (test.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return new Font(name, size);
+                }
+            }
+            return new Font(System.Drawing.FontFamily.GenericMonospace, size);
+        }
+
+        private static Font ResolveUIFont(float size, FontStyle style = FontStyle.Regular)
+        {
+            string[] preferred = { "Segoe UI", "DejaVu Sans", "Liberation Sans", "Arial" };
+            foreach (var name in preferred)
+            {
+                using (var test = new Font(name, size, style))
+                {
+                    if (test.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                        return new Font(name, size, style);
+                }
+            }
+            return new Font(System.Drawing.FontFamily.GenericSansSerif, size, style);
+        }
+
+        private void ResolveRuntimeFonts()
+        {
+            var monoFont10 = ResolveMonoFont(10f);
+            var monoFont9 = ResolveMonoFont(9f);
+            var uiFont = ResolveUIFont(9f);
+            var uiFontBold = ResolveUIFont(9f, FontStyle.Bold);
+
+            pythonEditor.Font = monoFont10;
+            outputBox.Font = monoFont9;
+            dataTreeView.Font = monoFont9;
+            packageListBox.Font = monoFont9;
+            lineNumberPanel.UpdateFont(monoFont9);
+
+            treeLabel.Font = uiFontBold;
+            outputLabel.Font = uiFontBold;
+            pkgListLabel.Font = uiFontBold;
+            dataGrid.Font = uiFont;
+        }
+
         public DataScienceControl()
         {
             InitializeComponent();
+            ResolveRuntimeFonts();
             InitializeData();
             SetupSnippetMenu();
             SetupSyntaxHighlighting();

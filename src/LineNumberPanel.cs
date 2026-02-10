@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Windows.Forms;
 
 namespace DataScienceWorkbench
@@ -13,7 +14,14 @@ namespace DataScienceWorkbench
         {
             this.DoubleBuffered = true;
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
-            lineFont = new Font("Monospace", 9f);
+            lineFont = new Font("Consolas", 9f);
+        }
+
+        public void UpdateFont(Font font)
+        {
+            if (lineFont != null) lineFont.Dispose();
+            lineFont = font;
+            this.Invalidate();
         }
 
         public void AttachEditor(RichTextBox editorBox)
@@ -29,6 +37,7 @@ namespace DataScienceWorkbench
             base.OnPaint(e);
             if (editor == null) return;
 
+            e.Graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
             e.Graphics.Clear(Color.FromArgb(40, 40, 40));
 
             int firstCharIndex = editor.GetCharIndexFromPosition(new Point(0, 0));

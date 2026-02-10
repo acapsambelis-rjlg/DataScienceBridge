@@ -154,7 +154,7 @@ namespace DataScienceWorkbench
             // dataTreeView
             // 
             this.dataTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataTreeView.Font = new System.Drawing.Font("Monospace", 9F);
+            this.dataTreeView.Font = new System.Drawing.Font("Consolas", 9F);
             this.dataTreeView.Location = new System.Drawing.Point(0, 22);
             this.dataTreeView.Name = "dataTreeView";
             this.dataTreeView.Size = new System.Drawing.Size(200, 428);
@@ -163,7 +163,7 @@ namespace DataScienceWorkbench
             // treeLabel
             // 
             this.treeLabel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.treeLabel.Font = new System.Drawing.Font("Sans", 9F, System.Drawing.FontStyle.Bold);
+            this.treeLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.treeLabel.Location = new System.Drawing.Point(0, 0);
             this.treeLabel.Name = "treeLabel";
             this.treeLabel.Padding = new System.Windows.Forms.Padding(4, 4, 0, 0);
@@ -189,7 +189,7 @@ namespace DataScienceWorkbench
             this.pythonEditor.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.pythonEditor.DetectUrls = false;
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pythonEditor.Font = new System.Drawing.Font("Monospace", 10F);
+            this.pythonEditor.Font = new System.Drawing.Font("Consolas", 10F);
             this.pythonEditor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(212)))), ((int)(((byte)(212)))), ((int)(((byte)(212)))));
             this.pythonEditor.Location = new System.Drawing.Point(45, 25);
             this.pythonEditor.Name = "pythonEditor";
@@ -281,7 +281,7 @@ namespace DataScienceWorkbench
             // 
             this.outputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
             this.outputBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.outputBox.Font = new System.Drawing.Font("Monospace", 9F);
+            this.outputBox.Font = new System.Drawing.Font("Consolas", 9F);
             this.outputBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
             this.outputBox.Location = new System.Drawing.Point(0, 22);
             this.outputBox.Name = "outputBox";
@@ -294,7 +294,7 @@ namespace DataScienceWorkbench
             // outputLabel
             // 
             this.outputLabel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.outputLabel.Font = new System.Drawing.Font("Sans", 9F, System.Drawing.FontStyle.Bold);
+            this.outputLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.outputLabel.Location = new System.Drawing.Point(0, 0);
             this.outputLabel.Name = "outputLabel";
             this.outputLabel.Padding = new System.Windows.Forms.Padding(4, 4, 0, 0);
@@ -321,7 +321,7 @@ namespace DataScienceWorkbench
             this.dataGrid.BackgroundColor = System.Drawing.Color.White;
             this.dataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGrid.Font = new System.Drawing.Font("Sans", 9F);
+            this.dataGrid.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.dataGrid.Location = new System.Drawing.Point(0, 40);
             this.dataGrid.Name = "dataGrid";
             this.dataGrid.ReadOnly = true;
@@ -399,7 +399,7 @@ namespace DataScienceWorkbench
             // packageListBox
             // 
             this.packageListBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.packageListBox.Font = new System.Drawing.Font("Monospace", 9F);
+            this.packageListBox.Font = new System.Drawing.Font("Consolas", 9F);
             this.packageListBox.FormattingEnabled = true;
             this.packageListBox.Location = new System.Drawing.Point(10, 32);
             this.packageListBox.Name = "packageListBox";
@@ -409,7 +409,7 @@ namespace DataScienceWorkbench
             // pkgListLabel
             // 
             this.pkgListLabel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pkgListLabel.Font = new System.Drawing.Font("Sans", 9F, System.Drawing.FontStyle.Bold);
+            this.pkgListLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.pkgListLabel.Location = new System.Drawing.Point(10, 10);
             this.pkgListLabel.Name = "pkgListLabel";
             this.pkgListLabel.Size = new System.Drawing.Size(422, 22);
