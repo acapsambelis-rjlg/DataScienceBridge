@@ -1,0 +1,1001 @@
+SensorId,SensorType,Location,Timestamp,Value,Unit,Status,BatteryLevel
+42,Pressure,Parking Lot,4/10/2025 7:46:23 PM,99.89,hPa,Normal,93.4
+16,Vibration,Parking Lot,8/1/2025 11:03:44 PM,48.149,mm/s,Normal,28.5
+17,CO2,Parking Lot,9/3/2025 5:17:22 PM,45.903,ppm,Normal,54.8
+24,Vibration,Building A - Floor 1,4/13/2025 8:53:33 PM,-4.938,mm/s,Normal,33.6
+42,Motion,Roof,7/9/2025 5:33:53 AM,37.963,count,Normal,34
+37,Humidity,Building A - Floor 2,12/4/2025 10:23:18 AM,75.373,%RH,Normal,52.6
+21,Temperature,Building B - Floor 2,8/1/2025 4:26:42 AM,87.562,°C,Normal,86
+7,Light,Building B - Floor 1,5/5/2025 9:33:30 PM,38.933,lux,Normal,85.1
+22,Motion,Building A - Floor 1,2/14/2025 6:38:25 PM,2.461,count,Alert,33.2
+21,CO2,Building B - Floor 2,12/24/2025 6:17:51 AM,39.68,ppm,Normal,27.8
+31,CO2,Building B - Floor 1,6/13/2025 2:23:53 PM,9.533,ppm,Normal,71.3
+45,CO2,Building A - Floor 1,2/5/2025 3:18:31 AM,19.637,ppm,Normal,79.8
+21,CO2,Building B - Floor 2,12/28/2025 6:13:10 PM,65.591,ppm,Normal,91.4
+10,Light,Roof,10/7/2025 10:23:40 AM,13.743,lux,Normal,11.8
+5,Temperature,Parking Lot,4/9/2025 4:20:58 AM,56.701,°C,Normal,43.4
+17,Pressure,Building B - Floor 2,11/13/2025 1:32:33 AM,86.562,hPa,Normal,50.3
+34,Temperature,Building B - Floor 1,11/6/2025 1:46:12 AM,-2.013,°C,Normal,98.7
+18,Vibration,Building A - Floor 1,5/30/2025 7:28:57 AM,24.028,mm/s,Normal,48.3
+2,Pressure,Building A - Floor 1,1/14/2025 2:22:04 PM,0.712,hPa,Normal,16.8
+1,Humidity,Parking Lot,6/3/2025 4:58:14 AM,81.012,%RH,Normal,61.2
+21,Temperature,Parking Lot,10/2/2025 9:57:06 PM,70.432,°C,Normal,99.8
+34,CO2,Building B - Floor 1,10/27/2025 2:28:13 PM,80.492,ppm,Normal,14.9
+3,Temperature,Warehouse,1/14/2025 8:27:23 PM,-0.958,°C,Normal,95.7
+12,Temperature,Parking Lot,1/25/2025 10:39:37 AM,-8.249,°C,Normal,19.3
+22,Motion,Building B - Floor 1,11/22/2025 2:10:19 PM,44.18,count,Normal,63.5
+2,Temperature,Building B - Floor 2,11/29/2025 6:11:14 PM,75.021,°C,Normal,41.9
+29,Vibration,Building B - Floor 1,2/25/2025 6:48:54 AM,78.436,mm/s,Normal,98.8
+38,Motion,Parking Lot,9/8/2025 1:23:24 AM,86.769,count,Normal,68.1
+12,Vibration,Building B - Floor 1,3/3/2025 11:30:39 AM,8.27,mm/s,Normal,63.7
+47,Motion,Basement,10/28/2025 4:56:36 PM,92.918,count,Normal,38
+16,Noise,Building A - Floor 1,11/13/2025 4:21:42 PM,58.826,dB,Normal,74.4
+18,CO2,Building B - Floor 1,10/27/2025 7:42:18 PM,80.43,ppm,Normal,28.2
+36,Light,Building A - Floor 1,7/9/2025 11:18:33 AM,23.45,lux,Normal,80.3
+37,Temperature,Warehouse,5/2/2025 8:24:00 PM,88.017,°C,Normal,67.1
+18,Motion,Basement,9/27/2025 6:14:30 PM,65.257,count,Alert,35.4
+29,Light,Building B - Floor 2,2/14/2025 8:13:25 PM,60.431,lux,Normal,75
+37,Light,Building B - Floor 1,12/21/2025 10:19:25 PM,63.92,lux,Normal,50.5
+17,Light,Roof,12/10/2025 12:25:04 AM,43.322,lux,Normal,84.5
+34,Temperature,Building B - Floor 1,6/17/2025 9:17:50 PM,77.682,°C,Normal,81
+36,Noise,Building A - Floor 1,11/19/2025 8:30:36 PM,72.749,dB,Normal,52.3
+44,Vibration,Basement,2/5/2025 12:56:03 PM,23.558,mm/s,Normal,91.1
+24,Motion,Building B - Floor 1,6/3/2025 10:11:35 PM,-7.795,count,Normal,93.8
+31,CO2,Building A - Floor 1,2/25/2025 9:21:35 AM,24.642,ppm,Normal,65.4
+28,Pressure,Building A - Floor 2,3/17/2025 1:35:12 PM,94.932,hPa,Normal,72.2
+15,Light,Basement,2/17/2025 1:29:26 PM,74.46,lux,Normal,79.4
+18,Vibration,Basement,5/27/2025 12:01:24 PM,-7.769,mm/s,Normal,77.2
+9,Light,Building A - Floor 2,3/26/2025 4:56:14 PM,76.371,lux,Normal,68.3
+16,Temperature,Roof,12/22/2025 2:19:19 AM,44.721,°C,Normal,61.1
+30,Vibration,Building A - Floor 1,8/20/2025 12:56:30 AM,4.669,mm/s,Normal,95.7
+14,Pressure,Building A - Floor 2,1/15/2025 9:01:45 AM,37.532,hPa,Normal,36.1
+23,CO2,Parking Lot,5/23/2025 6:55:06 PM,29.886,ppm,Alert,65.3
+17,Humidity,Building A - Floor 1,4/3/2025 11:30:34 PM,24.419,%RH,Normal,53.9
+19,Temperature,Warehouse,11/23/2025 11:57:31 PM,15.152,°C,Normal,39.3
+11,Noise,Basement,6/6/2025 2:48:18 PM,-5.666,dB,Normal,65.8
+25,Humidity,Building B - Floor 1,8/20/2025 5:59:54 PM,93.779,%RH,Normal,57.4
+20,Motion,Building B - Floor 2,9/15/2025 1:17:37 AM,2.592,count,Alert,11.8
+34,Motion,Building A - Floor 1,1/2/2025 10:03:46 PM,14.027,count,Normal,52.3
+21,Noise,Warehouse,7/29/2025 11:07:13 AM,51.033,dB,Alert,25.3
+23,Temperature,Building A - Floor 1,6/25/2025 12:52:11 AM,-5.685,°C,Normal,16.4
+49,Motion,Building B - Floor 1,8/4/2025 7:14:59 PM,-9.863,count,Normal,72.2
+44,Humidity,Roof,12/7/2025 12:18:15 AM,19.335,%RH,Normal,97.7
+40,Humidity,Basement,4/30/2025 8:34:22 AM,12.515,%RH,Normal,15.8
+13,Light,Parking Lot,8/5/2025 1:15:59 AM,44.065,lux,Alert,60.5
+47,Vibration,Building B - Floor 2,12/6/2025 10:36:56 PM,67.056,mm/s,Normal,77.7
+44,Humidity,Building B - Floor 1,8/1/2025 5:24:06 PM,-3.246,%RH,Normal,81.5
+5,Noise,Building B - Floor 1,3/25/2025 3:47:03 AM,35.056,dB,Normal,44.8
+11,Vibration,Building A - Floor 2,7/18/2025 8:32:31 AM,64.558,mm/s,Normal,77.5
+14,Vibration,Basement,1/21/2025 8:29:01 PM,74.34,mm/s,Normal,55.6
+7,Humidity,Building A - Floor 2,6/18/2025 8:54:41 PM,42.707,%RH,Normal,41.4
+42,Temperature,Roof,12/18/2025 5:13:48 AM,72.968,°C,Normal,58
+2,Humidity,Building A - Floor 1,9/24/2025 12:28:07 PM,3.558,%RH,Normal,52.5
+29,Pressure,Parking Lot,6/16/2025 1:37:59 AM,1.023,hPa,Normal,99.4
+38,Temperature,Building A - Floor 1,1/11/2025 5:33:16 AM,17.683,°C,Normal,49.9
+41,Noise,Building B - Floor 2,7/3/2025 8:14:26 PM,63.961,dB,Normal,22.6
+23,Noise,Roof,10/29/2025 6:07:26 PM,23.128,dB,Alert,11.3
+35,CO2,Building A - Floor 2,4/15/2025 6:56:20 PM,87.139,ppm,Normal,100
+42,Vibration,Basement,6/14/2025 3:53:37 PM,31.263,mm/s,Normal,99.2
+28,Motion,Roof,9/8/2025 4:16:49 PM,88.081,count,Normal,62.6
+27,Temperature,Warehouse,8/10/2025 6:51:57 AM,2.476,°C,Normal,77.8
+4,Noise,Building B - Floor 1,7/11/2025 1:07:54 AM,15.1,dB,Normal,98.9
+22,Motion,Warehouse,1/1/2025 6:16:28 PM,-1.127,count,Normal,54
+41,Humidity,Building B - Floor 1,3/9/2025 10:35:31 AM,23.034,%RH,Normal,85.7
+31,Temperature,Building A - Floor 2,3/29/2025 6:58:44 AM,63.961,°C,Normal,81.7
+8,Motion,Parking Lot,8/1/2025 1:53:31 AM,75.404,count,Normal,35.4
+43,Vibration,Building A - Floor 2,3/26/2025 7:07:15 AM,58.974,mm/s,Normal,97.4
+6,Temperature,Building B - Floor 2,6/18/2025 7:06:19 PM,-4.364,°C,Normal,53.1
+23,CO2,Building B - Floor 2,6/5/2025 11:48:55 PM,35.576,ppm,Normal,89.2
+40,CO2,Building B - Floor 2,8/8/2025 9:48:55 AM,88.243,ppm,Normal,44.4
+2,Vibration,Building B - Floor 1,7/27/2025 3:58:18 AM,1.326,mm/s,Normal,50.5
+13,Noise,Building A - Floor 2,3/10/2025 5:20:28 AM,17.613,dB,Normal,59.7
+10,Noise,Roof,8/15/2025 7:52:27 AM,46.774,dB,Normal,55.1
+13,Humidity,Warehouse,7/1/2025 5:29:55 AM,14.134,%RH,Normal,26.1
+4,CO2,Warehouse,10/4/2025 6:42:51 PM,71.677,ppm,Normal,67.4
+49,Vibration,Parking Lot,9/22/2025 5:55:08 AM,46.051,mm/s,Normal,53.2
+42,Noise,Roof,3/20/2025 1:10:45 AM,76.594,dB,Normal,42.7
+38,CO2,Building B - Floor 2,11/28/2025 2:24:58 PM,-4.98,ppm,Normal,61.9
+49,CO2,Building B - Floor 2,2/26/2025 4:01:31 PM,16.389,ppm,Normal,19.2
+11,Vibration,Parking Lot,5/1/2025 9:13:50 PM,51.825,mm/s,Normal,69.8
+2,Motion,Parking Lot,5/20/2025 11:02:57 AM,28.031,count,Normal,91.5
+11,Temperature,Building A - Floor 1,1/4/2025 8:19:34 AM,34.354,°C,Normal,87.9
+3,Noise,Building A - Floor 1,4/4/2025 12:20:13 AM,45.301,dB,Normal,60.2
+33,Temperature,Building B - Floor 1,11/3/2025 1:48:33 AM,69.616,°C,Normal,26.5
+36,Motion,Building B - Floor 1,7/30/2025 8:16:45 AM,82.086,count,Normal,42.1
+29,Noise,Building A - Floor 2,6/13/2025 5:24:00 AM,74.03,dB,Normal,52.8
+42,Humidity,Warehouse,10/30/2025 12:53:16 PM,99.617,%RH,Normal,18.6
+7,Humidity,Building B - Floor 1,10/20/2025 12:11:43 AM,21.491,%RH,Normal,36.2
+41,CO2,Building B - Floor 2,8/13/2025 2:10:22 AM,40.475,ppm,Normal,94.6
+33,Vibration,Building B - Floor 2,6/4/2025 8:42:08 AM,30.098,mm/s,Normal,37.8
+43,Vibration,Parking Lot,3/25/2025 4:06:20 AM,61.391,mm/s,Normal,56.8
+11,Temperature,Building B - Floor 1,3/15/2025 12:36:59 PM,24.359,°C,Normal,61.6
+42,Noise,Parking Lot,5/24/2025 6:31:15 AM,5.365,dB,Normal,73.9
+31,Pressure,Basement,11/13/2025 2:22:06 PM,14.955,hPa,Normal,86.1
+1,Noise,Basement,2/23/2025 2:40:58 PM,56.039,dB,Normal,18.3
+48,Humidity,Warehouse,11/14/2025 2:09:59 AM,25.06,%RH,Normal,66.4
+41,Pressure,Parking Lot,7/6/2025 3:47:13 PM,93.29,hPa,Normal,78.5
+48,Light,Basement,7/23/2025 6:11:10 PM,75.578,lux,Normal,86.8
+26,Light,Building B - Floor 2,7/10/2025 9:49:17 AM,12.274,lux,Alert,24.4
+31,CO2,Building A - Floor 2,4/20/2025 2:29:56 PM,46.339,ppm,Normal,10.6
+13,Humidity,Warehouse,10/9/2025 1:31:45 PM,14.134,%RH,Normal,88.4
+7,Vibration,Parking Lot,8/24/2025 4:42:17 PM,51.721,mm/s,Normal,46.6
+34,Temperature,Building B - Floor 2,7/26/2025 10:14:17 PM,88.081,°C,Normal,20.5
+25,Noise,Roof,1/16/2025 5:30:39 PM,71.072,dB,Normal,96.8
+44,Pressure,Building B - Floor 1,6/29/2025 5:29:30 AM,6.204,hPa,Normal,33.9
+26,Pressure,Warehouse,4/8/2025 12:47:47 PM,24.596,hPa,Normal,25.2
+40,Pressure,Building A - Floor 2,12/2/2025 2:59:10 AM,-4.222,hPa,Normal,37.6
+22,Temperature,Basement,1/23/2025 10:28:25 AM,5.883,°C,Normal,30.6
+35,Vibration,Building B - Floor 1,10/18/2025 4:49:26 AM,82.58,mm/s,Normal,91.3
+6,Light,Building A - Floor 2,5/28/2025 8:02:37 AM,94.47,lux,Normal,59.3
+31,Temperature,Roof,12/4/2025 11:42:14 AM,15.835,°C,Normal,36.3
+3,Noise,Building B - Floor 2,10/18/2025 5:39:40 AM,15.191,dB,Normal,27.2
+17,Light,Building B - Floor 1,10/29/2025 12:18:05 AM,63.271,lux,Alert,49.5
+17,CO2,Warehouse,1/1/2025 7:42:33 PM,64.176,ppm,Alert,18.9
+18,Noise,Building A - Floor 1,10/27/2025 9:09:26 AM,13.614,dB,Normal,77.5
+1,Noise,Basement,2/23/2025 9:31:46 AM,31.895,dB,Normal,24.7
+2,Pressure,Building A - Floor 1,1/3/2025 4:01:12 PM,73.085,hPa,Normal,43.5
+16,CO2,Building B - Floor 1,2/21/2025 4:55:03 PM,82.158,ppm,Normal,22.9
+17,Temperature,Basement,11/14/2025 4:57:58 AM,-9.228,°C,Normal,24.9
+27,Motion,Basement,1/2/2025 4:28:06 PM,80.243,count,Normal,32
+18,CO2,Parking Lot,10/12/2025 3:34:01 PM,96.002,ppm,Normal,18.4
+32,Noise,Building A - Floor 2,1/21/2025 9:55:02 PM,56.014,dB,Normal,12.4
+41,Motion,Building A - Floor 1,1/19/2025 10:22:24 AM,77.388,count,Alert,35.7
+43,Humidity,Building B - Floor 2,2/19/2025 6:59:07 PM,48.574,%RH,Normal,84.3
+3,Pressure,Building B - Floor 2,5/4/2025 3:04:12 AM,65.917,hPa,Normal,20.6
+42,Vibration,Building A - Floor 1,7/22/2025 7:56:16 PM,72.76,mm/s,Normal,98.7
+46,Light,Building B - Floor 2,11/6/2025 6:06:51 PM,98.979,lux,Normal,89.6
+21,Light,Warehouse,10/14/2025 12:59:52 PM,22.5,lux,Normal,36.5
+18,Vibration,Roof,11/8/2025 3:18:24 AM,67.784,mm/s,Normal,86.3
+47,Pressure,Building A - Floor 2,7/29/2025 5:58:36 PM,33.864,hPa,Normal,53
+22,Motion,Parking Lot,11/7/2025 1:36:41 AM,81.996,count,Normal,36.3
+29,Humidity,Basement,9/14/2025 3:20:20 AM,67.792,%RH,Normal,65.8
+37,Motion,Warehouse,6/24/2025 11:27:36 PM,33.526,count,Normal,80.2
+31,Temperature,Warehouse,10/21/2025 8:31:23 PM,15.932,°C,Normal,11.1
+4,Vibration,Building A - Floor 2,2/8/2025 3:31:30 PM,39.328,mm/s,Normal,21.4
+24,Pressure,Warehouse,7/23/2025 6:42:36 PM,11.451,hPa,Normal,67
+26,Pressure,Building A - Floor 1,12/30/2025 7:18:11 PM,97.213,hPa,Normal,29.2
+43,Motion,Roof,6/13/2025 7:50:59 AM,18.99,count,Normal,10.8
+45,Light,Parking Lot,1/25/2025 12:40:14 PM,41.87,lux,Alert,19.5
+23,Motion,Building A - Floor 2,6/29/2025 6:49:33 PM,21.66,count,Normal,86
+43,Vibration,Building B - Floor 2,5/4/2025 5:07:15 AM,5.078,mm/s,Normal,99.5
+48,Motion,Warehouse,10/11/2025 3:13:18 PM,75.6,count,Normal,11.4
+30,Temperature,Building A - Floor 1,11/11/2025 11:03:40 AM,60.694,°C,Normal,90.9
+45,Motion,Building B - Floor 2,5/3/2025 6:34:45 PM,-9.355,count,Normal,37.1
+48,Noise,Warehouse,6/14/2025 7:50:37 PM,0.705,dB,Normal,37.5
+37,CO2,Building B - Floor 2,7/24/2025 10:55:08 PM,11.443,ppm,Normal,77
+10,CO2,Building B - Floor 2,3/8/2025 4:04:40 AM,4.991,ppm,Normal,34
+27,Noise,Roof,4/18/2025 3:52:21 PM,85.807,dB,Normal,61
+11,Motion,Basement,8/30/2025 5:42:08 AM,28.293,count,Normal,95.4
+40,Noise,Building A - Floor 2,9/20/2025 3:35:21 AM,49.837,dB,Normal,41.3
+36,Light,Parking Lot,8/3/2025 1:23:06 PM,17.099,lux,Normal,75.9
+14,Motion,Parking Lot,4/16/2025 7:13:04 AM,44.909,count,Normal,85.4
+46,Motion,Building A - Floor 1,9/27/2025 6:51:19 AM,78.792,count,Normal,38.8
+25,Vibration,Building B - Floor 2,5/10/2025 11:32:09 PM,62.781,mm/s,Normal,30.3
+22,Motion,Roof,12/5/2025 4:51:46 AM,59.407,count,Normal,36.2
+9,Temperature,Building A - Floor 1,12/17/2025 3:59:45 PM,89.006,°C,Normal,37.6
+16,Humidity,Building A - Floor 2,3/23/2025 12:28:27 PM,12.553,%RH,Normal,67.4
+18,Humidity,Warehouse,1/22/2025 8:53:23 PM,75.114,%RH,Normal,93.3
+23,Humidity,Parking Lot,11/7/2025 3:33:04 PM,68.482,%RH,Normal,89.9
+36,Vibration,Parking Lot,2/9/2025 5:31:01 PM,49.806,mm/s,Normal,18.6
+4,Noise,Building A - Floor 2,8/30/2025 11:00:29 AM,88.269,dB,Normal,45
+11,Light,Parking Lot,11/7/2025 12:52:26 AM,94.576,lux,Normal,38
+8,Light,Roof,3/18/2025 4:54:09 AM,77.587,lux,Normal,51
+16,CO2,Building B - Floor 1,10/14/2025 1:13:17 PM,94.875,ppm,Normal,71.2
+25,CO2,Building A - Floor 2,10/19/2025 2:03:35 PM,-0.158,ppm,Normal,33.8
+16,CO2,Building B - Floor 2,6/8/2025 12:10:35 AM,75.835,ppm,Normal,97
+17,Pressure,Parking Lot,7/30/2025 5:42:36 PM,38.707,hPa,Normal,14.9
+36,Light,Basement,2/22/2025 2:05:05 PM,91.132,lux,Normal,49
+2,Pressure,Building A - Floor 2,7/15/2025 5:49:55 PM,58.103,hPa,Normal,40.2
+27,CO2,Building B - Floor 2,11/23/2025 7:56:14 AM,14.667,ppm,Normal,91.3
+17,Light,Building B - Floor 2,3/17/2025 6:28:17 AM,26.363,lux,Normal,32.7
+8,Motion,Building B - Floor 2,11/7/2025 2:39:38 AM,25.55,count,Normal,84.7
+2,Light,Building A - Floor 2,12/24/2025 2:53:52 PM,24.57,lux,Normal,72.4
+18,Motion,Basement,3/13/2025 11:33:32 PM,99.331,count,Normal,26.7
+4,Pressure,Parking Lot,3/31/2025 10:40:38 AM,59.246,hPa,Normal,97.7
+45,Temperature,Basement,8/3/2025 5:26:55 AM,85.905,°C,Normal,42.6
+31,Noise,Building B - Floor 2,4/19/2025 2:15:17 AM,41.33,dB,Normal,23.5
+39,Temperature,Warehouse,12/2/2025 10:31:18 AM,72.076,°C,Normal,65.3
+11,Light,Warehouse,1/13/2025 3:27:14 PM,37.381,lux,Normal,85.6
+8,Noise,Basement,9/17/2025 9:15:44 AM,59.657,dB,Normal,77.1
+26,Temperature,Building B - Floor 1,5/8/2025 1:36:17 PM,36.82,°C,Normal,83.6
+26,Noise,Building A - Floor 2,8/30/2025 12:56:08 AM,16.617,dB,Normal,40.3
+16,CO2,Building A - Floor 2,1/8/2025 7:15:18 AM,10.799,ppm,Normal,49
+29,Humidity,Building B - Floor 2,12/8/2025 1:38:09 PM,52.647,%RH,Normal,53.5
+42,Pressure,Roof,11/27/2025 9:56:12 AM,91.163,hPa,Normal,10.3
+37,Temperature,Building A - Floor 2,2/11/2025 7:13:43 AM,69.399,°C,Normal,66.4
+28,Motion,Building A - Floor 1,1/27/2025 11:20:15 AM,39.042,count,Normal,94.1
+45,Noise,Building A - Floor 1,12/23/2025 11:54:44 PM,6.894,dB,Normal,30.1
+32,Noise,Building B - Floor 1,3/12/2025 10:39:19 AM,58.976,dB,Normal,74.6
+8,Pressure,Basement,7/20/2025 10:42:15 PM,56.441,hPa,Normal,57.1
+40,Noise,Building B - Floor 1,1/3/2025 11:50:51 AM,66.073,dB,Normal,88.2
+43,Light,Building A - Floor 1,7/7/2025 7:33:01 PM,-2.559,lux,Normal,96.6
+1,Motion,Building B - Floor 1,8/27/2025 8:57:54 AM,56.801,count,Normal,99.4
+18,CO2,Roof,4/25/2025 12:59:00 PM,88.259,ppm,Alert,28.7
+29,Noise,Building A - Floor 2,3/12/2025 8:04:14 PM,16.669,dB,Normal,16.7
+24,CO2,Roof,7/31/2025 12:42:44 PM,34.836,ppm,Normal,27.8
+47,Humidity,Building A - Floor 1,12/4/2025 6:07:21 AM,42.45,%RH,Normal,26
+16,Motion,Building B - Floor 1,2/19/2025 9:14:30 PM,66.599,count,Normal,55.7
+44,Vibration,Parking Lot,3/26/2025 8:56:49 PM,79.438,mm/s,Normal,33.5
+14,Pressure,Building A - Floor 1,11/22/2025 7:33:14 PM,56.296,hPa,Normal,30.8
+30,Light,Building A - Floor 2,8/6/2025 8:18:36 PM,-3.14,lux,Alert,36.1
+1,Light,Warehouse,7/6/2025 8:58:45 PM,55.339,lux,Normal,94.4
+14,Humidity,Parking Lot,8/21/2025 3:48:13 PM,63.663,%RH,Normal,40.3
+39,Noise,Parking Lot,12/23/2025 10:56:07 AM,18.108,dB,Normal,11.5
+7,Noise,Parking Lot,4/11/2025 12:45:22 PM,70.355,dB,Normal,83.2
+23,Vibration,Roof,11/8/2025 5:43:02 AM,57.445,mm/s,Normal,72.7
+5,Temperature,Parking Lot,7/13/2025 9:32:32 PM,80.659,°C,Normal,80.7
+41,Pressure,Roof,1/22/2025 10:14:50 AM,96.914,hPa,Normal,25.8
+28,CO2,Parking Lot,9/26/2025 9:55:53 PM,90.341,ppm,Normal,47.8
+44,Motion,Parking Lot,3/14/2025 8:48:56 PM,41.631,count,Normal,28.4
+47,Light,Basement,5/16/2025 12:16:05 PM,81.604,lux,Normal,13.2
+44,Motion,Basement,9/14/2025 10:48:02 PM,56.242,count,Normal,96.9
+31,CO2,Building A - Floor 2,9/5/2025 11:03:38 PM,61.481,ppm,Normal,25.6
+16,CO2,Basement,1/2/2025 2:56:29 AM,31.082,ppm,Normal,83.2
+29,CO2,Parking Lot,6/27/2025 1:51:54 AM,40.758,ppm,Normal,83.9
+31,Light,Building A - Floor 2,1/7/2025 10:02:32 PM,67.291,lux,Normal,11.8
+37,Motion,Warehouse,3/29/2025 6:24:20 AM,36.089,count,Normal,77.5
+36,Humidity,Parking Lot,3/9/2025 10:11:10 PM,2.492,%RH,Normal,27.3
+9,Vibration,Basement,5/17/2025 10:36:54 PM,88.749,mm/s,Normal,24.8
+19,Vibration,Building A - Floor 2,5/6/2025 11:28:47 AM,73.994,mm/s,Normal,97.7
+44,Noise,Building B - Floor 2,5/21/2025 7:12:34 PM,64.56,dB,Normal,37.9
+45,Pressure,Building B - Floor 1,5/11/2025 6:22:48 PM,42.534,hPa,Normal,39.3
+49,CO2,Building A - Floor 1,9/26/2025 5:27:50 PM,0.553,ppm,Normal,64.8
+21,Noise,Building B - Floor 1,11/19/2025 4:16:57 AM,88.883,dB,Normal,45.3
+36,Light,Building B - Floor 1,1/14/2025 2:44:51 PM,47.908,lux,Normal,36.9
+33,CO2,Building A - Floor 1,1/12/2025 1:34:19 PM,48.411,ppm,Normal,53.7
+45,Light,Parking Lot,7/1/2025 5:17:49 PM,46.878,lux,Normal,78.3
+44,Noise,Warehouse,5/23/2025 9:35:57 AM,62.767,dB,Normal,49
+47,CO2,Basement,1/17/2025 3:29:30 AM,84.629,ppm,Normal,25.9
+37,Motion,Building A - Floor 1,1/23/2025 1:18:43 AM,-5.028,count,Normal,38.5
+39,Temperature,Building B - Floor 2,4/6/2025 6:10:31 AM,75.06,°C,Normal,95.3
+29,Light,Building A - Floor 2,9/21/2025 11:40:57 PM,99.958,lux,Normal,97.5
+30,Motion,Building B - Floor 2,8/16/2025 3:19:51 PM,28.952,count,Normal,66.3
+23,Humidity,Basement,12/22/2025 9:53:36 AM,10.24,%RH,Normal,78.9
+11,Noise,Building B - Floor 2,8/9/2025 6:16:54 AM,85.442,dB,Normal,87.8
+47,Pressure,Warehouse,7/28/2025 3:14:13 PM,98.605,hPa,Normal,63
+7,Noise,Warehouse,6/12/2025 3:37:03 PM,35.913,dB,Normal,69.1
+38,Light,Building A - Floor 1,10/16/2025 8:43:10 PM,66.486,lux,Normal,36.2
+23,Noise,Basement,10/5/2025 2:50:11 PM,22.055,dB,Normal,70
+26,Light,Building B - Floor 1,9/10/2025 6:49:56 PM,74.417,lux,Alert,29.4
+16,Pressure,Building A - Floor 2,4/12/2025 3:43:38 PM,18.261,hPa,Normal,48.7
+36,Motion,Building A - Floor 2,6/27/2025 7:22:35 PM,32.266,count,Normal,61.6
+14,Light,Parking Lot,3/5/2025 2:39:27 AM,36.892,lux,Alert,59.9
+43,Light,Building A - Floor 1,2/14/2025 1:26:11 AM,98.123,lux,Normal,71.7
+42,Noise,Warehouse,7/17/2025 1:33:16 PM,18.21,dB,Normal,65.1
+22,Pressure,Building A - Floor 2,11/22/2025 3:18:08 AM,14.541,hPa,Normal,14.2
+39,Motion,Building B - Floor 1,7/4/2025 1:33:13 AM,79.68,count,Normal,86.4
+29,Pressure,Roof,10/16/2025 5:47:02 AM,99.31,hPa,Normal,60.7
+23,Noise,Parking Lot,12/17/2025 8:49:13 PM,40.508,dB,Normal,23.7
+5,CO2,Roof,8/30/2025 5:00:34 AM,-1.436,ppm,Normal,28
+48,Temperature,Warehouse,4/11/2025 4:43:23 PM,30.177,°C,Normal,97.2
+33,CO2,Building A - Floor 2,12/26/2025 9:35:48 AM,82.719,ppm,Normal,41.6
+33,Temperature,Building A - Floor 1,9/1/2025 12:29:23 PM,88.519,°C,Normal,16.2
+7,Noise,Roof,12/21/2025 11:39:03 PM,38.532,dB,Normal,34.5
+33,Humidity,Roof,4/10/2025 9:37:23 AM,0.454,%RH,Normal,54
+36,Noise,Building A - Floor 2,3/14/2025 6:24:42 AM,-7.863,dB,Normal,82
+24,CO2,Warehouse,7/21/2025 12:55:54 AM,72.183,ppm,Normal,19.7
+26,Noise,Building B - Floor 2,7/24/2025 12:02:41 PM,61.13,dB,Alert,36.8
+46,Temperature,Roof,9/28/2025 1:17:36 AM,0.937,°C,Alert,98.3
+27,Noise,Roof,10/14/2025 4:06:40 PM,97.743,dB,Normal,78.2
+4,Light,Building B - Floor 1,7/4/2025 8:28:57 PM,-0.505,lux,Normal,47.1
+34,Vibration,Building B - Floor 2,11/16/2025 2:19:05 PM,23.383,mm/s,Alert,28
+46,CO2,Building A - Floor 2,5/7/2025 4:33:50 AM,-8.984,ppm,Normal,65.7
+30,Motion,Roof,6/27/2025 10:10:51 PM,88.16,count,Normal,82.9
+37,CO2,Building A - Floor 2,6/9/2025 9:22:51 AM,42.428,ppm,Normal,94.7
+21,CO2,Roof,5/16/2025 2:48:23 PM,-1.954,ppm,Normal,53.7
+31,Motion,Building A - Floor 1,9/29/2025 7:21:37 PM,39.978,count,Normal,43.6
+32,Pressure,Basement,3/31/2025 7:41:50 AM,71.972,hPa,Normal,17.7
+33,Humidity,Building A - Floor 2,11/8/2025 2:56:55 AM,50.317,%RH,Normal,34.6
+12,Light,Parking Lot,10/9/2025 5:51:31 AM,31.03,lux,Normal,50.9
+14,Humidity,Basement,4/20/2025 8:31:48 PM,66.146,%RH,Normal,34.1
+40,Humidity,Building A - Floor 1,10/2/2025 11:56:24 AM,11.683,%RH,Normal,94.7
+34,Vibration,Building A - Floor 2,12/10/2025 10:01:16 PM,48.232,mm/s,Normal,11.4
+38,Noise,Building B - Floor 1,7/29/2025 7:01:29 PM,77.332,dB,Normal,95
+26,CO2,Building A - Floor 1,1/15/2025 7:41:27 PM,10.525,ppm,Normal,59.7
+44,CO2,Parking Lot,4/25/2025 10:15:23 AM,-3.971,ppm,Normal,35.7
+36,Motion,Roof,7/25/2025 5:51:22 AM,-3.633,count,Normal,72.3
+45,Vibration,Building B - Floor 2,2/3/2025 10:19:26 AM,37.152,mm/s,Normal,44.2
+9,CO2,Building A - Floor 1,12/21/2025 4:07:12 AM,53.794,ppm,Normal,76.8
+29,Light,Building B - Floor 1,1/11/2025 8:21:16 PM,-4.815,lux,Normal,78.3
+48,Vibration,Basement,1/27/2025 10:47:40 PM,52.071,mm/s,Normal,61.9
+17,Vibration,Building A - Floor 1,11/28/2025 4:46:05 PM,5.203,mm/s,Normal,31.6
+15,Light,Parking Lot,4/2/2025 10:25:32 PM,78.284,lux,Normal,12.9
+5,Motion,Building A - Floor 1,8/31/2025 6:46:40 PM,45.869,count,Normal,88.4
+36,Pressure,Building A - Floor 1,6/15/2025 11:10:42 AM,34.312,hPa,Normal,20.3
+27,Light,Basement,11/2/2025 10:59:46 AM,13.02,lux,Normal,38
+2,Light,Warehouse,7/19/2025 9:52:13 AM,27.091,lux,Normal,26.7
+46,Noise,Building B - Floor 2,11/5/2025 10:47:27 AM,-6.306,dB,Normal,53.1
+13,Light,Warehouse,12/19/2025 12:49:24 AM,63.495,lux,Normal,11
+26,Noise,Roof,5/23/2025 7:35:40 PM,20.282,dB,Normal,45.2
+40,Temperature,Building A - Floor 2,9/30/2025 9:24:36 PM,22.682,°C,Normal,98.6
+46,Vibration,Warehouse,7/14/2025 10:21:26 PM,54.062,mm/s,Normal,49.8
+25,Noise,Building B - Floor 1,3/17/2025 2:52:19 PM,-1.83,dB,Normal,80.9
+30,Pressure,Parking Lot,11/21/2025 1:30:04 PM,37.756,hPa,Normal,62.9
+4,Pressure,Roof,8/24/2025 7:44:07 PM,-4.895,hPa,Normal,27.3
+30,Noise,Building A - Floor 1,2/12/2025 1:51:42 AM,16.384,dB,Normal,35.9
+17,Noise,Parking Lot,4/23/2025 10:13:21 PM,30.267,dB,Normal,98.5
+21,Motion,Building B - Floor 2,4/15/2025 2:53:53 PM,52.67,count,Normal,52.4
+1,Motion,Building A - Floor 2,11/6/2025 7:00:58 PM,-7.938,count,Normal,73.4
+8,Vibration,Building B - Floor 2,1/6/2025 12:13:59 AM,7.764,mm/s,Normal,11.9
+20,Motion,Building A - Floor 1,3/25/2025 7:04:04 PM,-3.465,count,Normal,99.2
+40,Pressure,Building A - Floor 1,5/26/2025 1:25:43 PM,23.011,hPa,Normal,29.9
+30,Humidity,Warehouse,1/28/2025 1:29:48 AM,15.033,%RH,Normal,85.3
+46,CO2,Building B - Floor 2,10/7/2025 10:46:29 PM,73.305,ppm,Alert,42.8
+23,CO2,Roof,3/26/2025 12:50:42 PM,11.033,ppm,Normal,54.1
+10,Pressure,Warehouse,12/25/2025 9:33:19 PM,14.398,hPa,Normal,65.8
+10,Motion,Roof,6/1/2025 2:17:31 PM,59.869,count,Alert,36.9
+10,Vibration,Warehouse,11/9/2025 4:04:36 PM,88.241,mm/s,Normal,59.6
+38,Noise,Parking Lot,2/3/2025 12:56:19 PM,27.237,dB,Normal,99.3
+4,Vibration,Parking Lot,11/15/2025 4:25:30 PM,46.089,mm/s,Normal,54.1
+38,Noise,Building A - Floor 2,10/1/2025 10:14:25 PM,51.393,dB,Normal,17.1
+23,Motion,Building B - Floor 1,5/3/2025 4:08:27 PM,79.904,count,Normal,50.3
+49,Humidity,Building A - Floor 2,2/21/2025 12:53:48 PM,-4.358,%RH,Normal,32.3
+42,Motion,Building B - Floor 2,7/9/2025 9:38:27 PM,-0.962,count,Normal,44.4
+2,Pressure,Building A - Floor 1,11/24/2025 5:03:16 PM,21.859,hPa,Normal,34.7
+30,Vibration,Warehouse,1/28/2025 11:56:58 PM,28.268,mm/s,Normal,19
+14,Pressure,Parking Lot,9/9/2025 8:32:50 AM,77.662,hPa,Alert,76.6
+46,CO2,Building A - Floor 2,2/2/2025 1:26:04 AM,17.397,ppm,Normal,48.3
+47,Noise,Building A - Floor 1,8/23/2025 5:59:04 PM,91.235,dB,Normal,86.9
+44,Pressure,Building A - Floor 2,12/6/2025 11:11:06 AM,-9.543,hPa,Normal,24.7
+20,Motion,Building B - Floor 1,8/13/2025 8:24:07 AM,91.396,count,Normal,51.6
+17,Temperature,Building A - Floor 2,10/10/2025 1:08:41 AM,48.946,°C,Normal,76.4
+8,Light,Building A - Floor 2,1/15/2025 6:27:06 AM,64.365,lux,Normal,40.1
+44,Motion,Building B - Floor 1,6/23/2025 3:24:53 PM,-7.703,count,Normal,71.6
+4,CO2,Warehouse,8/29/2025 11:37:34 PM,51.688,ppm,Normal,93.4
+31,Vibration,Warehouse,6/3/2025 5:01:16 PM,95.797,mm/s,Normal,84.9
+21,CO2,Warehouse,4/22/2025 6:37:39 PM,13.126,ppm,Normal,85.8
+46,Temperature,Building A - Floor 1,6/21/2025 2:20:05 PM,50.448,°C,Normal,15
+26,Temperature,Building A - Floor 1,12/19/2025 11:10:28 PM,50.796,°C,Normal,88.1
+15,Temperature,Building A - Floor 1,8/26/2025 2:35:48 AM,92.274,°C,Normal,62.7
+25,Temperature,Roof,3/24/2025 12:25:19 PM,96.37,°C,Normal,52.7
+36,Humidity,Warehouse,1/20/2025 11:48:56 AM,56.37,%RH,Normal,44.5
+26,Noise,Building B - Floor 1,3/8/2025 8:54:38 PM,82.19,dB,Normal,20.1
+32,CO2,Building A - Floor 2,6/22/2025 2:28:30 AM,16.677,ppm,Normal,20.6
+24,Pressure,Building B - Floor 2,2/8/2025 5:43:02 PM,55.291,hPa,Normal,17.9
+31,Motion,Roof,3/28/2025 10:31:00 PM,66.902,count,Normal,53.2
+36,Vibration,Roof,8/5/2025 1:31:01 PM,38.692,mm/s,Normal,31
+35,CO2,Warehouse,11/18/2025 5:51:17 PM,37.718,ppm,Normal,94.8
+25,Vibration,Roof,1/4/2025 4:50:48 AM,14.73,mm/s,Normal,28.4
+14,Vibration,Warehouse,4/4/2025 1:18:38 AM,59.159,mm/s,Normal,96.7
+37,Pressure,Warehouse,5/18/2025 9:20:06 AM,5.239,hPa,Normal,87.5
+9,Noise,Building B - Floor 2,1/15/2025 12:43:36 AM,62.114,dB,Normal,26.5
+42,Humidity,Building A - Floor 2,6/10/2025 10:45:49 PM,30.195,%RH,Normal,77.2
+32,Temperature,Warehouse,4/14/2025 9:03:03 PM,40.496,°C,Normal,99.8
+30,Motion,Warehouse,1/1/2025 10:20:04 PM,99.227,count,Normal,87
+44,Vibration,Building A - Floor 2,1/13/2025 5:54:57 PM,56.569,mm/s,Normal,38.8
+19,Vibration,Building A - Floor 1,3/19/2025 9:14:42 AM,70.652,mm/s,Normal,90.5
+38,Light,Building B - Floor 1,9/27/2025 12:26:15 PM,19.698,lux,Alert,37.8
+24,Vibration,Warehouse,6/6/2025 12:48:49 AM,27.671,mm/s,Normal,32.6
+20,Pressure,Building B - Floor 2,1/22/2025 2:57:12 AM,16.936,hPa,Normal,52.7
+15,Light,Building B - Floor 1,6/30/2025 10:43:40 AM,96.103,lux,Normal,81.2
+36,Motion,Warehouse,3/5/2025 4:38:59 PM,79.522,count,Normal,70.6
+46,Vibration,Building A - Floor 1,4/7/2025 2:09:50 AM,71.793,mm/s,Normal,63.4
+38,Humidity,Basement,12/29/2025 5:38:16 AM,95.13,%RH,Normal,29.8
+41,Noise,Building B - Floor 1,3/21/2025 10:06:24 PM,43.792,dB,Normal,12.3
+36,Noise,Roof,4/22/2025 7:20:23 PM,-1.337,dB,Normal,52.6
+41,Temperature,Building A - Floor 2,3/10/2025 4:50:24 AM,70.808,°C,Normal,75.8
+38,Temperature,Building B - Floor 1,9/7/2025 12:54:54 AM,57.671,°C,Normal,66.6
+16,Vibration,Building B - Floor 2,11/13/2025 1:10:45 PM,3.174,mm/s,Normal,47.4
+1,Temperature,Building B - Floor 2,5/14/2025 9:32:51 PM,97.644,°C,Normal,14.5
+23,Humidity,Basement,5/30/2025 7:13:56 PM,54.081,%RH,Normal,11.9
+27,Light,Building A - Floor 2,3/2/2025 2:56:25 AM,9.345,lux,Alert,32.8
+11,Humidity,Building B - Floor 1,6/27/2025 3:50:48 PM,65.677,%RH,Normal,93.8
+37,Temperature,Building A - Floor 1,3/9/2025 8:05:25 AM,-8.03,°C,Normal,13.3
+16,Vibration,Building B - Floor 2,8/1/2025 4:02:52 PM,6.15,mm/s,Normal,43.5
+20,Pressure,Building B - Floor 2,1/6/2025 10:00:52 PM,54.528,hPa,Normal,90.7
+8,Temperature,Building A - Floor 2,9/5/2025 3:02:06 PM,22.809,°C,Normal,56.5
+1,Motion,Building B - Floor 1,1/23/2025 11:10:24 AM,81.719,count,Normal,48
+9,CO2,Building A - Floor 2,10/21/2025 4:40:08 PM,34.264,ppm,Normal,11.9
+49,Light,Building A - Floor 2,4/6/2025 6:13:31 AM,89.918,lux,Normal,53.8
+11,Light,Building A - Floor 2,3/12/2025 7:39:16 PM,6.788,lux,Normal,70.4
+48,Vibration,Building A - Floor 1,8/26/2025 7:27:48 PM,74.13,mm/s,Normal,51.9
+1,CO2,Building B - Floor 1,10/1/2025 9:22:07 AM,43.607,ppm,Normal,66.5
+9,Motion,Building B - Floor 1,8/24/2025 2:36:15 AM,3.934,count,Normal,65.8
+42,Temperature,Warehouse,3/31/2025 4:18:44 PM,44.063,°C,Normal,59.2
+26,Noise,Basement,9/23/2025 8:18:12 AM,92.451,dB,Normal,66.2
+36,Temperature,Warehouse,4/3/2025 2:12:17 PM,18.868,°C,Normal,96.2
+26,Temperature,Parking Lot,8/22/2025 8:39:13 PM,73.952,°C,Normal,82
+22,CO2,Parking Lot,12/17/2025 3:31:45 AM,62.809,ppm,Normal,29.9
+38,Light,Basement,11/11/2025 2:35:34 PM,41.95,lux,Normal,66.6
+33,Vibration,Warehouse,5/20/2025 1:50:26 PM,-9.601,mm/s,Normal,76.6
+33,Noise,Building A - Floor 2,2/25/2025 8:36:40 PM,95.928,dB,Normal,99.4
+4,Vibration,Building A - Floor 1,11/28/2025 6:43:32 AM,17.223,mm/s,Normal,47
+17,Vibration,Roof,10/27/2025 6:24:51 AM,15.512,mm/s,Normal,59.2
+1,Humidity,Parking Lot,3/12/2025 4:32:28 AM,9.593,%RH,Normal,73.4
+45,Light,Building A - Floor 2,6/27/2025 10:27:20 AM,59.565,lux,Normal,49.6
+1,Temperature,Basement,7/12/2025 10:48:58 AM,30.886,°C,Normal,74.9
+8,Humidity,Building B - Floor 2,4/1/2025 3:39:58 AM,12.686,%RH,Normal,56.8
+34,Pressure,Basement,11/8/2025 6:59:09 AM,44.29,hPa,Normal,80.7
+16,Noise,Warehouse,5/15/2025 12:53:55 AM,98.913,dB,Alert,37.6
+21,Vibration,Parking Lot,4/7/2025 7:56:10 AM,80.304,mm/s,Normal,88.6
+47,CO2,Building A - Floor 1,1/10/2025 5:35:36 PM,97.256,ppm,Normal,28.1
+34,Light,Building A - Floor 2,10/3/2025 5:22:47 PM,45.885,lux,Normal,63.1
+6,Humidity,Parking Lot,2/18/2025 8:51:49 PM,97.775,%RH,Normal,28
+7,Humidity,Building B - Floor 1,9/27/2025 11:12:54 AM,12.8,%RH,Normal,54
+2,Motion,Building A - Floor 2,5/4/2025 11:47:40 AM,75.526,count,Normal,89.3
+15,Noise,Basement,5/7/2025 7:31:10 PM,14.131,dB,Normal,51.2
+8,Pressure,Building A - Floor 1,3/20/2025 3:33:08 AM,95.859,hPa,Normal,70.8
+40,Pressure,Roof,8/5/2025 4:36:57 PM,79.124,hPa,Normal,30.9
+34,Motion,Building A - Floor 2,9/8/2025 7:24:54 AM,78.879,count,Normal,47.9
+39,Temperature,Building B - Floor 1,7/26/2025 1:12:48 AM,26.976,°C,Normal,97.2
+41,Motion,Building B - Floor 2,4/26/2025 3:22:59 AM,97.217,count,Normal,65.9
+26,Temperature,Building A - Floor 1,9/9/2025 10:32:26 PM,40.359,°C,Normal,96
+35,Motion,Roof,2/15/2025 1:08:23 AM,88.256,count,Normal,50.9
+32,Temperature,Building A - Floor 2,5/10/2025 2:16:12 PM,37.917,°C,Normal,93.8
+43,Light,Building A - Floor 1,11/12/2025 7:57:48 AM,35.749,lux,Normal,57.3
+27,Pressure,Parking Lot,10/14/2025 5:37:38 PM,34.931,hPa,Normal,64.5
+21,Motion,Building A - Floor 1,5/9/2025 11:43:53 AM,18.752,count,Normal,69.7
+2,CO2,Building B - Floor 1,6/30/2025 7:45:39 PM,98.395,ppm,Normal,63.6
+7,Vibration,Building B - Floor 1,1/26/2025 10:03:59 AM,25.345,mm/s,Normal,23.6
+16,Motion,Roof,7/1/2025 5:38:47 AM,29.907,count,Normal,67.8
+27,Humidity,Roof,3/8/2025 10:25:27 AM,19.905,%RH,Normal,23.8
+19,Vibration,Building A - Floor 2,4/23/2025 3:34:00 AM,55.49,mm/s,Normal,42.5
+4,Motion,Basement,8/4/2025 3:11:27 AM,35.39,count,Normal,35.4
+42,Noise,Parking Lot,3/2/2025 11:33:42 AM,36.605,dB,Normal,38.2
+31,Pressure,Building B - Floor 1,4/12/2025 5:35:45 AM,82.928,hPa,Normal,66.3
+7,CO2,Building A - Floor 1,1/17/2025 3:08:17 AM,24.674,ppm,Normal,11
+21,Motion,Basement,3/4/2025 11:23:45 AM,4.171,count,Normal,77.6
+24,Pressure,Building B - Floor 2,8/1/2025 12:34:59 PM,20.235,hPa,Normal,57.3
+43,Vibration,Building A - Floor 1,7/10/2025 6:18:23 AM,36.689,mm/s,Normal,71.1
+13,Vibration,Basement,1/4/2025 7:00:50 AM,5.65,mm/s,Normal,52.6
+37,Noise,Warehouse,1/23/2025 10:47:25 AM,18.028,dB,Normal,25.7
+29,Temperature,Basement,10/5/2025 10:49:49 AM,53.47,°C,Normal,48.3
+30,Light,Building A - Floor 1,4/3/2025 7:25:57 AM,42.666,lux,Normal,27.6
+15,Pressure,Building B - Floor 1,3/19/2025 5:42:39 AM,44.888,hPa,Normal,29.5
+46,Pressure,Parking Lot,10/14/2025 5:27:20 PM,56.92,hPa,Normal,72.4
+41,Temperature,Building B - Floor 2,9/5/2025 12:08:39 PM,30.081,°C,Normal,39.2
+23,Humidity,Warehouse,9/11/2025 1:06:20 AM,88.733,%RH,Normal,43.2
+18,Vibration,Roof,2/26/2025 11:35:44 PM,58.873,mm/s,Normal,65.5
+35,Temperature,Building B - Floor 2,7/13/2025 8:10:12 PM,24.581,°C,Normal,85.9
+20,Motion,Building A - Floor 2,6/24/2025 1:41:34 AM,-2.625,count,Normal,93.4
+47,Temperature,Building A - Floor 1,10/9/2025 10:33:19 PM,73.734,°C,Normal,47.9
+19,Noise,Roof,5/17/2025 8:04:53 PM,91.39,dB,Normal,47
+39,Vibration,Warehouse,10/20/2025 10:04:01 PM,66.546,mm/s,Normal,86.1
+36,Noise,Building A - Floor 2,8/23/2025 4:21:07 PM,65.411,dB,Normal,93
+42,CO2,Building A - Floor 1,1/14/2025 1:45:56 PM,7.935,ppm,Normal,42.6
+2,Motion,Roof,6/22/2025 12:23:28 PM,25.615,count,Normal,63.8
+40,CO2,Warehouse,4/12/2025 12:14:23 PM,87.285,ppm,Normal,43.5
+11,Light,Building A - Floor 1,3/23/2025 2:00:24 PM,48.094,lux,Normal,16.4
+43,Temperature,Parking Lot,12/28/2025 8:04:25 PM,64.151,°C,Normal,75.9
+10,Temperature,Building B - Floor 1,11/22/2025 10:06:02 PM,-8.782,°C,Normal,49.8
+29,CO2,Basement,11/16/2025 2:27:48 AM,-7.852,ppm,Normal,80.1
+35,Noise,Warehouse,5/14/2025 3:44:59 AM,39.843,dB,Normal,10.2
+35,Pressure,Building B - Floor 2,8/22/2025 2:41:42 PM,-8.439,hPa,Normal,11.7
+42,Vibration,Building A - Floor 2,4/25/2025 2:38:34 PM,2.331,mm/s,Normal,50.7
+28,Vibration,Warehouse,1/2/2025 1:53:12 PM,84.892,mm/s,Alert,14.5
+46,Light,Building A - Floor 2,2/15/2025 2:26:52 AM,41.825,lux,Normal,69.6
+14,Light,Warehouse,3/20/2025 2:35:09 PM,65.817,lux,Normal,72.6
+46,Noise,Basement,4/2/2025 8:32:21 PM,0.641,dB,Normal,75.3
+6,Pressure,Building B - Floor 2,8/4/2025 10:33:04 PM,75.257,hPa,Normal,48
+18,CO2,Building A - Floor 2,9/5/2025 8:37:44 PM,60.132,ppm,Normal,54.6
+25,Pressure,Basement,5/4/2025 12:02:10 PM,15.887,hPa,Normal,26.9
+41,CO2,Building A - Floor 2,8/25/2025 10:51:24 PM,68.76,ppm,Normal,43
+22,Noise,Roof,12/24/2025 11:32:53 PM,98.253,dB,Normal,67.7
+10,Noise,Building B - Floor 2,4/3/2025 12:18:07 PM,6.542,dB,Normal,26.3
+21,Temperature,Basement,5/9/2025 4:43:41 AM,81.387,°C,Normal,12.3
+15,Pressure,Roof,2/14/2025 2:09:12 PM,75.279,hPa,Normal,11.8
+40,Humidity,Basement,6/6/2025 6:35:18 PM,92.83,%RH,Normal,36.1
+13,Noise,Building B - Floor 2,4/24/2025 6:07:23 PM,54.958,dB,Normal,62.5
+1,Vibration,Parking Lot,7/15/2025 5:43:30 PM,82.405,mm/s,Normal,94
+42,Humidity,Parking Lot,9/5/2025 3:01:55 AM,56.029,%RH,Normal,16.6
+23,CO2,Building A - Floor 1,9/13/2025 5:37:16 AM,34.682,ppm,Normal,17
+34,Vibration,Warehouse,12/8/2025 8:11:16 AM,90.182,mm/s,Normal,71.6
+14,CO2,Building A - Floor 2,8/2/2025 3:21:26 AM,92.55,ppm,Normal,38.7
+49,CO2,Building A - Floor 2,12/8/2025 5:27:01 AM,81.874,ppm,Normal,26.1
+21,Humidity,Warehouse,4/18/2025 11:53:45 AM,96.947,%RH,Normal,61.8
+28,Motion,Parking Lot,1/19/2025 6:22:21 AM,15.527,count,Normal,36.5
+2,Motion,Building A - Floor 1,11/7/2025 11:01:40 AM,41.219,count,Normal,80.8
+38,Humidity,Building A - Floor 1,4/2/2025 4:21:43 AM,41.646,%RH,Normal,15.9
+20,Motion,Parking Lot,12/3/2025 7:35:53 AM,97.252,count,Normal,68.9
+28,Vibration,Basement,8/1/2025 7:05:40 AM,15.326,mm/s,Normal,46.7
+46,Light,Building B - Floor 1,3/16/2025 6:47:59 PM,24.3,lux,Normal,76.8
+40,Light,Building A - Floor 1,9/20/2025 9:48:58 PM,0.852,lux,Normal,21.6
+28,CO2,Warehouse,11/13/2025 12:03:19 PM,63.368,ppm,Alert,63.3
+20,Noise,Basement,11/22/2025 11:28:52 AM,28.565,dB,Normal,95.3
+33,CO2,Roof,4/2/2025 2:23:59 AM,61.221,ppm,Normal,29
+49,CO2,Building B - Floor 2,7/5/2025 8:35:21 PM,41.524,ppm,Normal,84.3
+43,Humidity,Basement,9/21/2025 4:50:16 PM,10.197,%RH,Normal,75.2
+39,Vibration,Building B - Floor 1,5/21/2025 9:12:57 AM,80.853,mm/s,Normal,21.9
+9,Pressure,Basement,4/3/2025 5:44:45 AM,5.517,hPa,Normal,15.3
+16,Pressure,Building A - Floor 2,7/7/2025 5:24:39 AM,41.63,hPa,Normal,43
+5,CO2,Parking Lot,8/14/2025 11:22:36 AM,74.311,ppm,Normal,58.4
+7,Noise,Building B - Floor 1,4/28/2025 6:41:28 AM,88.557,dB,Normal,86.5
+16,CO2,Building A - Floor 2,9/8/2025 11:16:40 AM,44.166,ppm,Normal,12.8
+41,Noise,Building B - Floor 2,5/20/2025 11:44:06 PM,32.923,dB,Normal,53.4
+1,Temperature,Parking Lot,4/13/2025 2:30:32 AM,60.89,°C,Normal,59.5
+23,Vibration,Warehouse,2/8/2025 8:09:34 PM,67.628,mm/s,Normal,45.4
+17,Light,Roof,11/30/2025 6:38:54 AM,-4.959,lux,Normal,24.3
+34,Motion,Roof,8/27/2025 7:56:28 AM,84.851,count,Normal,42.4
+41,CO2,Building B - Floor 1,4/11/2025 3:51:50 AM,49.956,ppm,Normal,17.1
+32,CO2,Roof,1/4/2025 11:44:39 PM,42.974,ppm,Normal,21.2
+3,Temperature,Basement,8/23/2025 2:21:20 PM,54.095,°C,Normal,99.7
+29,Temperature,Roof,5/31/2025 8:31:02 PM,-9.734,°C,Normal,15.5
+8,Vibration,Building B - Floor 2,1/8/2025 10:12:49 AM,45.348,mm/s,Normal,95.1
+35,Motion,Building B - Floor 1,8/20/2025 6:43:24 AM,87.587,count,Normal,13.1
+33,Light,Warehouse,4/15/2025 11:15:01 PM,89.566,lux,Normal,14.7
+14,Motion,Building A - Floor 2,8/1/2025 6:41:11 PM,26.367,count,Normal,68.3
+35,Light,Building A - Floor 1,11/5/2025 12:17:25 AM,8.772,lux,Normal,58.1
+47,Noise,Building A - Floor 1,11/19/2025 7:35:48 AM,52.69,dB,Normal,29.6
+36,Light,Basement,3/11/2025 9:13:24 AM,92.419,lux,Normal,10.6
+21,Light,Building B - Floor 2,2/21/2025 7:57:57 AM,61.174,lux,Normal,34.2
+31,Light,Building A - Floor 2,7/29/2025 6:56:09 PM,25.545,lux,Normal,39.5
+5,Vibration,Building B - Floor 2,1/8/2025 8:40:00 PM,86.497,mm/s,Normal,14
+47,Motion,Building A - Floor 2,1/17/2025 9:57:22 AM,-6.267,count,Normal,54.3
+5,Motion,Building B - Floor 2,8/5/2025 6:20:51 PM,51.219,count,Normal,24.7
+38,Noise,Building B - Floor 2,9/12/2025 8:35:22 AM,5.576,dB,Normal,17.5
+29,CO2,Building A - Floor 2,4/20/2025 10:53:09 AM,-2.168,ppm,Normal,55.3
+18,CO2,Warehouse,5/18/2025 11:15:00 AM,3.278,ppm,Normal,51
+36,Pressure,Basement,9/11/2025 8:35:12 PM,36.924,hPa,Normal,46.9
+16,Vibration,Building A - Floor 2,2/1/2025 11:34:30 AM,-5.841,mm/s,Normal,48.2
+5,Motion,Building B - Floor 1,10/29/2025 7:27:03 PM,95.881,count,Normal,58.8
+48,Vibration,Basement,5/27/2025 11:32:17 PM,80.638,mm/s,Normal,69.4
+47,Vibration,Building B - Floor 1,8/21/2025 4:18:36 AM,70.551,mm/s,Normal,35.6
+40,Temperature,Building B - Floor 2,2/20/2025 7:57:42 PM,-3.547,°C,Normal,67.9
+8,CO2,Roof,5/17/2025 6:50:38 PM,-6.993,ppm,Normal,45.3
+21,CO2,Roof,11/23/2025 12:17:10 PM,7.669,ppm,Normal,15.1
+29,Motion,Building A - Floor 2,7/17/2025 4:39:25 PM,-4.606,count,Normal,81.2
+3,Noise,Roof,12/29/2025 1:00:07 PM,88.824,dB,Normal,89.9
+14,Vibration,Parking Lot,10/30/2025 11:14:50 PM,25.31,mm/s,Normal,90.4
+47,Pressure,Basement,10/4/2025 11:34:19 PM,26.244,hPa,Normal,87.7
+18,Light,Warehouse,4/3/2025 9:25:13 PM,42.615,lux,Normal,66.3
+4,Vibration,Warehouse,9/25/2025 5:23:04 AM,61.348,mm/s,Normal,80.5
+43,CO2,Basement,3/29/2025 10:22:51 AM,55.9,ppm,Normal,36.8
+14,CO2,Building A - Floor 2,9/28/2025 2:14:28 AM,43.442,ppm,Normal,58.6
+47,Pressure,Warehouse,3/6/2025 9:03:33 AM,40.309,hPa,Alert,51.6
+6,Pressure,Basement,11/26/2025 7:35:19 PM,5.591,hPa,Normal,68.1
+9,Temperature,Building A - Floor 1,2/13/2025 8:57:42 AM,48.516,°C,Normal,80.7
+11,Pressure,Warehouse,8/14/2025 5:29:40 AM,12.715,hPa,Normal,47.8
+48,Pressure,Building B - Floor 2,4/14/2025 12:52:45 AM,64.032,hPa,Normal,32.7
+25,Noise,Basement,5/1/2025 4:11:34 PM,10.132,dB,Normal,60.6
+30,Motion,Parking Lot,12/2/2025 10:28:12 AM,65.775,count,Normal,77.3
+41,Motion,Basement,2/26/2025 9:47:40 PM,31.409,count,Normal,20.5
+25,Motion,Parking Lot,11/6/2025 4:30:04 PM,32.202,count,Normal,48.6
+40,Noise,Building B - Floor 1,11/17/2025 2:45:23 PM,1.079,dB,Normal,18.4
+49,CO2,Building A - Floor 1,8/16/2025 1:34:34 PM,57.217,ppm,Alert,60.9
+35,Noise,Roof,3/18/2025 6:32:33 PM,17.692,dB,Normal,54.1
+40,Pressure,Roof,3/3/2025 12:47:46 PM,59.368,hPa,Normal,29.9
+11,Vibration,Building A - Floor 2,8/21/2025 10:25:55 AM,21.581,mm/s,Normal,46.7
+40,CO2,Building B - Floor 2,12/2/2025 8:41:02 AM,56.893,ppm,Normal,96.3
+5,Motion,Building A - Floor 1,12/24/2025 2:34:25 PM,33.805,count,Normal,56.3
+38,Light,Warehouse,10/24/2025 8:10:03 AM,93.502,lux,Normal,20
+39,Temperature,Parking Lot,5/9/2025 10:56:01 AM,27.861,°C,Normal,56.1
+19,Motion,Building B - Floor 2,12/18/2025 8:07:48 PM,36.616,count,Normal,68.8
+40,Humidity,Parking Lot,6/13/2025 1:53:02 PM,88.276,%RH,Normal,63.8
+32,Motion,Building A - Floor 2,9/1/2025 4:03:55 PM,25.02,count,Normal,79.7
+15,Humidity,Roof,7/26/2025 11:29:50 PM,11.726,%RH,Normal,25.9
+27,Vibration,Building B - Floor 2,3/28/2025 9:40:47 PM,65.881,mm/s,Normal,12.6
+48,CO2,Warehouse,7/16/2025 7:00:46 AM,2.25,ppm,Normal,29.8
+2,Humidity,Roof,10/24/2025 3:46:49 AM,40.723,%RH,Normal,33
+36,Pressure,Parking Lot,7/15/2025 2:47:24 PM,51.558,hPa,Normal,14.7
+24,Pressure,Building B - Floor 2,1/14/2025 11:40:44 AM,31.273,hPa,Normal,88
+8,Vibration,Building A - Floor 1,9/14/2025 6:05:32 PM,48.163,mm/s,Normal,22.1
+29,Noise,Building B - Floor 2,12/11/2025 9:36:59 AM,65.79,dB,Normal,54.2
+8,CO2,Basement,3/8/2025 11:16:25 PM,5.268,ppm,Normal,16.9
+26,Pressure,Building A - Floor 2,10/26/2025 2:45:08 PM,44.351,hPa,Normal,82.4
+46,Pressure,Roof,12/30/2025 10:15:44 AM,5.118,hPa,Normal,79.5
+29,Humidity,Roof,1/11/2025 4:06:29 AM,69.951,%RH,Normal,64.8
+1,Light,Building B - Floor 1,5/3/2025 10:30:28 AM,46.235,lux,Normal,84.4
+47,CO2,Building B - Floor 2,3/29/2025 6:55:23 AM,62.787,ppm,Normal,34.8
+29,Noise,Warehouse,6/21/2025 8:10:44 PM,-7.807,dB,Normal,60.4
+9,CO2,Basement,5/20/2025 8:55:51 AM,32.249,ppm,Normal,60.7
+31,Noise,Building B - Floor 1,8/10/2025 3:41:26 AM,33.733,dB,Normal,84.4
+2,Temperature,Building B - Floor 1,6/21/2025 5:20:31 PM,18.63,°C,Normal,61.9
+25,Temperature,Building A - Floor 2,8/2/2025 2:48:20 AM,9.912,°C,Normal,48.9
+39,Vibration,Parking Lot,4/10/2025 1:35:46 PM,46.398,mm/s,Normal,42.5
+42,Temperature,Building B - Floor 2,8/28/2025 7:02:11 AM,90.145,°C,Normal,51.1
+39,Humidity,Building B - Floor 2,10/26/2025 6:22:32 PM,55.206,%RH,Normal,45
+19,CO2,Building B - Floor 1,11/17/2025 5:02:51 AM,25.04,ppm,Normal,71.2
+46,Noise,Parking Lot,5/17/2025 5:04:15 PM,0.323,dB,Normal,56.8
+44,Motion,Building B - Floor 2,11/14/2025 9:06:22 PM,80.905,count,Normal,24
+36,Pressure,Building B - Floor 1,5/2/2025 5:50:55 PM,94.372,hPa,Normal,41.4
+15,Vibration,Warehouse,3/14/2025 4:39:29 AM,53.123,mm/s,Normal,75.9
+35,Light,Roof,5/10/2025 5:48:47 AM,72.294,lux,Normal,21.1
+45,Motion,Building B - Floor 1,11/14/2025 4:08:06 AM,96.349,count,Normal,86.9
+9,Temperature,Warehouse,6/29/2025 10:45:35 PM,2.445,°C,Normal,92.2
+16,Pressure,Building B - Floor 2,5/31/2025 12:02:42 PM,-3.237,hPa,Normal,99.3
+34,CO2,Building B - Floor 2,3/6/2025 12:44:45 AM,91.912,ppm,Normal,65.9
+13,Vibration,Roof,10/28/2025 4:40:44 PM,77.323,mm/s,Normal,97.8
+37,Noise,Building A - Floor 1,1/12/2025 1:28:32 AM,62.301,dB,Normal,36.3
+44,Noise,Building A - Floor 1,12/2/2025 7:35:25 AM,26.503,dB,Normal,51.6
+13,Motion,Building A - Floor 2,6/26/2025 12:01:15 PM,26.439,count,Normal,24.3
+44,Pressure,Warehouse,9/13/2025 7:17:22 AM,2.004,hPa,Normal,52.8
+23,Humidity,Parking Lot,10/6/2025 10:45:20 PM,22.531,%RH,Normal,17.6
+9,Vibration,Building B - Floor 2,2/24/2025 8:08:59 PM,98.951,mm/s,Normal,67.5
+18,CO2,Building A - Floor 2,6/7/2025 3:55:08 PM,66.155,ppm,Normal,51.1
+47,Vibration,Roof,3/3/2025 3:13:34 AM,-0.938,mm/s,Alert,69
+30,CO2,Roof,11/9/2025 4:56:05 PM,84.263,ppm,Normal,36.5
+3,Pressure,Warehouse,4/30/2025 10:02:03 PM,64.171,hPa,Normal,33.4
+44,Motion,Building A - Floor 1,12/15/2025 8:56:36 PM,76.383,count,Normal,50.6
+9,Vibration,Roof,12/28/2025 12:22:18 PM,73.678,mm/s,Alert,84
+38,Humidity,Building B - Floor 2,3/25/2025 5:04:26 AM,38.933,%RH,Normal,79.2
+47,Noise,Building A - Floor 1,8/13/2025 2:42:50 AM,6.216,dB,Normal,31.6
+26,CO2,Warehouse,4/2/2025 12:09:31 AM,-6.531,ppm,Normal,89
+17,Noise,Basement,7/15/2025 12:09:22 AM,47.305,dB,Normal,61.3
+38,Temperature,Building A - Floor 2,2/28/2025 4:31:31 AM,-0.082,°C,Normal,22.8
+16,Vibration,Building A - Floor 1,12/5/2025 4:24:03 PM,11.478,mm/s,Normal,85.1
+30,CO2,Building B - Floor 1,12/29/2025 4:16:16 AM,66.982,ppm,Normal,23.9
+30,Vibration,Building B - Floor 2,11/18/2025 1:37:11 PM,33.723,mm/s,Normal,38.1
+27,Humidity,Warehouse,5/10/2025 12:08:53 AM,31.522,%RH,Normal,59.1
+22,Light,Building B - Floor 1,9/12/2025 9:46:56 PM,83.779,lux,Normal,64.3
+3,Vibration,Basement,5/25/2025 3:55:39 AM,76.235,mm/s,Normal,45.6
+49,Vibration,Building A - Floor 2,7/31/2025 3:49:39 PM,8.152,mm/s,Normal,59.8
+40,Motion,Roof,2/25/2025 4:09:20 PM,98.015,count,Normal,32.8
+40,Motion,Warehouse,9/26/2025 9:35:48 AM,2.779,count,Normal,20.9
+41,Light,Basement,7/11/2025 11:49:52 AM,30.3,lux,Normal,44.1
+7,Humidity,Building B - Floor 2,1/7/2025 4:34:09 AM,41.72,%RH,Normal,37.6
+37,Noise,Building A - Floor 2,2/4/2025 2:01:31 AM,-5.29,dB,Normal,10.7
+32,Humidity,Roof,5/9/2025 6:15:04 AM,62.056,%RH,Alert,84.3
+4,CO2,Building A - Floor 2,10/30/2025 6:30:37 AM,-4.524,ppm,Normal,26.1
+20,CO2,Building A - Floor 1,7/18/2025 1:36:38 PM,79.054,ppm,Normal,18
+11,Vibration,Roof,8/26/2025 11:04:46 PM,6.617,mm/s,Normal,43.3
+44,Vibration,Building B - Floor 1,11/3/2025 12:43:23 PM,77.561,mm/s,Normal,53.5
+29,Humidity,Building B - Floor 1,2/15/2025 7:14:52 AM,-3.983,%RH,Normal,83.4
+48,CO2,Building B - Floor 2,9/10/2025 12:42:47 AM,32.134,ppm,Normal,46.4
+37,Motion,Building B - Floor 2,1/16/2025 6:47:51 PM,27.701,count,Normal,63.1
+40,Temperature,Basement,5/21/2025 5:43:33 PM,13.953,°C,Normal,88.1
+26,Pressure,Building B - Floor 2,12/22/2025 12:44:38 PM,93.278,hPa,Normal,88.3
+3,Humidity,Basement,12/25/2025 5:16:03 PM,27.612,%RH,Normal,56.4
+45,Light,Building B - Floor 1,10/13/2025 8:51:22 AM,-1.798,lux,Normal,80.9
+34,CO2,Building A - Floor 1,7/3/2025 2:54:39 AM,61.508,ppm,Normal,52.2
+28,Pressure,Building B - Floor 2,7/2/2025 11:12:50 PM,40.966,hPa,Normal,68.3
+28,Vibration,Roof,9/22/2025 9:02:14 AM,86.55,mm/s,Normal,71.8
+21,Light,Basement,10/30/2025 11:06:02 PM,85.172,lux,Normal,27.7
+31,Noise,Building B - Floor 1,11/3/2025 8:14:09 PM,21.195,dB,Normal,57.8
+25,Vibration,Parking Lot,2/26/2025 10:02:05 PM,82.382,mm/s,Normal,98.4
+30,Temperature,Roof,10/23/2025 5:05:34 AM,97.058,°C,Normal,86.4
+21,Noise,Building A - Floor 1,9/13/2025 5:02:14 PM,17.029,dB,Normal,51.6
+12,Temperature,Parking Lot,5/4/2025 5:05:34 AM,-6.552,°C,Normal,70.8
+17,Noise,Parking Lot,11/17/2025 5:15:58 AM,68.556,dB,Normal,65.6
+47,Noise,Roof,5/10/2025 12:59:36 AM,65.51,dB,Alert,87
+20,Humidity,Building A - Floor 1,6/8/2025 5:42:22 AM,-4.927,%RH,Normal,76
+10,Vibration,Building A - Floor 1,9/9/2025 4:02:07 AM,12.922,mm/s,Normal,10.2
+8,Noise,Building A - Floor 1,11/17/2025 5:23:20 AM,48.533,dB,Normal,19.5
+21,CO2,Roof,10/1/2025 10:44:55 AM,6.608,ppm,Normal,44
+40,Humidity,Building A - Floor 1,10/22/2025 12:12:25 AM,30.775,%RH,Normal,78.5
+1,Motion,Basement,1/9/2025 2:57:12 PM,-1.427,count,Normal,69.6
+39,Humidity,Warehouse,11/22/2025 4:21:10 PM,1.362,%RH,Normal,71.6
+45,Noise,Roof,10/22/2025 5:07:15 AM,-2.32,dB,Normal,85.6
+35,Noise,Building B - Floor 2,5/9/2025 2:02:23 AM,95.605,dB,Alert,48.8
+12,CO2,Building B - Floor 1,3/17/2025 3:26:23 PM,56.633,ppm,Normal,60.6
+9,Vibration,Warehouse,8/26/2025 2:20:13 PM,48.008,mm/s,Normal,22.6
+22,Humidity,Building A - Floor 1,2/3/2025 1:49:45 PM,59.089,%RH,Normal,49.6
+3,CO2,Building A - Floor 2,11/28/2025 3:06:58 PM,0.785,ppm,Normal,30.6
+6,Noise,Building A - Floor 2,6/9/2025 5:33:57 PM,36.446,dB,Normal,25.1
+12,Light,Roof,1/16/2025 12:10:00 PM,59.586,lux,Normal,32.3
+16,Temperature,Building A - Floor 2,8/24/2025 10:10:26 PM,89.316,°C,Normal,17.4
+46,CO2,Building B - Floor 2,8/5/2025 8:34:57 AM,52.884,ppm,Normal,89.2
+17,Motion,Roof,6/22/2025 8:14:50 AM,18.531,count,Normal,78.7
+43,Light,Parking Lot,5/6/2025 7:05:53 PM,45.586,lux,Normal,18.8
+1,Noise,Basement,4/27/2025 10:21:12 PM,92.44,dB,Normal,90.9
+5,Pressure,Parking Lot,10/19/2025 10:39:52 PM,39.119,hPa,Normal,87.8
+47,Pressure,Building B - Floor 2,3/4/2025 6:45:52 PM,74.399,hPa,Normal,78.1
+20,Vibration,Building A - Floor 2,1/21/2025 5:56:44 AM,46.24,mm/s,Normal,27.2
+19,Vibration,Roof,5/11/2025 4:15:15 PM,57.197,mm/s,Normal,69.6
+47,Temperature,Building A - Floor 2,3/29/2025 12:25:34 PM,56.789,°C,Normal,95.7
+39,Temperature,Building A - Floor 1,11/3/2025 1:21:34 AM,73.628,°C,Normal,13.6
+7,Temperature,Building B - Floor 2,7/12/2025 4:25:19 PM,17.414,°C,Normal,78
+27,Noise,Roof,7/25/2025 3:49:18 PM,39.803,dB,Normal,72
+39,Temperature,Building A - Floor 2,10/30/2025 1:25:51 PM,62.886,°C,Normal,36.4
+15,Motion,Basement,6/16/2025 11:13:41 AM,38.71,count,Normal,31.4
+37,Temperature,Building B - Floor 1,7/16/2025 4:34:25 AM,36.255,°C,Alert,80.2
+23,Pressure,Building B - Floor 2,12/18/2025 7:19:32 PM,17.938,hPa,Normal,64.5
+18,Motion,Roof,4/9/2025 2:48:34 PM,43.511,count,Normal,49
+7,Vibration,Basement,5/22/2025 6:02:53 AM,11.382,mm/s,Normal,43.6
+28,Light,Warehouse,11/28/2025 4:35:39 AM,61.222,lux,Normal,62.5
+18,Noise,Warehouse,2/9/2025 5:41:20 AM,19.915,dB,Normal,39.8
+20,Temperature,Roof,2/11/2025 2:29:49 PM,84.971,°C,Normal,61.9
+41,Pressure,Parking Lot,1/24/2025 11:27:47 AM,54.795,hPa,Normal,19.6
+3,Humidity,Warehouse,3/29/2025 6:03:41 PM,31.942,%RH,Normal,96.1
+13,Noise,Building B - Floor 2,4/3/2025 10:58:42 PM,30.911,dB,Normal,66.5
+30,CO2,Building B - Floor 2,11/10/2025 8:12:21 AM,9.182,ppm,Normal,59.8
+46,Vibration,Parking Lot,5/13/2025 12:10:32 AM,37.83,mm/s,Normal,29.7
+21,Noise,Basement,3/9/2025 5:19:59 PM,17.17,dB,Normal,65.9
+44,Vibration,Building B - Floor 1,5/8/2025 9:36:41 AM,30.372,mm/s,Normal,90.6
+1,CO2,Building B - Floor 2,11/12/2025 4:50:37 AM,63.475,ppm,Normal,99
+49,Pressure,Building B - Floor 1,10/29/2025 5:41:53 PM,-4.437,hPa,Normal,47.8
+12,Humidity,Building B - Floor 2,7/14/2025 10:15:05 AM,-8.717,%RH,Normal,45.2
+38,Temperature,Basement,6/12/2025 9:58:30 PM,36.208,°C,Normal,61.8
+37,Pressure,Parking Lot,12/28/2025 12:12:34 AM,16.456,hPa,Normal,25
+47,CO2,Basement,9/22/2025 10:45:02 PM,72.546,ppm,Normal,93.4
+42,Vibration,Building A - Floor 2,2/26/2025 10:44:19 PM,-0.706,mm/s,Normal,65.8
+2,Temperature,Roof,6/8/2025 6:50:39 PM,25.022,°C,Normal,87.7
+36,Noise,Warehouse,12/27/2025 7:38:41 AM,95.052,dB,Normal,91.7
+13,Humidity,Basement,6/21/2025 2:38:26 AM,9.68,%RH,Normal,35.5
+47,Vibration,Building B - Floor 2,1/29/2025 5:16:14 AM,99.661,mm/s,Normal,29.9
+6,Pressure,Basement,12/21/2025 9:48:00 AM,53.957,hPa,Normal,40.6
+2,Vibration,Basement,3/23/2025 5:27:52 AM,88.343,mm/s,Normal,99.2
+15,Light,Basement,9/10/2025 4:58:51 AM,99.707,lux,Normal,93.6
+27,Motion,Warehouse,10/29/2025 7:38:36 PM,99.573,count,Normal,86.1
+15,Temperature,Parking Lot,3/17/2025 1:38:38 AM,38.173,°C,Normal,68.1
+27,Noise,Warehouse,1/26/2025 7:05:48 AM,14.053,dB,Normal,99
+25,Pressure,Parking Lot,12/4/2025 1:38:02 AM,92.684,hPa,Normal,35.4
+47,Motion,Building B - Floor 2,11/9/2025 12:41:53 AM,50.729,count,Normal,89.8
+2,Light,Building A - Floor 2,12/3/2025 4:25:09 AM,34.232,lux,Normal,99
+14,Noise,Roof,9/1/2025 9:48:22 AM,38.224,dB,Normal,43.6
+28,Light,Building B - Floor 2,4/23/2025 8:18:02 AM,68.767,lux,Normal,24.6
+21,Pressure,Warehouse,2/10/2025 1:21:14 AM,60.459,hPa,Normal,38.7
+35,Temperature,Parking Lot,4/5/2025 2:09:22 AM,4.274,°C,Normal,95.1
+33,Motion,Building A - Floor 2,10/13/2025 2:38:58 AM,27.732,count,Normal,24.8
+1,Pressure,Building B - Floor 1,6/19/2025 1:40:50 AM,13.238,hPa,Normal,71.1
+48,Pressure,Parking Lot,10/3/2025 7:09:18 PM,79.298,hPa,Normal,23.7
+25,CO2,Parking Lot,9/15/2025 6:17:32 PM,31.226,ppm,Normal,42.7
+27,Noise,Parking Lot,9/7/2025 1:56:50 PM,99.197,dB,Normal,95.1
+22,Motion,Roof,1/18/2025 6:35:44 AM,6.623,count,Normal,82.5
+49,Humidity,Basement,2/14/2025 11:49:45 AM,-4.661,%RH,Normal,79.7
+49,CO2,Building A - Floor 1,8/9/2025 4:32:21 PM,8.395,ppm,Normal,95.5
+1,CO2,Parking Lot,7/14/2025 11:41:41 AM,84.16,ppm,Normal,34
+34,Vibration,Building A - Floor 2,5/11/2025 12:36:07 AM,87.266,mm/s,Normal,56.3
+42,Pressure,Warehouse,10/6/2025 9:00:48 AM,7.656,hPa,Normal,73.9
+47,Light,Basement,8/6/2025 8:57:46 PM,38.951,lux,Normal,44.8
+42,Temperature,Building B - Floor 1,4/10/2025 10:39:01 AM,68.774,°C,Normal,37.5
+36,Vibration,Building A - Floor 2,10/19/2025 8:18:50 PM,76.788,mm/s,Normal,86
+30,Temperature,Building B - Floor 1,11/2/2025 2:56:37 PM,60.038,°C,Normal,60.8
+49,Humidity,Building A - Floor 2,7/15/2025 9:36:10 PM,44.986,%RH,Normal,52.3
+40,Light,Building B - Floor 1,3/10/2025 1:27:00 PM,56.456,lux,Normal,58.4
+12,Motion,Roof,8/23/2025 10:51:39 PM,-2.395,count,Normal,64.1
+6,Humidity,Building B - Floor 2,4/8/2025 2:13:36 AM,35.801,%RH,Normal,46.1
+38,Pressure,Building A - Floor 2,6/12/2025 1:44:38 PM,75.84,hPa,Normal,45.9
+37,Pressure,Building B - Floor 1,1/12/2025 11:15:28 AM,51.723,hPa,Normal,55.2
+40,Motion,Building B - Floor 1,5/20/2025 6:29:51 PM,92.409,count,Normal,15.6
+27,Humidity,Building B - Floor 1,10/15/2025 12:11:05 AM,3.648,%RH,Normal,11.6
+46,Temperature,Basement,10/19/2025 11:05:30 AM,58.724,°C,Alert,77.6
+23,Noise,Building B - Floor 1,3/20/2025 4:50:31 PM,81.535,dB,Normal,67.6
+49,Noise,Parking Lot,4/12/2025 2:34:23 AM,31.863,dB,Normal,39.9
+4,Humidity,Building B - Floor 1,1/11/2025 10:39:15 AM,57.856,%RH,Normal,29.4
+18,Pressure,Basement,7/20/2025 3:16:41 PM,43.181,hPa,Normal,91.8
+28,Noise,Warehouse,4/21/2025 3:03:42 PM,33.646,dB,Normal,37.2
+35,Light,Basement,1/7/2025 9:19:12 AM,0.832,lux,Normal,70.3
+30,Pressure,Parking Lot,5/20/2025 7:29:53 AM,92.922,hPa,Normal,29.5
+5,Temperature,Roof,5/9/2025 8:26:11 PM,53.91,°C,Normal,40.9
+41,Vibration,Building B - Floor 2,7/19/2025 7:55:14 PM,25.947,mm/s,Normal,77.6
+1,CO2,Warehouse,9/30/2025 3:43:54 PM,31.16,ppm,Normal,33.6
+16,Light,Building B - Floor 1,1/17/2025 7:56:58 PM,62.344,lux,Normal,92.1
+17,Pressure,Building A - Floor 2,7/16/2025 1:01:24 PM,-9.16,hPa,Normal,84.7
+31,CO2,Building A - Floor 1,7/24/2025 4:01:48 PM,29.824,ppm,Normal,96.5
+45,Vibration,Parking Lot,4/20/2025 7:36:03 AM,51.546,mm/s,Normal,73.1
+30,Pressure,Basement,7/16/2025 7:37:49 AM,95.472,hPa,Normal,36.4
+26,Humidity,Building B - Floor 1,6/30/2025 2:21:08 AM,8.166,%RH,Normal,74.1
+39,Motion,Building A - Floor 1,1/14/2025 7:22:50 AM,19.252,count,Normal,16.9
+15,Light,Building A - Floor 2,12/5/2025 11:53:58 PM,22.36,lux,Normal,72.3
+26,Noise,Building B - Floor 1,12/13/2025 2:14:55 AM,90.021,dB,Normal,76.1
+38,Temperature,Building B - Floor 1,2/24/2025 1:33:21 AM,27.866,°C,Normal,75
+47,CO2,Parking Lot,7/12/2025 12:08:01 PM,47.518,ppm,Normal,99.5
+42,Vibration,Building A - Floor 1,1/6/2025 7:14:41 PM,54.025,mm/s,Normal,94.3
+30,Vibration,Parking Lot,7/27/2025 9:16:23 PM,18.419,mm/s,Normal,68.6
+16,Pressure,Basement,7/14/2025 10:27:31 PM,38.853,hPa,Normal,21.4
+22,Light,Building A - Floor 2,1/17/2025 1:15:24 PM,-2.502,lux,Normal,32.5
+14,Humidity,Basement,4/4/2025 8:07:33 PM,44.604,%RH,Normal,57.1
+20,Light,Building A - Floor 2,6/17/2025 2:55:07 PM,22.181,lux,Normal,49
+5,Pressure,Building B - Floor 1,3/9/2025 2:09:12 PM,84.555,hPa,Normal,59.8
+47,Noise,Warehouse,5/14/2025 8:14:05 AM,17.585,dB,Normal,86.8
+24,Light,Building B - Floor 2,8/8/2025 7:20:09 AM,29.884,lux,Normal,80.2
+21,Light,Building A - Floor 1,7/17/2025 5:11:04 AM,50.711,lux,Normal,23.2
+40,Motion,Parking Lot,6/17/2025 7:36:46 PM,-9.964,count,Normal,34.7
+20,Humidity,Building B - Floor 2,11/22/2025 10:04:58 PM,52.205,%RH,Normal,30.3
+19,Temperature,Building A - Floor 1,2/24/2025 8:33:24 PM,15.667,°C,Normal,97.1
+24,Pressure,Roof,3/7/2025 7:15:00 PM,46.833,hPa,Normal,34.7
+22,Light,Roof,7/15/2025 12:50:17 PM,91.537,lux,Normal,47.6
+8,Noise,Building B - Floor 2,11/27/2025 10:22:26 PM,91.01,dB,Normal,83.9
+41,Humidity,Warehouse,11/3/2025 12:15:35 PM,29.064,%RH,Normal,42.9
+37,CO2,Building A - Floor 2,5/7/2025 4:49:12 AM,42.939,ppm,Normal,73.7
+8,Temperature,Building B - Floor 2,6/28/2025 7:07:49 PM,60.636,°C,Normal,17.7
+31,Pressure,Building B - Floor 1,9/11/2025 8:31:50 PM,14.3,hPa,Normal,42.4
+48,Motion,Basement,12/20/2025 11:35:30 PM,44.565,count,Normal,17.6
+20,Humidity,Roof,10/14/2025 5:46:05 PM,65.891,%RH,Normal,39.7
+33,CO2,Roof,10/10/2025 11:08:40 AM,30.656,ppm,Normal,63
+22,Humidity,Warehouse,11/20/2025 12:24:59 AM,55.47,%RH,Normal,51.1
+41,CO2,Parking Lot,3/23/2025 12:46:53 PM,45.256,ppm,Normal,60.9
+19,Light,Building B - Floor 1,5/24/2025 6:46:48 PM,89.397,lux,Normal,68.3
+1,Light,Building A - Floor 1,3/9/2025 9:00:24 AM,18.586,lux,Normal,31.7
+18,Vibration,Roof,7/14/2025 11:48:34 PM,86.259,mm/s,Normal,59
+20,Vibration,Building A - Floor 1,12/1/2025 10:53:00 PM,99.437,mm/s,Normal,26.8
+14,Vibration,Building B - Floor 2,2/4/2025 12:25:52 AM,59.293,mm/s,Normal,31.4
+42,Temperature,Building B - Floor 2,1/4/2025 2:07:55 PM,25.688,°C,Normal,50.7
+25,Vibration,Building B - Floor 1,3/4/2025 4:09:29 PM,10.895,mm/s,Normal,56.6
+40,Pressure,Warehouse,5/19/2025 7:53:11 PM,37.014,hPa,Normal,46.9
+41,Humidity,Building A - Floor 2,2/4/2025 9:03:13 PM,78.07,%RH,Normal,39.2
+29,Motion,Building B - Floor 2,2/19/2025 9:25:01 AM,-3.655,count,Alert,61.2
+31,Pressure,Basement,6/16/2025 5:26:09 PM,58.794,hPa,Normal,77.9
+43,CO2,Roof,3/18/2025 3:05:21 AM,36.876,ppm,Normal,70.8
+4,Humidity,Roof,10/7/2025 2:00:33 AM,98.566,%RH,Normal,21.3
+47,Pressure,Warehouse,1/30/2025 6:10:37 PM,38.085,hPa,Normal,31.9
+46,Noise,Building A - Floor 1,3/16/2025 10:27:20 AM,16.032,dB,Normal,62.6
+24,Pressure,Building B - Floor 2,1/5/2025 12:09:28 AM,-8.635,hPa,Normal,21.5
+38,Humidity,Basement,4/27/2025 6:10:40 AM,10.47,%RH,Normal,40.1
+43,Temperature,Building A - Floor 2,10/12/2025 12:10:19 AM,37.462,°C,Alert,34.3
+27,CO2,Building B - Floor 1,3/13/2025 8:48:46 AM,12.346,ppm,Normal,93.3
+11,Light,Building B - Floor 2,8/6/2025 2:23:35 PM,51.844,lux,Normal,33.5
+25,CO2,Basement,12/30/2025 11:06:50 AM,78.624,ppm,Alert,70
+36,Light,Building A - Floor 2,7/27/2025 1:15:03 AM,89.176,lux,Normal,88.8
+6,Light,Building B - Floor 1,6/16/2025 3:42:56 PM,99.945,lux,Normal,98.1
+3,Motion,Basement,1/16/2025 5:22:12 PM,87.555,count,Normal,53.7
+46,CO2,Building A - Floor 1,7/8/2025 12:46:30 PM,99.736,ppm,Normal,94
+34,Motion,Parking Lot,8/22/2025 1:05:02 AM,63.689,count,Normal,53.8
+29,CO2,Building A - Floor 1,6/25/2025 6:54:56 AM,62.914,ppm,Normal,77.4
+46,CO2,Building B - Floor 2,5/31/2025 8:58:22 PM,93.933,ppm,Normal,60.5
+33,Vibration,Roof,2/16/2025 8:49:44 PM,-3.385,mm/s,Normal,54.2
+17,Pressure,Basement,12/17/2025 6:02:02 AM,3.045,hPa,Normal,86.3
+22,Humidity,Building B - Floor 2,2/19/2025 6:39:14 PM,17.656,%RH,Normal,17.6
+14,Pressure,Roof,8/11/2025 12:22:35 PM,33.236,hPa,Normal,65.7
+10,CO2,Parking Lot,5/16/2025 8:20:15 PM,71.92,ppm,Normal,62.1
+31,Humidity,Building A - Floor 2,12/11/2025 6:29:54 PM,60.634,%RH,Normal,65
+32,Vibration,Building A - Floor 2,6/6/2025 1:00:58 PM,78.686,mm/s,Normal,76.5
+37,Light,Roof,8/1/2025 6:32:33 AM,70.336,lux,Alert,92.5
+14,Pressure,Building A - Floor 2,1/24/2025 11:12:38 AM,51.761,hPa,Normal,48.8
+41,Noise,Basement,2/27/2025 1:52:35 AM,17.539,dB,Normal,70.8
+9,Noise,Parking Lot,11/18/2025 3:42:41 AM,59.34,dB,Normal,94.8
+45,Light,Basement,2/9/2025 10:25:20 PM,-6.091,lux,Normal,56.3
+13,CO2,Parking Lot,7/1/2025 10:14:13 AM,37.667,ppm,Normal,48.2
+40,CO2,Warehouse,9/19/2025 9:56:06 PM,58.804,ppm,Normal,30.2
+7,Light,Roof,2/4/2025 2:28:44 AM,0.244,lux,Normal,68.6
+14,Humidity,Parking Lot,7/22/2025 3:55:35 PM,88.075,%RH,Normal,81.2
+19,Motion,Warehouse,10/27/2025 2:02:38 PM,79.7,count,Normal,41.8
+10,Temperature,Building A - Floor 2,5/7/2025 12:40:06 AM,29.415,°C,Normal,80
+33,Pressure,Parking Lot,10/19/2025 5:44:18 AM,13.13,hPa,Normal,59.6
+1,Light,Building B - Floor 1,2/25/2025 6:31:54 PM,54.763,lux,Normal,76.7
+40,Pressure,Building A - Floor 2,7/14/2025 2:39:56 AM,82.357,hPa,Normal,64.8
+22,Vibration,Building A - Floor 1,11/24/2025 8:15:50 PM,35.601,mm/s,Normal,85.4
+44,Humidity,Building B - Floor 1,12/27/2025 4:58:33 AM,66.698,%RH,Normal,37.7
+48,Vibration,Building B - Floor 1,7/28/2025 12:19:12 PM,0.588,mm/s,Normal,50
+25,Light,Building A - Floor 1,3/20/2025 3:46:27 AM,44.158,lux,Normal,47
+4,Temperature,Basement,10/17/2025 3:32:12 AM,46.144,°C,Normal,17.2
+23,Light,Basement,11/20/2025 6:50:08 AM,74.714,lux,Normal,65.2
+44,Pressure,Warehouse,2/23/2025 12:18:31 PM,-2.534,hPa,Normal,81
+31,Noise,Building B - Floor 2,5/3/2025 9:03:53 AM,34.839,dB,Normal,77.8
+44,Humidity,Basement,2/18/2025 6:47:47 PM,73.097,%RH,Normal,51.1
+13,Pressure,Building A - Floor 2,1/18/2025 4:32:01 AM,66.193,hPa,Normal,70.5
+21,Vibration,Basement,4/6/2025 10:10:59 PM,47.114,mm/s,Normal,96.9
+7,Vibration,Basement,7/12/2025 1:15:53 AM,30.635,mm/s,Normal,98.4
+8,Noise,Parking Lot,5/23/2025 7:31:45 PM,34.185,dB,Normal,55.4
+6,CO2,Basement,4/7/2025 9:16:15 PM,-4.798,ppm,Normal,25.2
+39,Light,Building B - Floor 1,12/14/2025 10:50:27 AM,35.847,lux,Normal,72.8
+49,Vibration,Building A - Floor 2,8/28/2025 7:41:53 PM,59.435,mm/s,Normal,89.9
+10,Motion,Building B - Floor 1,1/13/2025 12:29:52 AM,74.383,count,Normal,61.4
+23,Motion,Warehouse,10/24/2025 3:05:41 PM,59.545,count,Normal,93.8
+38,Motion,Building A - Floor 1,4/8/2025 12:07:54 AM,72.328,count,Normal,43.1
+48,Pressure,Building B - Floor 2,10/27/2025 5:57:07 AM,8.885,hPa,Normal,19.2
+1,CO2,Parking Lot,9/8/2025 6:47:16 PM,52.209,ppm,Normal,72.3
+39,Vibration,Building B - Floor 1,1/1/2025 9:17:30 PM,-8.297,mm/s,Normal,42.6
+11,Vibration,Building A - Floor 2,1/21/2025 1:28:57 PM,5.075,mm/s,Normal,81.6
+44,CO2,Parking Lot,1/17/2025 8:51:03 AM,-6.107,ppm,Normal,48
+21,Noise,Building A - Floor 1,8/17/2025 9:50:17 PM,33.197,dB,Normal,96.3
+19,Motion,Building B - Floor 1,3/19/2025 9:18:38 AM,48.309,count,Normal,37.9
+2,Vibration,Basement,1/10/2025 12:54:26 AM,59.191,mm/s,Normal,61.2
+46,Temperature,Building A - Floor 1,11/19/2025 8:32:29 PM,1.187,°C,Normal,90.2
+46,Light,Building A - Floor 2,6/17/2025 9:48:00 PM,38.637,lux,Normal,56.6
+9,Temperature,Building B - Floor 2,3/9/2025 7:06:22 PM,63.62,°C,Normal,22.5
+20,Light,Building A - Floor 2,5/1/2025 2:56:40 AM,22.739,lux,Normal,22.4
+27,Vibration,Warehouse,12/24/2025 8:59:00 AM,18.908,mm/s,Normal,56.4
+23,Temperature,Parking Lot,6/13/2025 7:07:20 AM,-7.78,°C,Normal,51.7
+20,Motion,Basement,11/11/2025 4:36:05 AM,29.202,count,Normal,50.6
+44,Motion,Building B - Floor 2,6/15/2025 11:03:49 PM,99.025,count,Normal,25.4
+5,Motion,Warehouse,5/15/2025 10:27:40 PM,41.547,count,Normal,83
+46,Temperature,Building A - Floor 2,5/7/2025 10:12:26 PM,95.411,°C,Normal,45.7
+34,Vibration,Parking Lot,9/22/2025 8:17:15 AM,47.333,mm/s,Normal,57.7
+3,Noise,Building B - Floor 2,6/29/2025 7:02:42 PM,61.181,dB,Normal,15.7
+29,CO2,Basement,3/15/2025 10:42:27 AM,-6.605,ppm,Normal,20.5
+7,Pressure,Roof,4/9/2025 5:25:16 AM,36.961,hPa,Normal,60.5
+4,Temperature,Building B - Floor 2,4/14/2025 5:50:56 AM,-5.544,°C,Normal,13
+3,Humidity,Warehouse,11/17/2025 12:06:27 AM,61.406,%RH,Normal,48.2
+4,Pressure,Parking Lot,5/9/2025 1:31:19 AM,60.417,hPa,Alert,97.1
+31,Humidity,Building B - Floor 2,3/16/2025 5:31:29 PM,64.367,%RH,Normal,40.4
+45,Motion,Building B - Floor 2,9/20/2025 4:33:16 AM,19.828,count,Normal,67.7
+43,CO2,Building A - Floor 1,5/27/2025 10:12:05 AM,61.181,ppm,Normal,64.2
+18,Temperature,Basement,2/27/2025 6:17:21 PM,9.015,°C,Normal,45.8
+24,Temperature,Building A - Floor 2,8/11/2025 1:31:44 PM,58.461,°C,Normal,52.5
+14,CO2,Building B - Floor 1,2/6/2025 4:37:27 AM,22.609,ppm,Normal,18.6
+2,Humidity,Warehouse,3/15/2025 2:05:29 PM,50.323,%RH,Normal,55.2
+43,Motion,Building A - Floor 1,5/13/2025 6:31:37 PM,6.023,count,Normal,42.1
+3,Light,Warehouse,9/12/2025 3:17:03 AM,12.733,lux,Normal,21.2
+29,Motion,Parking Lot,2/27/2025 7:06:35 AM,-8.843,count,Normal,84.5
+40,Humidity,Basement,9/26/2025 1:35:48 PM,22.509,%RH,Normal,61.7
+31,Vibration,Building A - Floor 1,9/8/2025 1:02:01 PM,93.302,mm/s,Normal,63.5
+49,CO2,Parking Lot,2/18/2025 4:45:31 PM,48.829,ppm,Alert,13.8
+24,Vibration,Parking Lot,1/3/2025 9:17:07 PM,32.422,mm/s,Normal,55.8
+13,Light,Building A - Floor 2,12/17/2025 5:39:50 AM,82.139,lux,Normal,19.9
+2,Humidity,Roof,7/3/2025 2:43:50 AM,32.711,%RH,Normal,65.7
+4,Vibration,Building B - Floor 2,4/21/2025 7:34:02 AM,20.276,mm/s,Normal,63.7
+43,Noise,Roof,1/31/2025 3:39:09 PM,78.438,dB,Normal,60.5
+29,Light,Building A - Floor 2,4/17/2025 4:57:10 PM,71.136,lux,Normal,86.9
+29,Humidity,Basement,9/3/2025 6:45:21 PM,39.873,%RH,Normal,60.3
+2,Vibration,Building A - Floor 2,10/26/2025 10:06:08 PM,89.433,mm/s,Normal,27.1
+32,Temperature,Building A - Floor 1,5/15/2025 1:06:42 AM,67.662,°C,Normal,50
+10,Pressure,Building A - Floor 1,7/12/2025 3:57:26 AM,21.818,hPa,Normal,22.8
+30,CO2,Building A - Floor 1,9/23/2025 9:20:15 AM,40.096,ppm,Normal,45.8
+12,Vibration,Building A - Floor 2,8/17/2025 4:14:58 PM,85.385,mm/s,Normal,57
+2,Light,Building A - Floor 2,1/26/2025 3:00:20 PM,98.954,lux,Normal,54.8
+22,Humidity,Building B - Floor 1,8/3/2025 8:58:54 AM,33.796,%RH,Normal,65.1
+49,Temperature,Building A - Floor 1,4/24/2025 7:19:49 PM,40.957,°C,Normal,70
+36,Noise,Building B - Floor 2,10/24/2025 12:33:04 PM,81.298,dB,Normal,52.3
+28,Motion,Building A - Floor 2,2/17/2025 2:51:33 AM,82.726,count,Normal,74.6
+30,Noise,Warehouse,12/11/2025 2:49:44 AM,14.805,dB,Normal,58.7
+28,Noise,Warehouse,9/10/2025 6:07:14 PM,26.236,dB,Normal,93.4
+25,Humidity,Building A - Floor 2,11/28/2025 1:29:09 PM,99.432,%RH,Alert,36.7
+43,CO2,Building A - Floor 1,10/25/2025 6:11:54 AM,18.803,ppm,Normal,34.1
+20,Light,Warehouse,3/16/2025 8:37:25 PM,83.984,lux,Normal,63.6
+44,CO2,Basement,12/13/2025 7:30:16 AM,-1.807,ppm,Normal,30
+11,Noise,Basement,8/12/2025 2:15:47 PM,56.755,dB,Normal,82.6
+16,CO2,Building B - Floor 1,4/1/2025 4:30:30 AM,12.668,ppm,Normal,62
+13,Temperature,Building A - Floor 2,5/12/2025 7:41:05 PM,46.296,°C,Normal,44
+32,Vibration,Building A - Floor 2,9/3/2025 12:29:30 AM,-7.49,mm/s,Alert,64.1
+40,Humidity,Basement,1/17/2025 8:41:16 AM,86.539,%RH,Normal,87.5
+35,Humidity,Warehouse,7/20/2025 1:59:31 PM,22.823,%RH,Normal,53.7
+20,Motion,Roof,1/24/2025 8:23:46 PM,28.951,count,Normal,39.6
+26,Humidity,Parking Lot,12/9/2025 9:19:57 AM,42.886,%RH,Normal,64.3
+33,Pressure,Building A - Floor 1,5/16/2025 5:31:16 AM,16.183,hPa,Normal,28.1
+18,Motion,Building A - Floor 1,2/12/2025 10:23:50 PM,46.705,count,Normal,69.1
+36,Humidity,Building A - Floor 1,8/15/2025 3:34:43 AM,91.26,%RH,Normal,81.9
+32,Light,Basement,11/2/2025 5:13:52 AM,70.534,lux,Normal,78.2
+48,Vibration,Building A - Floor 2,11/29/2025 4:50:35 AM,-6.095,mm/s,Normal,42.9
+33,Humidity,Building B - Floor 2,6/26/2025 5:34:53 AM,21.276,%RH,Normal,66.7
+1,CO2,Parking Lot,8/28/2025 9:50:03 AM,7.913,ppm,Normal,46.3
+15,Vibration,Basement,8/1/2025 8:07:13 AM,31.324,mm/s,Alert,85.9
+18,Vibration,Building A - Floor 2,12/15/2025 6:53:08 AM,87.018,mm/s,Normal,28.8
+35,Light,Building B - Floor 2,6/23/2025 10:23:15 AM,19.15,lux,Normal,21.6
+14,Pressure,Building A - Floor 1,3/20/2025 12:50:48 AM,79.662,hPa,Normal,77.8
+41,Motion,Basement,11/26/2025 1:49:32 AM,64.012,count,Normal,82.5
+32,CO2,Warehouse,11/13/2025 1:58:49 AM,38.181,ppm,Normal,86.1
+24,Motion,Building A - Floor 2,9/14/2025 5:18:14 PM,97.594,count,Alert,68.9
+41,CO2,Building B - Floor 1,1/26/2025 6:19:53 AM,74.382,ppm,Normal,16.9
+22,Temperature,Building B - Floor 2,6/17/2025 9:19:54 PM,50.599,°C,Normal,82.3
+32,CO2,Roof,10/15/2025 4:05:44 PM,66.728,ppm,Normal,83.2
+14,Vibration,Parking Lot,7/19/2025 3:13:13 PM,60.824,mm/s,Normal,58.9
+17,Noise,Building A - Floor 2,3/31/2025 8:10:34 AM,95.46,dB,Normal,93.1
+26,Noise,Roof,8/19/2025 12:01:51 AM,87.016,dB,Alert,99.7
+19,Pressure,Building A - Floor 1,1/31/2025 4:37:24 AM,9.959,hPa,Alert,13
+26,Noise,Building A - Floor 2,12/30/2025 2:22:07 AM,18.663,dB,Normal,43.4
+44,Light,Warehouse,7/20/2025 9:02:56 AM,87.645,lux,Normal,74.7
+43,Temperature,Basement,2/25/2025 8:14:23 PM,35.366,°C,Normal,14
+33,Pressure,Building A - Floor 2,4/4/2025 2:48:35 PM,94.174,hPa,Normal,70.7
+7,Pressure,Building B - Floor 2,10/27/2025 7:35:45 PM,49.881,hPa,Normal,61.8
+24,Temperature,Building A - Floor 2,2/9/2025 6:38:06 AM,34.766,°C,Normal,52
+16,Vibration,Basement,5/1/2025 5:29:29 AM,81.383,mm/s,Normal,43.5
+5,CO2,Parking Lot,6/5/2025 1:37:04 AM,10.468,ppm,Normal,52.2
+46,Motion,Building A - Floor 2,3/28/2025 10:14:13 AM,60.506,count,Normal,59.4
+19,Temperature,Building A - Floor 1,5/12/2025 4:40:48 AM,67.447,°C,Normal,91.2
+36,Temperature,Building B - Floor 1,4/23/2025 10:56:05 PM,-7.815,°C,Normal,57.2
+5,Vibration,Building A - Floor 1,9/19/2025 8:32:04 PM,33.804,mm/s,Normal,90
+37,CO2,Warehouse,5/6/2025 5:05:14 AM,32.114,ppm,Normal,34.7
+22,Light,Building B - Floor 1,11/6/2025 6:04:22 PM,81.246,lux,Normal,10.3
+39,Pressure,Building B - Floor 1,5/5/2025 8:16:49 PM,38.919,hPa,Normal,57.1
+33,Light,Building B - Floor 1,5/3/2025 12:38:48 PM,10.211,lux,Normal,67.5
+10,Noise,Parking Lot,6/12/2025 3:21:07 AM,36.515,dB,Normal,70.3
+4,CO2,Basement,7/6/2025 5:26:27 PM,55.321,ppm,Normal,20.9
+6,Vibration,Building B - Floor 2,1/26/2025 12:35:43 AM,8.361,mm/s,Normal,35.6
+3,Humidity,Roof,7/17/2025 2:20:27 AM,67.328,%RH,Normal,29.9
+33,CO2,Basement,7/25/2025 4:45:30 AM,70.286,ppm,Normal,91.6
+35,Temperature,Parking Lot,10/11/2025 12:58:27 PM,-9.969,°C,Normal,90.3
+9,Vibration,Building B - Floor 2,6/1/2025 7:04:10 PM,58.728,mm/s,Normal,73.2
+18,Humidity,Building A - Floor 2,2/5/2025 1:31:26 PM,6.367,%RH,Normal,98.5
+34,Pressure,Roof,1/27/2025 2:40:29 PM,12.748,hPa,Normal,26.4
+24,Humidity,Basement,4/28/2025 12:17:09 PM,19.239,%RH,Normal,31.1
+48,Humidity,Parking Lot,12/6/2025 6:40:21 AM,26.415,%RH,Normal,21.1
+14,Temperature,Building B - Floor 2,11/6/2025 12:24:31 PM,74.16,°C,Normal,95.3
+33,Humidity,Building B - Floor 2,11/9/2025 5:38:32 AM,69.633,%RH,Normal,72.3
+12,Humidity,Building A - Floor 2,4/24/2025 3:39:34 PM,22.204,%RH,Normal,89.1
+48,Motion,Roof,8/6/2025 12:09:57 PM,60.286,count,Normal,98.9
+32,Pressure,Building A - Floor 1,5/1/2025 6:52:54 PM,-2.093,hPa,Normal,53.4
+2,Humidity,Building A - Floor 2,11/2/2025 7:21:42 PM,87.432,%RH,Alert,56.8
+47,CO2,Parking Lot,1/13/2025 3:52:34 AM,2.624,ppm,Normal,77.2
+27,Temperature,Building A - Floor 2,7/15/2025 9:51:30 PM,72.182,°C,Normal,54.2
+24,Vibration,Warehouse,8/5/2025 4:34:46 PM,94.409,mm/s,Normal,25.2
+34,Motion,Building A - Floor 2,8/17/2025 2:26:24 AM,28.543,count,Normal,74.6
+17,Vibration,Basement,7/22/2025 10:42:05 PM,63.648,mm/s,Normal,22.7
+15,Humidity,Building A - Floor 2,3/31/2025 7:46:17 PM,4.01,%RH,Normal,45.3
+35,Motion,Roof,5/3/2025 6:48:15 AM,34.586,count,Normal,76.4
+26,Temperature,Building B - Floor 2,6/22/2025 10:36:07 PM,82.741,°C,Normal,76.5
+26,Light,Warehouse,7/29/2025 8:06:20 PM,87.158,lux,Normal,36.8
+23,CO2,Building B - Floor 2,5/28/2025 4:58:45 PM,62.664,ppm,Normal,50.5
+39,Temperature,Building A - Floor 1,5/27/2025 11:27:14 AM,70.957,°C,Normal,61.7
+9,Motion,Warehouse,6/3/2025 5:03:52 AM,28.828,count,Normal,39.5
+25,CO2,Roof,4/17/2025 1:39:59 PM,99.351,ppm,Normal,73
+29,Humidity,Parking Lot,10/27/2025 11:34:41 PM,36.757,%RH,Normal,44.5
+1,Humidity,Building B - Floor 1,2/28/2025 7:10:11 PM,16.735,%RH,Normal,76
+49,Temperature,Building A - Floor 1,8/31/2025 8:51:21 AM,3.65,°C,Normal,36.2
+5,Pressure,Roof,3/16/2025 9:14:11 PM,-4.315,hPa,Normal,21
+17,Humidity,Building A - Floor 2,11/25/2025 1:03:40 AM,57.291,%RH,Normal,17.1
+7,Humidity,Building A - Floor 2,3/15/2025 11:54:20 PM,-5.771,%RH,Normal,45.8
+3,Humidity,Building A - Floor 2,8/2/2025 10:07:00 PM,87.715,%RH,Normal,12.7
+20,Light,Warehouse,11/19/2025 3:52:45 PM,80.759,lux,Normal,21.5
+12,Humidity,Basement,6/15/2025 11:52:30 PM,29.666,%RH,Normal,53.6
+49,Light,Warehouse,3/28/2025 9:09:57 PM,87.25,lux,Normal,30.1
