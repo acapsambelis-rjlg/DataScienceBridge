@@ -203,6 +203,12 @@ namespace DataScienceWorkbench
                         e.SuppressKeyPress = true;
                     }
                 }
+                else if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    HandleAutoIndent();
+                }
             };
 
             pythonEditor.KeyPress += (s, e) =>
@@ -211,16 +217,6 @@ namespace DataScienceWorkbench
                 {
                     e.Handled = true;
                     return;
-                }
-
-                if (e.KeyChar == '\r')
-                {
-                    e.Handled = true;
-                    HandleAutoIndent();
-                }
-                else if (e.KeyChar == '\n')
-                {
-                    e.Handled = true;
                 }
 
                 if (e.KeyChar == '\t')
