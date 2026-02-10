@@ -26,6 +26,17 @@ namespace DataScienceWorkbench
         private bool suppressHighlight;
         private bool textDirty;
 
+        private List<UndoEntry> undoStack = new List<UndoEntry>();
+        private List<UndoEntry> redoStack = new List<UndoEntry>();
+        private bool isUndoRedoAction;
+        private const int MaxUndoLevels = 100;
+
+        private class UndoEntry
+        {
+            public string Text;
+            public int CursorPos;
+        }
+
         public event EventHandler<string> StatusChanged;
 
         private static Font ResolveMonoFont(float size)
@@ -85,6 +96,7 @@ namespace DataScienceWorkbench
             suppressHighlight = true;
             pythonEditor.Text = GetDefaultScript();
             suppressHighlight = false;
+            ResetUndoStack();
             ApplySyntaxHighlighting();
             PopulateDataTree();
             datasetCombo.SelectedIndex = 0;
@@ -114,9 +126,96 @@ namespace DataScienceWorkbench
                     textDirty = true;
                     highlightTimer.Stop();
                     highlightTimer.Start();
+
+                    if (!isUndoRedoAction)
+                    {
+                        PushUndo(pythonEditor.Text, pythonEditor.SelectionStart);
+                    }
+                }
+            };
+
+            pythonEditor.KeyDown += (s, e) =>
+            {
+                if (e.Control && e.KeyCode == Keys.Z)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    PerformUndo();
+                }
+                else if (e.Control && e.KeyCode == Keys.Y)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    PerformRedo();
                 }
             };
         }
+
+        private void ResetUndoStack()
+        {
+            undoStack.Clear();
+            redoStack.Clear();
+            undoStack.Add(new UndoEntry { Text = pythonEditor.Text, CursorPos = pythonEditor.SelectionStart });
+        }
+
+        private void PushUndo(string text, int cursorPos)
+        {
+            if (undoStack.Count > 0 && undoStack[undoStack.Count - 1].Text == text)
+                return;
+
+            undoStack.Add(new UndoEntry { Text = text, CursorPos = cursorPos });
+            if (undoStack.Count > MaxUndoLevels)
+                undoStack.RemoveAt(0);
+
+            redoStack.Clear();
+        }
+
+        private void PerformUndo()
+        {
+            if (undoStack.Count <= 1) return;
+
+            var current = undoStack[undoStack.Count - 1];
+            undoStack.RemoveAt(undoStack.Count - 1);
+            redoStack.Add(current);
+
+            var prev = undoStack[undoStack.Count - 1];
+            ApplyUndoRedoText(prev);
+        }
+
+        private void PerformRedo()
+        {
+            if (redoStack.Count == 0) return;
+
+            var entry = redoStack[redoStack.Count - 1];
+            redoStack.RemoveAt(redoStack.Count - 1);
+            undoStack.Add(entry);
+
+            ApplyUndoRedoText(entry);
+        }
+
+        private void ApplyUndoRedoText(UndoEntry entry)
+        {
+            isUndoRedoAction = true;
+            suppressHighlight = true;
+            try
+            {
+                pythonEditor.Text = entry.Text;
+                pythonEditor.SelectionStart = Math.Min(entry.CursorPos, pythonEditor.Text.Length);
+                pythonEditor.SelectionLength = 0;
+            }
+            finally
+            {
+                suppressHighlight = false;
+                isUndoRedoAction = false;
+            }
+
+            textDirty = true;
+            highlightTimer.Stop();
+            highlightTimer.Start();
+        }
+
+        public bool CanUndo { get { return undoStack.Count > 1; } }
+        public bool CanRedo { get { return redoStack.Count > 0; } }
 
         private void ApplySyntaxHighlighting()
         {
@@ -192,7 +291,7 @@ namespace DataScienceWorkbench
         public string ScriptText
         {
             get { return pythonEditor.Text; }
-            set { pythonEditor.Text = value; }
+            set { pythonEditor.Text = value; ResetUndoStack(); }
         }
 
         public string OutputText
@@ -217,12 +316,12 @@ namespace DataScienceWorkbench
 
             var editMenu = new ToolStripMenuItem("&Edit");
 
-            var undoItem = new ToolStripMenuItem("Undo", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.CanUndo) pythonEditor.Undo(); });
-            undoItem.ShortcutKeys = Keys.Control | Keys.Z;
+            var undoItem = new ToolStripMenuItem("Undo", null, (s, e) => { if (pythonEditor.Focused) PerformUndo(); });
+            undoItem.ShortcutKeyDisplayString = "Ctrl+Z";
             editMenu.DropDownItems.Add(undoItem);
 
-            var redoItem = new ToolStripMenuItem("Redo", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.CanRedo) pythonEditor.Redo(); });
-            redoItem.ShortcutKeys = Keys.Control | Keys.Y;
+            var redoItem = new ToolStripMenuItem("Redo", null, (s, e) => { if (pythonEditor.Focused) PerformRedo(); });
+            redoItem.ShortcutKeyDisplayString = "Ctrl+Y";
             editMenu.DropDownItems.Add(redoItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
@@ -261,8 +360,8 @@ namespace DataScienceWorkbench
 
             editMenu.DropDownOpening += (s, e) =>
             {
-                undoItem.Enabled = pythonEditor.Focused && pythonEditor.CanUndo;
-                redoItem.Enabled = pythonEditor.Focused && pythonEditor.CanRedo;
+                undoItem.Enabled = pythonEditor.Focused && CanUndo;
+                redoItem.Enabled = pythonEditor.Focused && CanRedo;
                 bool hasSelection = pythonEditor.Focused && pythonEditor.SelectionLength > 0;
                 cutItem.Enabled = hasSelection;
                 copyItem.Enabled = hasSelection;
@@ -711,6 +810,7 @@ namespace DataScienceWorkbench
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     pythonEditor.Text = File.ReadAllText(dlg.FileName);
+                    ResetUndoStack();
                     RaiseStatus("Loaded: " + dlg.FileName);
                 }
             }
