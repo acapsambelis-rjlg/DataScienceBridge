@@ -42,24 +42,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\src\DataModels.cs">
-      <Link>DataModels.cs</Link>
-    </Compile>
-    <Compile Include="..\src\DataScienceControl.cs">
-      <Link>DataScienceControl.cs</Link>
-    </Compile>
-    <Compile Include="..\src\JsonHelper.cs">
-      <Link>JsonHelper.cs</Link>
-    </Compile>
-    <Compile Include="..\src\MainForm.cs">
-      <Link>MainForm.cs</Link>
-    </Compile>
-    <Compile Include="..\src\Program.cs">
-      <Link>Program.cs</Link>
-    </Compile>
-    <Compile Include="..\src\PythonBridge.cs">
-      <Link>PythonBridge.cs</Link>
-    </Compile>
+    <Compile Include="DataModels.cs" />
+    <Compile Include="DataScienceControl.cs" />
+    <Compile Include="JsonHelper.cs" />
+    <Compile Include="MainForm.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="PythonBridge.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

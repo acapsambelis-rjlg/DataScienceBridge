@@ -13,18 +13,22 @@ A Windows Forms application built with Mono (.NET Framework) that provides an in
 ```
 DataScienceWorkbench.sln            - Visual Studio solution file
 DataScienceWorkbench/
-  DataScienceWorkbench.csproj       - VS project file (links to src/ files)
+  DataScienceWorkbench.csproj       - VS project file
   Properties/
     AssemblyInfo.cs                 - Assembly metadata
+  DataModels.cs          - Data classes and DataGenerator (VS copy)
+  DataScienceControl.cs  - Reusable UserControl (VS copy)
+  JsonHelper.cs          - JSON serializer (VS copy)
+  MainForm.cs            - Host form (VS copy)
+  Program.cs             - Entry point (VS copy)
+  PythonBridge.cs        - Python bridge (VS copy)
 src/
-  DataModels.cs          - Data classes (Customer, Product, Order, Employee, SensorReading, StockPrice, WebEvent) and DataGenerator
-  JsonHelper.cs          - Lightweight JSON serializer (no external dependencies)
-  PythonBridge.cs        - Python script execution, pip package management, CSV/JSON export
-  DataScienceControl.cs  - Reusable UserControl with Python editor, data browser, output panel, package manager
-  MainForm.cs            - Thin host form that contains the DataScienceControl
-  Program.cs             - Entry point
+  (same .cs files)       - Used by Mono build on Linux/Replit
 build.sh                 - Mono compiler script (for Linux/Replit)
 run.sh                   - Launch script (Xvfb + x11vnc + mono, for Linux/Replit)
+```
+Note: Source files exist in both `src/` (for Mono/Replit) and `DataScienceWorkbench/` (for Visual Studio).
+Keep them in sync when making changes.
 ```
 
 ## DataScienceControl Public API
