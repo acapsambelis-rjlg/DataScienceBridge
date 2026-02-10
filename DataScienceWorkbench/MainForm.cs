@@ -8,6 +8,8 @@ namespace DataScienceWorkbench
     {
         public MainForm()
         {
+            this.DoubleBuffered = true;
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
             InitializeComponent();
             SetupMenuAndEvents();
         }
