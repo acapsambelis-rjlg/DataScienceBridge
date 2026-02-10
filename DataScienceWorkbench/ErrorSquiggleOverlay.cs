@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace DataScienceWorkbench
@@ -12,11 +11,19 @@ namespace DataScienceWorkbench
         private int errorLineNumber = -1;
         private const int WM_PAINT = 0x000F;
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetDC(IntPtr hWnd);
+        private static readonly Color CurrentLineColor = Color.FromArgb(20, 255, 255, 255);
+        private static readonly Color BracketHighlightColor = Color.FromArgb(80, 128, 128, 128);
+        private int matchedBracketPos1 = -1;
+        private int matchedBracketPos2 = -1;
 
-        [DllImport("user32.dll")]
-        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+        private static readonly Dictionary<char, char> OpenBrackets = new Dictionary<char, char>
+        {
+            { '(', ')' }, { '[', ']' }, { '{', '}' }
+        };
+        private static readonly Dictionary<char, char> CloseBrackets = new Dictionary<char, char>
+        {
+            { ')', '(' }, { ']', '[' }, { '}', '{' }
+        };
 
         public void SetErrorLine(int lineNumber)
         {
@@ -34,17 +41,149 @@ namespace DataScienceWorkbench
 
         public int ErrorLine { get { return errorLineNumber; } }
 
+        public void UpdateBracketMatching()
+        {
+            int oldPos1 = matchedBracketPos1;
+            int oldPos2 = matchedBracketPos2;
+
+            matchedBracketPos1 = -1;
+            matchedBracketPos2 = -1;
+
+            string text = this.Text;
+            int pos = this.SelectionStart;
+            if (this.SelectionLength > 0 || pos < 0 || text.Length == 0)
+            {
+                if (oldPos1 != -1) this.Invalidate();
+                return;
+            }
+
+            char charAtCursor = pos < text.Length ? text[pos] : '\0';
+            char charBefore = pos > 0 ? text[pos - 1] : '\0';
+
+            if (OpenBrackets.ContainsKey(charAtCursor))
+            {
+                matchedBracketPos1 = pos;
+                matchedBracketPos2 = FindMatchingForward(text, pos, charAtCursor, OpenBrackets[charAtCursor]);
+            }
+            else if (CloseBrackets.ContainsKey(charAtCursor))
+            {
+                matchedBracketPos1 = pos;
+                matchedBracketPos2 = FindMatchingBackward(text, pos, charAtCursor, CloseBrackets[charAtCursor]);
+            }
+            else if (OpenBrackets.ContainsKey(charBefore))
+            {
+                matchedBracketPos1 = pos - 1;
+                matchedBracketPos2 = FindMatchingForward(text, pos - 1, charBefore, OpenBrackets[charBefore]);
+            }
+            else if (CloseBrackets.ContainsKey(charBefore))
+            {
+                matchedBracketPos1 = pos - 1;
+                matchedBracketPos2 = FindMatchingBackward(text, pos - 1, charBefore, CloseBrackets[charBefore]);
+            }
+
+            if (oldPos1 != matchedBracketPos1 || oldPos2 != matchedBracketPos2)
+                this.Invalidate();
+        }
+
+        private int FindMatchingForward(string text, int pos, char open, char close)
+        {
+            int depth = 1;
+            for (int i = pos + 1; i < text.Length; i++)
+            {
+                if (text[i] == open) depth++;
+                else if (text[i] == close) { depth--; if (depth == 0) return i; }
+            }
+            return -1;
+        }
+
+        private int FindMatchingBackward(string text, int pos, char close, char open)
+        {
+            int depth = 1;
+            for (int i = pos - 1; i >= 0; i--)
+            {
+                if (text[i] == close) depth++;
+                else if (text[i] == open) { depth--; if (depth == 0) return i; }
+            }
+            return -1;
+        }
+
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
 
-            if (m.Msg == WM_PAINT && errorLineNumber >= 1)
+            if (m.Msg == WM_PAINT)
             {
-                DrawSquiggle();
+                DrawOverlays();
             }
         }
 
-        private void DrawSquiggle()
+        private void DrawOverlays()
+        {
+            try
+            {
+                using (var g = this.CreateGraphics())
+                {
+                    g.SetClip(this.ClientRectangle);
+                    DrawCurrentLineHighlight(g);
+                    DrawBracketHighlights(g);
+                    if (errorLineNumber >= 1)
+                        DrawSquiggle(g);
+                }
+            }
+            catch { }
+        }
+
+        private void DrawCurrentLineHighlight(Graphics g)
+        {
+            if (this.SelectionLength > 0) return;
+
+            int currentLine = this.GetLineFromCharIndex(this.SelectionStart);
+            int charIdx = this.GetFirstCharIndexFromLine(currentLine);
+            if (charIdx < 0) return;
+
+            Point linePos = this.GetPositionFromCharIndex(charIdx);
+            int lineHeight = this.Font.Height;
+
+            Rectangle lineRect = new Rectangle(0, linePos.Y, this.ClientSize.Width, lineHeight);
+
+            if (lineRect.Bottom < 0 || lineRect.Top > this.ClientSize.Height) return;
+
+            using (var brush = new SolidBrush(CurrentLineColor))
+            {
+                g.FillRectangle(brush, lineRect);
+            }
+        }
+
+        private void DrawBracketHighlights(Graphics g)
+        {
+            if (matchedBracketPos1 < 0 || matchedBracketPos2 < 0) return;
+
+            DrawBracketRect(g, matchedBracketPos1);
+            DrawBracketRect(g, matchedBracketPos2);
+        }
+
+        private void DrawBracketRect(Graphics g, int charIndex)
+        {
+            if (charIndex < 0 || charIndex >= this.Text.Length) return;
+
+            Point pos = this.GetPositionFromCharIndex(charIndex);
+            if (pos.Y < 0 || pos.Y > this.ClientSize.Height) return;
+
+            Size charSize = TextRenderer.MeasureText(this.Text[charIndex].ToString(), this.Font, Size.Empty, TextFormatFlags.NoPadding);
+
+            Rectangle rect = new Rectangle(pos.X, pos.Y, charSize.Width + 2, this.Font.Height);
+
+            using (var brush = new SolidBrush(BracketHighlightColor))
+            {
+                g.FillRectangle(brush, rect);
+            }
+            using (var pen = new Pen(Color.FromArgb(120, 180, 180, 180)))
+            {
+                g.DrawRectangle(pen, rect);
+            }
+        }
+
+        private void DrawSquiggle(Graphics g)
         {
             if (errorLineNumber < 1 || errorLineNumber > this.Lines.Length) return;
 
@@ -66,39 +205,27 @@ namespace DataScienceWorkbench
             if (squiggleY < 0 || squiggleY > this.ClientSize.Height) return;
             if (startPos.X >= lineRight) return;
 
-            IntPtr hdc = GetDC(this.Handle);
-            try
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            using (var pen = new Pen(Color.FromArgb(255, 60, 60), 1.0f))
             {
-                using (var g = Graphics.FromHdc(hdc))
+                int waveHeight = 2;
+                int waveWidth = 4;
+                var points = new List<Point>();
+
+                int x = startPos.X;
+                bool up = true;
+                while (x < lineRight)
                 {
-                    g.SmoothingMode = SmoothingMode.AntiAlias;
-                    g.SetClip(this.ClientRectangle);
-
-                    using (var pen = new Pen(Color.FromArgb(255, 60, 60), 1.0f))
-                    {
-                        int waveHeight = 2;
-                        int waveWidth = 4;
-                        var points = new List<Point>();
-
-                        int x = startPos.X;
-                        bool up = true;
-                        while (x < lineRight)
-                        {
-                            points.Add(new Point(x, squiggleY + (up ? 0 : waveHeight)));
-                            x += waveWidth / 2;
-                            up = !up;
-                        }
-
-                        if (points.Count > 1)
-                        {
-                            g.DrawLines(pen, points.ToArray());
-                        }
-                    }
+                    points.Add(new Point(x, squiggleY + (up ? 0 : waveHeight)));
+                    x += waveWidth / 2;
+                    up = !up;
                 }
-            }
-            finally
-            {
-                ReleaseDC(this.Handle, hdc);
+
+                if (points.Count > 1)
+                {
+                    g.DrawLines(pen, points.ToArray());
+                }
             }
         }
     }

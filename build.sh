@@ -11,6 +11,7 @@ mcs $REFS \
     -langversion:7 \
     src/DataModels.cs \
     src/ErrorSquiggleOverlay.cs \
+    src/AutoCompletePopup.cs \
     src/JsonHelper.cs \
     src/PythonBridge.cs \
     src/PythonSyntaxHighlighter.cs \

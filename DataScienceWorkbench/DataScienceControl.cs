@@ -31,6 +31,14 @@ namespace DataScienceWorkbench
         private bool isUndoRedoAction;
         private const int MaxUndoLevels = 100;
 
+        private AutoCompletePopup autoComplete;
+        private bool suppressAutoComplete;
+
+        private static readonly Dictionary<char, char> BracketPairs = new Dictionary<char, char>
+        {
+            { '(', ')' }, { '[', ']' }, { '{', '}' }, { '"', '"' }, { '\'', '\'' }
+        };
+
         private class UndoEntry
         {
             public string Text;
@@ -107,6 +115,7 @@ namespace DataScienceWorkbench
         {
             syntaxHighlighter = new PythonSyntaxHighlighter();
             lineNumberPanel.AttachEditor(pythonEditor);
+            autoComplete = new AutoCompletePopup(pythonEditor);
 
             highlightTimer = new Timer();
             highlightTimer.Interval = 500;
@@ -131,11 +140,34 @@ namespace DataScienceWorkbench
                     {
                         PushUndo(pythonEditor.Text, pythonEditor.SelectionStart);
                     }
+
+                    if (!suppressAutoComplete)
+                    {
+                        autoComplete.OnTextChanged();
+                    }
+                }
+            };
+
+            pythonEditor.SelectionChanged += (s, e) =>
+            {
+                if (!suppressHighlight)
+                {
+                    pythonEditor.UpdateBracketMatching();
+                    pythonEditor.Invalidate();
+                    UpdateCursorPositionStatus();
+                    autoComplete.OnSelectionChanged();
                 }
             };
 
             pythonEditor.KeyDown += (s, e) =>
             {
+                if (autoComplete.IsShowing && autoComplete.HandleKeyDown(e.KeyCode, e.Modifiers))
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+
                 if (e.Control && e.KeyCode == Keys.Z)
                 {
                     e.Handled = true;
@@ -148,7 +180,139 @@ namespace DataScienceWorkbench
                     e.SuppressKeyPress = true;
                     PerformRedo();
                 }
+                else if (e.KeyCode == Keys.Escape && autoComplete.IsShowing)
+                {
+                    autoComplete.Hide();
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                }
             };
+
+            pythonEditor.KeyPress += (s, e) =>
+            {
+                if (HandleBracketAutoClose(e.KeyChar))
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                if (e.KeyChar == '\r' || e.KeyChar == '\n')
+                {
+                    e.Handled = true;
+                    HandleAutoIndent();
+                }
+            };
+        }
+
+        private bool HandleBracketAutoClose(char typed)
+        {
+            string text = pythonEditor.Text;
+            int pos = pythonEditor.SelectionStart;
+
+            if (typed == '"' || typed == '\'')
+            {
+                if (pos < text.Length && text[pos] == typed)
+                {
+                    pythonEditor.SelectionStart = pos + 1;
+                    return true;
+                }
+
+                bool atWordChar = pos > 0 && (char.IsLetterOrDigit(text[pos - 1]) || text[pos - 1] == '_');
+                if (!atWordChar)
+                {
+                    suppressAutoComplete = true;
+                    int selLen = pythonEditor.SelectionLength;
+                    if (selLen > 0)
+                    {
+                        string selected = pythonEditor.SelectedText;
+                        pythonEditor.SelectedText = typed.ToString() + selected + typed.ToString();
+                        pythonEditor.SelectionStart = pos + 1;
+                        pythonEditor.SelectionLength = selLen;
+                    }
+                    else
+                    {
+                        pythonEditor.SelectedText = typed.ToString() + typed.ToString();
+                        pythonEditor.SelectionStart = pos + 1;
+                    }
+                    suppressAutoComplete = false;
+                    return true;
+                }
+                return false;
+            }
+
+            if (BracketPairs.ContainsKey(typed) && typed != '"' && typed != '\'')
+            {
+                char close = BracketPairs[typed];
+
+                if (typed == close && pos < text.Length && text[pos] == typed)
+                {
+                    pythonEditor.SelectionStart = pos + 1;
+                    return true;
+                }
+
+                suppressAutoComplete = true;
+                int selLen = pythonEditor.SelectionLength;
+                if (selLen > 0)
+                {
+                    string selected = pythonEditor.SelectedText;
+                    pythonEditor.SelectedText = typed.ToString() + selected + close.ToString();
+                    pythonEditor.SelectionStart = pos + 1;
+                    pythonEditor.SelectionLength = selLen;
+                }
+                else
+                {
+                    pythonEditor.SelectedText = typed.ToString() + close.ToString();
+                    pythonEditor.SelectionStart = pos + 1;
+                }
+                suppressAutoComplete = false;
+                return true;
+            }
+
+            bool isClosing = typed == ')' || typed == ']' || typed == '}';
+            if (isClosing && pos < text.Length && text[pos] == typed)
+            {
+                pythonEditor.SelectionStart = pos + 1;
+                return true;
+            }
+
+            return false;
+        }
+
+        private void HandleAutoIndent()
+        {
+            string text = pythonEditor.Text;
+            int pos = pythonEditor.SelectionStart;
+
+            int lineStart = text.LastIndexOf('\n', Math.Max(pos - 1, 0));
+            lineStart = lineStart < 0 ? 0 : lineStart + 1;
+
+            string currentLine = text.Substring(lineStart, pos - lineStart);
+
+            string indent = "";
+            foreach (char c in currentLine)
+            {
+                if (c == ' ' || c == '\t') indent += c;
+                else break;
+            }
+
+            string trimmed = currentLine.TrimEnd();
+            if (trimmed.EndsWith(":"))
+            {
+                indent += "    ";
+            }
+
+            suppressAutoComplete = true;
+            pythonEditor.SelectedText = "\n" + indent;
+            suppressAutoComplete = false;
+        }
+
+        private void UpdateCursorPositionStatus()
+        {
+            int pos = pythonEditor.SelectionStart;
+            int line = pythonEditor.GetLineFromCharIndex(pos) + 1;
+            int firstChar = pythonEditor.GetFirstCharIndexFromLine(line - 1);
+            int col = pos - firstChar + 1;
+            RaiseStatus("Ln " + line + ", Col " + col);
         }
 
         private void ResetUndoStack()
