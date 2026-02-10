@@ -217,6 +217,14 @@ namespace DataScienceWorkbench
                     e.Handled = true;
                     HandleAutoIndent();
                 }
+
+                if (e.KeyChar == '\t')
+                {
+                    e.Handled = true;
+                    suppressAutoComplete = true;
+                    pythonEditor.SelectedText = "    ";
+                    suppressAutoComplete = false;
+                }
             };
         }
 
@@ -332,30 +340,33 @@ namespace DataScienceWorkbench
 
         private void HandleAutoIndent()
         {
-            string text = pythonEditor.Text;
             int pos = pythonEditor.SelectionStart;
+            int lineIndex = pythonEditor.GetLineFromCharIndex(pos);
+            string currentLine = lineIndex < pythonEditor.Lines.Length ? pythonEditor.Lines[lineIndex] : "";
 
-            int lineStart = text.LastIndexOf('\n', Math.Max(pos - 1, 0));
-            lineStart = lineStart < 0 ? 0 : lineStart + 1;
-
-            string currentLine = text.Substring(lineStart, pos - lineStart);
+            int charInLine = pos - pythonEditor.GetFirstCharIndexFromLine(lineIndex);
+            string textBeforeCursor = charInLine <= currentLine.Length ? currentLine.Substring(0, charInLine) : currentLine;
 
             string indent = "";
-            foreach (char c in currentLine)
+            foreach (char c in textBeforeCursor)
             {
-                if (c == ' ' || c == '\t') indent += c;
+                if (c == ' ') indent += ' ';
                 else break;
             }
 
-            string trimmed = currentLine.TrimEnd();
+            string trimmed = textBeforeCursor.TrimEnd();
             if (trimmed.EndsWith(":"))
             {
                 indent += "    ";
             }
 
+            suppressHighlight = true;
             suppressAutoComplete = true;
+            PushUndo(pythonEditor.Text, pos);
             pythonEditor.SelectedText = "\n" + indent;
+            suppressHighlight = false;
             suppressAutoComplete = false;
+            ApplySyntaxHighlighting();
         }
 
         private void UpdateCursorPositionStatus()
