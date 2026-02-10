@@ -21,6 +21,9 @@ namespace DataScienceWorkbench
 
         private string dataExportDir;
         private bool packagesLoaded;
+        private PythonSyntaxHighlighter syntaxHighlighter;
+        private Timer highlightTimer;
+        private bool suppressHighlight;
 
         public event EventHandler<string> StatusChanged;
 
@@ -29,10 +32,47 @@ namespace DataScienceWorkbench
             InitializeComponent();
             InitializeData();
             SetupSnippetMenu();
+            SetupSyntaxHighlighting();
+            suppressHighlight = true;
             pythonEditor.Text = GetDefaultScript();
+            suppressHighlight = false;
+            ApplySyntaxHighlighting();
             PopulateDataTree();
             datasetCombo.SelectedIndex = 0;
             ExportAllData();
+        }
+
+        private void SetupSyntaxHighlighting()
+        {
+            syntaxHighlighter = new PythonSyntaxHighlighter();
+            lineNumberPanel.AttachEditor(pythonEditor);
+
+            highlightTimer = new Timer();
+            highlightTimer.Interval = 500;
+            highlightTimer.Tick += (s, e) =>
+            {
+                highlightTimer.Stop();
+                ApplySyntaxHighlighting();
+            };
+
+            pythonEditor.TextChanged += (s, e) =>
+            {
+                if (!suppressHighlight)
+                {
+                    highlightTimer.Stop();
+                    highlightTimer.Start();
+                }
+            };
+        }
+
+        private void ApplySyntaxHighlighting()
+        {
+            if (pythonEditor.Text.Length > 50000) return;
+            try
+            {
+                syntaxHighlighter.Highlight(pythonEditor);
+            }
+            catch { }
         }
 
         public void LoadData(
@@ -367,6 +407,61 @@ namespace DataScienceWorkbench
             outputBox.Clear();
         }
 
+        private void OnCheckSyntax(object sender, EventArgs e)
+        {
+            string script = pythonEditor.Text;
+            if (string.IsNullOrWhiteSpace(script))
+            {
+                AppendOutput("No script to check.\n", Color.Yellow);
+                return;
+            }
+
+            RaiseStatus("Checking syntax...");
+            var result = pythonRunner.CheckSyntax(script);
+
+            if (result.Success)
+            {
+                AppendOutput("Syntax OK - no errors found.\n", Color.LightGreen);
+                RaiseStatus("Syntax check passed.");
+            }
+            else
+            {
+                AppendOutput("Syntax Error:\n" + result.Error + "\n", Color.FromArgb(255, 100, 100));
+
+                int errorLine = ParseErrorLine(result.Error);
+                if (errorLine > 0)
+                {
+                    HighlightErrorLine(errorLine);
+                }
+                RaiseStatus("Syntax error on line " + errorLine);
+            }
+        }
+
+        private int ParseErrorLine(string error)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(error, @"[Ll]ine (\d+)");
+            if (match.Success)
+            {
+                int line;
+                if (int.TryParse(match.Groups[1].Value, out line))
+                    return line;
+            }
+            return -1;
+        }
+
+        private void HighlightErrorLine(int lineNumber)
+        {
+            if (lineNumber < 1 || lineNumber > pythonEditor.Lines.Length) return;
+
+            int lineIdx = lineNumber - 1;
+            int start = pythonEditor.GetFirstCharIndexFromLine(lineIdx);
+            int length = pythonEditor.Lines[lineIdx].Length;
+
+            pythonEditor.Select(start, length);
+            pythonEditor.SelectionBackColor = Color.FromArgb(80, 30, 30);
+            pythonEditor.Select(start + length, 0);
+        }
+
         private void OnOpenScript(object sender, EventArgs e)
         {
             using (var dlg = new OpenFileDialog { Filter = "Python files (*.py)|*.py|All files (*.*)|*.*" })
@@ -516,9 +611,14 @@ TIPS:
         private void InsertSnippet(string code)
         {
             int pos = pythonEditor.SelectionStart;
-            pythonEditor.Text = pythonEditor.Text.Insert(pos, code);
+            suppressHighlight = true;
+            pythonEditor.SelectionStart = pos;
+            pythonEditor.SelectionLength = 0;
+            pythonEditor.SelectedText = code;
+            suppressHighlight = false;
             pythonEditor.SelectionStart = pos + code.Length;
             pythonEditor.Focus();
+            ApplySyntaxHighlighting();
         }
 
         private string GetDefaultScript()

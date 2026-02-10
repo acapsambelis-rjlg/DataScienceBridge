@@ -209,6 +209,55 @@ namespace DataScienceWorkbench
             };
         }
 
+        public PythonResult CheckSyntax(string script)
+        {
+            string scriptFile = Path.GetTempFileName() + "_src.py";
+            File.WriteAllText(scriptFile, script);
+
+            string checkFile = Path.GetTempFileName() + ".py";
+            File.WriteAllText(checkFile,
+                "import ast, sys\n" +
+                "try:\n" +
+                "    with open(r'" + scriptFile.Replace("'", "\\'") + "', 'r') as f:\n" +
+                "        source = f.read()\n" +
+                "    ast.parse(source)\n" +
+                "    print('Syntax OK')\n" +
+                "except SyntaxError as e:\n" +
+                "    print(f'Line {e.lineno}: {e.msg}', file=sys.stderr)\n" +
+                "    sys.exit(1)\n");
+
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = pythonPath,
+                    Arguments = "\"" + checkFile + "\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                var proc = Process.Start(psi);
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit(10000);
+
+                return new PythonResult
+                {
+                    ExitCode = proc.ExitCode,
+                    Output = stdout,
+                    Error = stderr,
+                    Success = proc.ExitCode == 0
+                };
+            }
+            finally
+            {
+                try { File.Delete(scriptFile); } catch { }
+                try { File.Delete(checkFile); } catch { }
+            }
+        }
+
         public string ListPackages()
         {
             var psi = new ProcessStartInfo

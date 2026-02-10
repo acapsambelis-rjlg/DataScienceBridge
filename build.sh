@@ -12,6 +12,7 @@ mcs $REFS \
     src/DataModels.cs \
     src/JsonHelper.cs \
     src/PythonBridge.cs \
+    src/PythonSyntaxHighlighter.cs \
     src/DataScienceControl.Designer.cs \
     src/DataScienceControl.cs \
     src/MainForm.Designer.cs \

@@ -25,7 +25,8 @@ DataScienceWorkbench/
   MainForm.Designer.cs              - Designer-generated form layout
   MainForm.resx                     - Designer resource file
   Program.cs                        - Entry point
-  PythonBridge.cs                   - Python bridge
+  PythonBridge.cs                   - Python bridge + syntax checker
+  PythonSyntaxHighlighter.cs        - Syntax highlighting + line number panel
 src/
   (same .cs files including .Designer.cs) - Used by Mono build on Linux/Replit
 build.sh                 - Mono compiler script (for Linux/Replit)
@@ -47,7 +48,7 @@ Keep them in sync when making changes.
 
 ## Key Features
 - **7 dummy datasets**: Products (200), Customers (150), Orders (500), Employees (100), Sensor Readings (1000), Stock Prices (365 days x 10 symbols), Web Events (2000)
-- **Integrated Python editor** with code snippets (histograms, scatter plots, correlations, time series)
+- **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, and code snippets
 - **Data Browser** tab with DataGridView for browsing all datasets
 - **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)
 - **CSV data bridge**: All .NET data exported as CSV for Python pandas consumption
@@ -72,6 +73,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-10: Added Python syntax highlighting (keywords, strings, comments, numbers, decorators, builtins), line numbers, and syntax error checking
 - 2026-02-10: Added .Designer.cs and .resx files for both DataScienceControl and MainForm (Visual Studio designer support)
 - 2026-02-10: Added Visual Studio solution and project files targeting .NET Framework 4.7.2
 - 2026-02-10: Extracted all functionality from MainForm into DataScienceControl UserControl with public API for reuse
