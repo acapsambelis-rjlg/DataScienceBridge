@@ -25,7 +25,7 @@ namespace DataScienceWorkbench
             this.dataTreeView = new System.Windows.Forms.TreeView();
             this.treeLabel = new System.Windows.Forms.Label();
             this.editorPanel = new System.Windows.Forms.Panel();
-            this.pythonEditor = new System.Windows.Forms.RichTextBox();
+            this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
             this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.runBtn = new System.Windows.Forms.ToolStripButton();
@@ -577,7 +577,7 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.TreeView dataTreeView;
         private System.Windows.Forms.Label treeLabel;
         private System.Windows.Forms.Panel editorPanel;
-        private System.Windows.Forms.RichTextBox pythonEditor;
+        private DataScienceWorkbench.SquiggleRichTextBox pythonEditor;
         private DataScienceWorkbench.LineNumberPanel lineNumberPanel;
         private System.Windows.Forms.ToolStrip toolBar;
         private System.Windows.Forms.ToolStripButton runBtn;

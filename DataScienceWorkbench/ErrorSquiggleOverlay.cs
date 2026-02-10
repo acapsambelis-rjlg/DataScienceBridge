@@ -1,39 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Text;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace DataScienceWorkbench
 {
-    public class ErrorSquiggleOverlay : Control
+    public class SquiggleRichTextBox : RichTextBox
     {
-        private RichTextBox editor;
         private int errorLineNumber = -1;
+        private const int WM_PAINT = 0x000F;
 
-        public ErrorSquiggleOverlay()
-        {
-            this.SetStyle(
-                ControlStyles.SupportsTransparentBackColor |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.UserPaint |
-                ControlStyles.OptimizedDoubleBuffer,
-                true);
-            this.BackColor = Color.Transparent;
-        }
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetDC(IntPtr hWnd);
 
-        public void AttachEditor(RichTextBox editorBox)
-        {
-            editor = editorBox;
-            editor.VScroll += (s, e) => this.Invalidate();
-            editor.Resize += (s, e) =>
-            {
-                this.Size = editor.ClientSize;
-                this.Invalidate();
-            };
-            this.Size = editor.ClientSize;
-            this.Location = new Point(0, 0);
-        }
+        [DllImport("user32.dll")]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         public void SetErrorLine(int lineNumber)
         {
@@ -51,63 +34,71 @@ namespace DataScienceWorkbench
 
         public int ErrorLine { get { return errorLineNumber; } }
 
-        protected override CreateParams CreateParams
+        protected override void WndProc(ref Message m)
         {
-            get
+            base.WndProc(ref m);
+
+            if (m.Msg == WM_PAINT && errorLineNumber >= 1)
             {
-                var cp = base.CreateParams;
-                cp.ExStyle |= 0x20;
-                return cp;
+                DrawSquiggle();
             }
         }
 
-        protected override void OnPaintBackground(PaintEventArgs e)
+        private void DrawSquiggle()
         {
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            if (editor == null || errorLineNumber < 1) return;
-            if (errorLineNumber > editor.Lines.Length) return;
+            if (errorLineNumber < 1 || errorLineNumber > this.Lines.Length) return;
 
             int lineIdx = errorLineNumber - 1;
-            string lineText = editor.Lines[lineIdx];
+            string lineText = this.Lines[lineIdx];
             if (lineText.Length == 0) return;
 
-            int startCharIdx = editor.GetFirstCharIndexFromLine(lineIdx);
-            Point startPos = editor.GetPositionFromCharIndex(startCharIdx);
+            int startCharIdx = this.GetFirstCharIndexFromLine(lineIdx);
+            Point startPos = this.GetPositionFromCharIndex(startCharIdx);
 
             int endCharIdx = startCharIdx + lineText.Length - 1;
-            Point endPos = editor.GetPositionFromCharIndex(endCharIdx);
+            Point endPos = this.GetPositionFromCharIndex(endCharIdx);
 
-            Size charSize = TextRenderer.MeasureText("W", editor.Font);
+            Size charSize = TextRenderer.MeasureText("W", this.Font);
             int lineRight = endPos.X + charSize.Width;
 
-            int squiggleY = startPos.Y + editor.Font.Height - 1;
+            int squiggleY = startPos.Y + this.Font.Height - 1;
 
-            if (squiggleY < 0 || squiggleY > editor.ClientSize.Height) return;
+            if (squiggleY < 0 || squiggleY > this.ClientSize.Height) return;
+            if (startPos.X >= lineRight) return;
 
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            using (var pen = new Pen(Color.FromArgb(255, 80, 80), 1.2f))
+            IntPtr hdc = GetDC(this.Handle);
+            try
             {
-                int x = startPos.X;
-                int waveHeight = 3;
-                int waveWidth = 4;
-                var points = new System.Collections.Generic.List<Point>();
-
-                bool up = true;
-                while (x < lineRight)
+                using (var g = Graphics.FromHdc(hdc))
                 {
-                    points.Add(new Point(x, squiggleY + (up ? 0 : waveHeight)));
-                    x += waveWidth / 2;
-                    up = !up;
-                }
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    g.SetClip(this.ClientRectangle);
 
-                if (points.Count > 1)
-                {
-                    e.Graphics.DrawLines(pen, points.ToArray());
+                    using (var pen = new Pen(Color.FromArgb(255, 60, 60), 1.0f))
+                    {
+                        int waveHeight = 2;
+                        int waveWidth = 4;
+                        var points = new List<Point>();
+
+                        int x = startPos.X;
+                        bool up = true;
+                        while (x < lineRight)
+                        {
+                            points.Add(new Point(x, squiggleY + (up ? 0 : waveHeight)));
+                            x += waveWidth / 2;
+                            up = !up;
+                        }
+
+                        if (points.Count > 1)
+                        {
+                            g.DrawLines(pen, points.ToArray());
+                        }
+                    }
                 }
+            }
+            finally
+            {
+                ReleaseDC(this.Handle, hdc);
             }
         }
     }
