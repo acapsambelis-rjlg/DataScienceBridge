@@ -215,13 +215,59 @@ namespace DataScienceWorkbench
             fileMenu.DropDownItems.Add(new ToolStripSeparator());
             fileMenu.DropDownItems.Add("Re-export Data", null, (s, e) => { ExportAllData(); RaiseStatus("Data re-exported successfully."); });
 
-            var editMenu = new ToolStripMenuItem("Edit");
-            editMenu.DropDownItems.Add("Cut", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Cut(); });
-            editMenu.DropDownItems.Add("Copy", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Copy(); });
-            editMenu.DropDownItems.Add("Paste", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Paste(); });
+            var editMenu = new ToolStripMenuItem("&Edit");
+
+            var undoItem = new ToolStripMenuItem("Undo", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.CanUndo) pythonEditor.Undo(); });
+            undoItem.ShortcutKeys = Keys.Control | Keys.Z;
+            editMenu.DropDownItems.Add(undoItem);
+
+            var redoItem = new ToolStripMenuItem("Redo", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.CanRedo) pythonEditor.Redo(); });
+            redoItem.ShortcutKeys = Keys.Control | Keys.Y;
+            editMenu.DropDownItems.Add(redoItem);
+
             editMenu.DropDownItems.Add(new ToolStripSeparator());
-            editMenu.DropDownItems.Add("Select All", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.SelectAll(); });
+
+            var cutItem = new ToolStripMenuItem("Cut", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Cut(); });
+            cutItem.ShortcutKeys = Keys.Control | Keys.X;
+            editMenu.DropDownItems.Add(cutItem);
+
+            var copyItem = new ToolStripMenuItem("Copy", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Copy(); });
+            copyItem.ShortcutKeys = Keys.Control | Keys.C;
+            editMenu.DropDownItems.Add(copyItem);
+
+            var pasteItem = new ToolStripMenuItem("Paste", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Paste(); });
+            pasteItem.ShortcutKeys = Keys.Control | Keys.V;
+            editMenu.DropDownItems.Add(pasteItem);
+
+            var deleteItem = new ToolStripMenuItem("Delete", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.SelectionLength > 0) pythonEditor.SelectedText = ""; });
+            deleteItem.ShortcutKeys = Keys.Delete;
+            deleteItem.ShowShortcutKeys = false;
+            editMenu.DropDownItems.Add(deleteItem);
+
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            var selectAllItem = new ToolStripMenuItem("Select All", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.SelectAll(); });
+            selectAllItem.ShortcutKeys = Keys.Control | Keys.A;
+            editMenu.DropDownItems.Add(selectAllItem);
+
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            var findItem = new ToolStripMenuItem("Find && Replace...", null, (s, e) => ShowFindReplace());
+            findItem.ShortcutKeys = Keys.Control | Keys.H;
+            editMenu.DropDownItems.Add(findItem);
+
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
             editMenu.DropDownItems.Add("Clear Output", null, (s, e) => outputBox.Clear());
+
+            editMenu.DropDownOpening += (s, e) =>
+            {
+                undoItem.Enabled = pythonEditor.Focused && pythonEditor.CanUndo;
+                redoItem.Enabled = pythonEditor.Focused && pythonEditor.CanRedo;
+                bool hasSelection = pythonEditor.Focused && pythonEditor.SelectionLength > 0;
+                cutItem.Enabled = hasSelection;
+                copyItem.Enabled = hasSelection;
+                deleteItem.Enabled = hasSelection;
+            };
 
             var runMenu = new ToolStripMenuItem("Run");
             runMenu.DropDownItems.Add("Execute Script (F5)", null, OnRunScript);
@@ -537,6 +583,126 @@ namespace DataScienceWorkbench
             return -1;
         }
 
+
+        private Form findReplaceForm;
+
+        private void ShowFindReplace()
+        {
+            if (findReplaceForm != null && !findReplaceForm.IsDisposed)
+            {
+                findReplaceForm.Activate();
+                return;
+            }
+
+            findReplaceForm = new Form
+            {
+                Text = "Find & Replace",
+                Size = new Size(420, 200),
+                MinimumSize = new Size(400, 200),
+                MaximizeBox = false,
+                FormBorderStyle = FormBorderStyle.SizableToolWindow,
+                StartPosition = FormStartPosition.CenterParent,
+                TopMost = true
+            };
+
+            var findLabel = new Label { Text = "Find:", Location = new Point(12, 18), Size = new Size(60, 20) };
+            var findBox = new TextBox { Location = new Point(80, 15), Size = new Size(220, 22), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+            var replaceLabel = new Label { Text = "Replace:", Location = new Point(12, 48), Size = new Size(60, 20) };
+            var replaceBox = new TextBox { Location = new Point(80, 45), Size = new Size(220, 22), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+            var matchCaseCheck = new CheckBox { Text = "Match case", Location = new Point(80, 75), Size = new Size(120, 20) };
+
+            var findNextBtn = new Button { Text = "Find Next", Location = new Point(310, 14), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            var replaceBtn = new Button { Text = "Replace", Location = new Point(310, 44), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            var replaceAllBtn = new Button { Text = "Replace All", Location = new Point(310, 74), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+            var closeBtn = new Button { Text = "Close", Location = new Point(310, 114), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
+
+            int searchStart = 0;
+
+            findNextBtn.Click += (s, ev) =>
+            {
+                string find = findBox.Text;
+                if (string.IsNullOrEmpty(find)) return;
+
+                var comparison = matchCaseCheck.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                int idx = pythonEditor.Text.IndexOf(find, searchStart, comparison);
+                if (idx < 0)
+                {
+                    idx = pythonEditor.Text.IndexOf(find, 0, comparison);
+                    if (idx < 0)
+                    {
+                        RaiseStatus("Not found: " + find);
+                        return;
+                    }
+                }
+                pythonEditor.Select(idx, find.Length);
+                pythonEditor.ScrollToCaret();
+                pythonEditor.Focus();
+                searchStart = idx + find.Length;
+                RaiseStatus("Found at position " + idx);
+            };
+
+            replaceBtn.Click += (s, ev) =>
+            {
+                if (pythonEditor.SelectionLength > 0)
+                {
+                    pythonEditor.SelectedText = replaceBox.Text;
+                }
+                findNextBtn.PerformClick();
+            };
+
+            replaceAllBtn.Click += (s, ev) =>
+            {
+                string find = findBox.Text;
+                string replace = replaceBox.Text;
+                if (string.IsNullOrEmpty(find)) return;
+
+                var comparison = matchCaseCheck.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                int count = 0;
+                int idx = 0;
+                string text = pythonEditor.Text;
+                var sb = new System.Text.StringBuilder();
+                while (true)
+                {
+                    int found = text.IndexOf(find, idx, comparison);
+                    if (found < 0)
+                    {
+                        sb.Append(text.Substring(idx));
+                        break;
+                    }
+                    sb.Append(text.Substring(idx, found - idx));
+                    sb.Append(replace);
+                    idx = found + find.Length;
+                    count++;
+                }
+                if (count > 0)
+                {
+                    pythonEditor.Text = sb.ToString();
+                }
+                RaiseStatus("Replaced " + count + " occurrence(s).");
+            };
+
+            closeBtn.Click += (s, ev) => findReplaceForm.Close();
+
+            findBox.KeyDown += (s, ev) =>
+            {
+                if (ev.KeyCode == Keys.Enter) { findNextBtn.PerformClick(); ev.Handled = true; ev.SuppressKeyPress = true; }
+                if (ev.KeyCode == Keys.Escape) { findReplaceForm.Close(); ev.Handled = true; }
+            };
+
+            replaceBox.KeyDown += (s, ev) =>
+            {
+                if (ev.KeyCode == Keys.Enter) { replaceBtn.PerformClick(); ev.Handled = true; ev.SuppressKeyPress = true; }
+                if (ev.KeyCode == Keys.Escape) { findReplaceForm.Close(); ev.Handled = true; }
+            };
+
+            findReplaceForm.Controls.AddRange(new Control[] { findLabel, findBox, replaceLabel, replaceBox, matchCaseCheck, findNextBtn, replaceBtn, replaceAllBtn, closeBtn });
+
+            if (pythonEditor.SelectionLength > 0)
+                findBox.Text = pythonEditor.SelectedText;
+
+            findReplaceForm.Show(this.FindForm());
+            findBox.Focus();
+        }
 
         private void OnOpenScript(object sender, EventArgs e)
         {
