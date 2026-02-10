@@ -25,6 +25,7 @@ DataScienceWorkbench/
   MainForm.Designer.cs              - Designer-generated form layout
   MainForm.resx                     - Designer resource file
   Program.cs                        - Entry point
+  ErrorSquiggleOverlay.cs           - Red squiggly underline for syntax errors
   LineNumberPanel.cs                - Line number gutter control
   PythonBridge.cs                   - Python bridge + syntax checker
   PythonSyntaxHighlighter.cs        - Syntax highlighting engine

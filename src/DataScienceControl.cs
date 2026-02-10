@@ -24,7 +24,8 @@ namespace DataScienceWorkbench
         private PythonSyntaxHighlighter syntaxHighlighter;
         private Timer highlightTimer;
         private bool suppressHighlight;
-        private int lastErrorLine = -1;
+        private bool textDirty;
+        private ErrorSquiggleOverlay squiggleOverlay;
 
         public event EventHandler<string> StatusChanged;
 
@@ -96,11 +97,18 @@ namespace DataScienceWorkbench
             syntaxHighlighter = new PythonSyntaxHighlighter();
             lineNumberPanel.AttachEditor(pythonEditor);
 
+            squiggleOverlay = new ErrorSquiggleOverlay();
+            squiggleOverlay.AttachEditor(pythonEditor);
+            pythonEditor.Controls.Add(squiggleOverlay);
+            squiggleOverlay.BringToFront();
+
             highlightTimer = new Timer();
             highlightTimer.Interval = 500;
             highlightTimer.Tick += (s, e) =>
             {
                 highlightTimer.Stop();
+                if (!textDirty) return;
+                textDirty = false;
                 ApplySyntaxHighlighting();
                 RunLiveSyntaxCheck();
             };
@@ -109,6 +117,7 @@ namespace DataScienceWorkbench
             {
                 if (!suppressHighlight)
                 {
+                    textDirty = true;
                     highlightTimer.Stop();
                     highlightTimer.Start();
                 }
@@ -130,7 +139,7 @@ namespace DataScienceWorkbench
             string script = pythonEditor.Text;
             if (string.IsNullOrWhiteSpace(script))
             {
-                ClearErrorHighlight();
+                squiggleOverlay.ClearError();
                 RaiseStatus("Ready");
                 return;
             }
@@ -138,10 +147,10 @@ namespace DataScienceWorkbench
             try
             {
                 var result = pythonRunner.CheckSyntax(script);
-                ClearErrorHighlight();
 
                 if (result.Success)
                 {
+                    squiggleOverlay.ClearError();
                     RaiseStatus("Ready");
                 }
                 else
@@ -149,8 +158,7 @@ namespace DataScienceWorkbench
                     int errorLine = ParseErrorLine(result.Error);
                     if (errorLine > 0)
                     {
-                        HighlightErrorLine(errorLine);
-                        lastErrorLine = errorLine;
+                        squiggleOverlay.SetErrorLine(errorLine);
                         var errorMsg = result.Error.Trim();
                         var firstLine = errorMsg.Split('\n')[0];
                         RaiseStatus("Line " + errorLine + ": " + firstLine);
@@ -158,30 +166,6 @@ namespace DataScienceWorkbench
                 }
             }
             catch { }
-        }
-
-        private void ClearErrorHighlight()
-        {
-            if (lastErrorLine < 1 || lastErrorLine > pythonEditor.Lines.Length)
-            {
-                lastErrorLine = -1;
-                return;
-            }
-
-            int selStart = pythonEditor.SelectionStart;
-            int selLen = pythonEditor.SelectionLength;
-
-            int lineIdx = lastErrorLine - 1;
-            int start = pythonEditor.GetFirstCharIndexFromLine(lineIdx);
-            int length = pythonEditor.Lines[lineIdx].Length;
-
-            suppressHighlight = true;
-            pythonEditor.Select(start, length);
-            pythonEditor.SelectionBackColor = Color.FromArgb(30, 30, 30);
-            pythonEditor.Select(selStart, selLen);
-            suppressHighlight = false;
-
-            lastErrorLine = -1;
         }
 
         public void LoadData(
@@ -530,6 +514,7 @@ namespace DataScienceWorkbench
 
             if (result.Success)
             {
+                squiggleOverlay.ClearError();
                 AppendOutput("Syntax OK - no errors found.\n", Color.LightGreen);
                 RaiseStatus("Syntax check passed.");
             }
@@ -540,7 +525,7 @@ namespace DataScienceWorkbench
                 int errorLine = ParseErrorLine(result.Error);
                 if (errorLine > 0)
                 {
-                    HighlightErrorLine(errorLine);
+                    squiggleOverlay.SetErrorLine(errorLine);
                 }
                 RaiseStatus("Syntax error on line " + errorLine);
             }
@@ -558,18 +543,6 @@ namespace DataScienceWorkbench
             return -1;
         }
 
-        private void HighlightErrorLine(int lineNumber)
-        {
-            if (lineNumber < 1 || lineNumber > pythonEditor.Lines.Length) return;
-
-            int lineIdx = lineNumber - 1;
-            int start = pythonEditor.GetFirstCharIndexFromLine(lineIdx);
-            int length = pythonEditor.Lines[lineIdx].Length;
-
-            pythonEditor.Select(start, length);
-            pythonEditor.SelectionBackColor = Color.FromArgb(80, 30, 30);
-            pythonEditor.Select(start + length, 0);
-        }
 
         private void OnOpenScript(object sender, EventArgs e)
         {

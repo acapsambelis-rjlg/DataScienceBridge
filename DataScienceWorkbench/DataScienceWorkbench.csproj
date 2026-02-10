@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataModels.cs" />
+    <Compile Include="ErrorSquiggleOverlay.cs" />
     <Compile Include="DataScienceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
