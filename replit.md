@@ -11,6 +11,11 @@ A Windows Forms application built with Mono (.NET Framework) that provides an in
 
 ## Project Structure
 ```
+DataScienceWorkbench.sln            - Visual Studio solution file
+DataScienceWorkbench/
+  DataScienceWorkbench.csproj       - VS project file (links to src/ files)
+  Properties/
+    AssemblyInfo.cs                 - Assembly metadata
 src/
   DataModels.cs          - Data classes (Customer, Product, Order, Employee, SensorReading, StockPrice, WebEvent) and DataGenerator
   JsonHelper.cs          - Lightweight JSON serializer (no external dependencies)
@@ -18,8 +23,8 @@ src/
   DataScienceControl.cs  - Reusable UserControl with Python editor, data browser, output panel, package manager
   MainForm.cs            - Thin host form that contains the DataScienceControl
   Program.cs             - Entry point
-build.sh                 - Mono compiler script
-run.sh                   - Launch script (Xvfb + x11vnc + mono)
+build.sh                 - Mono compiler script (for Linux/Replit)
+run.sh                   - Launch script (Xvfb + x11vnc + mono, for Linux/Replit)
 ```
 
 ## DataScienceControl Public API
@@ -41,6 +46,11 @@ run.sh                   - Launch script (Xvfb + x11vnc + mono)
 - **CSV data bridge**: All .NET data exported as CSV for Python pandas consumption
 
 ## Build & Run
+
+### Visual Studio (Windows)
+Open `DataScienceWorkbench.sln` in Visual Studio. Targets .NET Framework 4.7.2.
+
+### Mono (Linux/Replit)
 ```bash
 bash build.sh    # Compile with Mono (mcs)
 bash run.sh      # Run the application
@@ -55,5 +65,6 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-10: Added Visual Studio solution and project files targeting .NET Framework 4.7.2
 - 2026-02-10: Extracted all functionality from MainForm into DataScienceControl UserControl with public API for reuse
 - 2026-02-10: Initial project creation with full data model, Python editor, data browser, and package manager
