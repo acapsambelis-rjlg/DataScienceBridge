@@ -6,11 +6,29 @@ using System.Windows.Forms;
 
 namespace DataScienceWorkbench
 {
+    internal class NoActivateForm : Form
+    {
+        private const int WS_EX_NOACTIVATE = 0x08000000;
+        private const int WS_EX_TOOLWINDOW = 0x00000080;
+
+        protected override bool ShowWithoutActivation { get { return true; } }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var cp = base.CreateParams;
+                cp.ExStyle |= WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW;
+                return cp;
+            }
+        }
+    }
+
     public class AutoCompletePopup : IDisposable
     {
         private readonly RichTextBox editor;
         private readonly ListBox listBox;
-        private readonly Form popupForm;
+        private readonly NoActivateForm popupForm;
         private int triggerStart = -1;
         private bool isShowing;
 
@@ -128,7 +146,7 @@ namespace DataScienceWorkbench
                 }
             };
 
-            popupForm = new Form
+            popupForm = new NoActivateForm
             {
                 FormBorderStyle = FormBorderStyle.None,
                 ShowInTaskbar = false,
@@ -138,20 +156,6 @@ namespace DataScienceWorkbench
             };
             popupForm.Controls.Add(listBox);
             listBox.Dock = DockStyle.Fill;
-
-            popupForm.Deactivate += (s, e) =>
-            {
-                if (isShowing)
-                    BeginInvokeHide();
-            };
-        }
-
-        private void BeginInvokeHide()
-        {
-            if (editor.IsHandleCreated)
-            {
-                editor.BeginInvoke(new Action(() => Hide()));
-            }
         }
 
         private void ListBox_DrawItem(object sender, DrawItemEventArgs e)
@@ -201,11 +205,16 @@ namespace DataScienceWorkbench
 
         public void OnTextChanged()
         {
-            if (editor.SelectionStart <= 0) { Hide(); return; }
-
             string text = editor.Text;
             int pos = editor.SelectionStart;
-            if (pos > text.Length) { Hide(); return; }
+            if (pos <= 0 || pos > text.Length) { Hide(); return; }
+
+            char lastChar = text[pos - 1];
+            if (!char.IsLetterOrDigit(lastChar) && lastChar != '_' && lastChar != '.')
+            {
+                Hide();
+                return;
+            }
 
             int wordStart = pos - 1;
             while (wordStart >= 0 && (char.IsLetterOrDigit(text[wordStart]) || text[wordStart] == '_' || text[wordStart] == '.'))
@@ -274,8 +283,17 @@ namespace DataScienceWorkbench
 
         public void OnSelectionChanged()
         {
-            if (isShowing && editor.SelectionLength > 0)
+            if (!isShowing) return;
+            if (editor.SelectionLength > 0)
+            {
                 Hide();
+                return;
+            }
+            int pos = editor.SelectionStart;
+            if (pos < triggerStart)
+            {
+                Hide();
+            }
         }
 
         private void AcceptCompletion()

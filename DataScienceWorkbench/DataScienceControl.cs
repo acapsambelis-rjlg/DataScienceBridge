@@ -452,11 +452,15 @@ namespace DataScienceWorkbench
         private void ApplySyntaxHighlighting()
         {
             if (pythonEditor.Text.Length > 50000) return;
+            suppressAutoComplete = true;
+            suppressHighlight = true;
             try
             {
                 syntaxHighlighter.Highlight(pythonEditor);
             }
             catch { }
+            suppressHighlight = false;
+            suppressAutoComplete = false;
             RunSymbolAnalysis();
         }
 
