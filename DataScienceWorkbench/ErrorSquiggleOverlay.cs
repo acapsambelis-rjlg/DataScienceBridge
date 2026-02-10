@@ -169,9 +169,22 @@ namespace DataScienceWorkbench
             Point pos = this.GetPositionFromCharIndex(charIndex);
             if (pos.Y < 0 || pos.Y > this.ClientSize.Height) return;
 
-            Size charSize = TextRenderer.MeasureText(this.Text[charIndex].ToString(), this.Font, Size.Empty, TextFormatFlags.NoPadding);
+            int charWidth;
+            if (charIndex + 1 < this.Text.Length && this.Text[charIndex] != '\n')
+            {
+                Point nextPos = this.GetPositionFromCharIndex(charIndex + 1);
+                if (nextPos.Y == pos.Y && nextPos.X > pos.X)
+                    charWidth = nextPos.X - pos.X;
+                else
+                    charWidth = TextRenderer.MeasureText(this.Text[charIndex].ToString(), this.Font, Size.Empty, TextFormatFlags.NoPadding).Width - 4;
+            }
+            else
+            {
+                charWidth = TextRenderer.MeasureText(this.Text[charIndex].ToString(), this.Font, Size.Empty, TextFormatFlags.NoPadding).Width - 4;
+            }
+            if (charWidth < 4) charWidth = 4;
 
-            Rectangle rect = new Rectangle(pos.X, pos.Y, charSize.Width + 2, this.Font.Height);
+            Rectangle rect = new Rectangle(pos.X, pos.Y, charWidth, this.Font.Height);
 
             using (var brush = new SolidBrush(BracketHighlightColor))
             {
