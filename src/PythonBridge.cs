@@ -118,8 +118,41 @@ namespace DataScienceWorkbench
 
         public PythonResult Execute(string script, string workingDir = null)
         {
+            return Execute(script, workingDir, null);
+        }
+
+        public PythonResult Execute(string script, string workingDir, Dictionary<string, string> inMemoryData)
+        {
+            bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
+
+            string fullScript;
+            if (hasMemData)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine("import sys, io, pandas as pd");
+                sb.AppendLine("dotnet = {}");
+                sb.AppendLine("while True:");
+                sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
+                sb.AppendLine("    if _hdr == '__DONE__': break");
+                sb.AppendLine("    if _hdr.startswith('__DATASET__||'):");
+                sb.AppendLine("        _parts = _hdr.split('||')");
+                sb.AppendLine("        _name = _parts[1]");
+                sb.AppendLine("        _nlines = int(_parts[2])");
+                sb.AppendLine("        _lines = []");
+                sb.AppendLine("        for _ in range(_nlines):");
+                sb.AppendLine("            _lines.append(sys.stdin.readline())");
+                sb.AppendLine("        dotnet[_name] = pd.read_csv(io.StringIO(''.join(_lines)))");
+                sb.AppendLine();
+                sb.AppendLine(script);
+                fullScript = sb.ToString();
+            }
+            else
+            {
+                fullScript = script;
+            }
+
             string tempScript = Path.GetTempFileName() + ".py";
-            File.WriteAllText(tempScript, script);
+            File.WriteAllText(tempScript, fullScript);
 
             try
             {
@@ -129,6 +162,7 @@ namespace DataScienceWorkbench
                     Arguments = "\"" + tempScript + "\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
+                    RedirectStandardInput = hasMemData,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
@@ -139,6 +173,22 @@ namespace DataScienceWorkbench
                 psi.EnvironmentVariables["MPLBACKEND"] = "Agg";
 
                 var proc = Process.Start(psi);
+
+                if (hasMemData)
+                {
+                    foreach (var kvp in inMemoryData)
+                    {
+                        string csvData = kvp.Value;
+                        string[] csvLines = csvData.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + csvLines.Length);
+                        foreach (var line in csvLines)
+                            proc.StandardInput.WriteLine(line);
+                    }
+                    proc.StandardInput.WriteLine("__DONE__");
+                    proc.StandardInput.Flush();
+                    proc.StandardInput.Close();
+                }
+
                 string stdout = proc.StandardOutput.ReadToEnd();
                 string stderr = proc.StandardError.ReadToEnd();
                 proc.WaitForExit(60000);

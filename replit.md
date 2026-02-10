@@ -44,6 +44,10 @@ Keep them in sync when making changes.
 - **ExportCustomData(name, values, columnName)** - Export any IEnumerable (e.g., List<int>) to CSV for Python access
 - **ExportCustomData(name, DataTable)** - Export a DataTable to CSV for Python access
 - **ExportCustomData<T>(name, List<T>)** - Export a typed list of objects to CSV for Python access
+- **RegisterInMemoryData(name, values, columnName)** - Register IEnumerable for in-memory piping to Python (no file I/O)
+- **RegisterInMemoryData<T>(name, dataProvider)** - Register a Func<List<T>> for in-memory piping (uses reflection)
+- **RegisterInMemoryData(name, dataTableProvider)** - Register a Func<DataTable> for in-memory piping
+- **UnregisterInMemoryData(name)** - Remove a registered in-memory data source
 - **RunScript()** - Execute the current Python script
 - **ScriptText** - Get/set the Python editor text
 - **OutputText** - Get the output panel text

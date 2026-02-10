@@ -21,6 +21,8 @@ namespace DataScienceWorkbench
             SetupMenuAndEvents();
 
             dataScienceControl.ExportCustomData("measurements", SampleMeasurements, "value");
+
+            dataScienceControl.RegisterInMemoryData("measurements", SampleMeasurements, "value");
         }
 
         private void SetupMenuAndEvents()

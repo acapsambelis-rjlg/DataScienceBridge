@@ -34,6 +34,7 @@ namespace DataScienceWorkbench
         private AutoCompletePopup autoComplete;
         private bool suppressAutoComplete;
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
+        private Dictionary<string, Func<string>> inMemoryDataSources = new Dictionary<string, Func<string>>();
 
         private static readonly Dictionary<char, char> BracketPairs = new Dictionary<char, char>
         {
@@ -585,6 +586,109 @@ namespace DataScienceWorkbench
             ExportCsv(data, name);
         }
 
+        public void RegisterInMemoryData(string name, System.Collections.IEnumerable values, string columnName = "value")
+        {
+            inMemoryDataSources[name] = () =>
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine(columnName);
+                foreach (var item in values)
+                {
+                    string s = item != null ? item.ToString() : "";
+                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                    sb.AppendLine(s);
+                }
+                return sb.ToString();
+            };
+        }
+
+        public void RegisterInMemoryData<T>(string name, Func<List<T>> dataProvider) where T : class
+        {
+            inMemoryDataSources[name] = () =>
+            {
+                var data = dataProvider();
+                var props = typeof(T).GetProperties();
+                var sb = new System.Text.StringBuilder();
+
+                var headerParts = new List<string>();
+                foreach (var p in props)
+                {
+                    if (p.GetIndexParameters().Length > 0) continue;
+                    if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
+                    if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
+                    headerParts.Add(p.Name);
+                }
+                sb.AppendLine(string.Join(",", headerParts));
+
+                foreach (var item in data)
+                {
+                    var vals = new List<string>();
+                    foreach (var p in props)
+                    {
+                        if (p.GetIndexParameters().Length > 0) continue;
+                        if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
+                        if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
+                        var val = p.GetValue(item);
+                        string s = val != null ? val.ToString() : "";
+                        if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                            s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                        vals.Add(s);
+                    }
+                    sb.AppendLine(string.Join(",", vals));
+                }
+                return sb.ToString();
+            };
+        }
+
+        public void RegisterInMemoryData(string name, Func<System.Data.DataTable> dataProvider)
+        {
+            inMemoryDataSources[name] = () =>
+            {
+                var table = dataProvider();
+                var sb = new System.Text.StringBuilder();
+                var headers = new List<string>();
+                foreach (System.Data.DataColumn col in table.Columns)
+                    headers.Add(col.ColumnName);
+                sb.AppendLine(string.Join(",", headers));
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    var vals = new List<string>();
+                    foreach (var item in row.ItemArray)
+                    {
+                        string s = item != null ? item.ToString() : "";
+                        if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                            s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                        vals.Add(s);
+                    }
+                    sb.AppendLine(string.Join(",", vals));
+                }
+                return sb.ToString();
+            };
+        }
+
+        public void UnregisterInMemoryData(string name)
+        {
+            inMemoryDataSources.Remove(name);
+        }
+
+        private Dictionary<string, string> SerializeInMemoryData()
+        {
+            var result = new Dictionary<string, string>();
+            foreach (var kvp in inMemoryDataSources)
+            {
+                try
+                {
+                    result[kvp.Key] = kvp.Value();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Warning: Failed to serialize in-memory data '" + kvp.Key + "': " + ex.Message);
+                }
+            }
+            return result;
+        }
+
         public void RunScript()
         {
             OnRunScript(this, EventArgs.Empty);
@@ -919,7 +1023,11 @@ namespace DataScienceWorkbench
 
             Application.DoEvents();
 
-            var result = pythonRunner.Execute(script, dataExportDir);
+            Dictionary<string, string> memData = null;
+            if (inMemoryDataSources.Count > 0)
+                memData = SerializeInMemoryData();
+
+            var result = pythonRunner.Execute(script, dataExportDir, memData);
 
             if (!string.IsNullOrEmpty(result.Output))
                 AppendOutput(result.Output, Color.FromArgb(220, 220, 220));
@@ -1216,9 +1324,10 @@ AVAILABLE DATASETS (as CSV files):
   stock_prices.csv  - 365 days of 10 stock symbols
   web_events.csv    - 2000 web analytics events
 
-CUSTOM .NET DATA:
-  measurements.csv  - Static list of integers from .NET
-  (Any .NET control can export data via ExportCustomData)
+CUSTOM .NET DATA (IN-MEMORY):
+  measurements  - Static list of integers piped from .NET memory
+  (Any .NET control can register data via RegisterInMemoryData)
+  In-memory data appears as pre-loaded pandas DataFrames
 
 HOW TO USE:
   1. Write Python code in the editor
@@ -1454,9 +1563,10 @@ print('Time series chart saved to timeseries.png')
 import pandas as pd
 import numpy as np
 
-# Read custom .NET data (e.g., a static List<int> from another control)
-measurements = pd.read_csv('measurements.csv')
-print('=== .NET Custom Data: Measurements ===')
+# 'dotnet' dict holds DataFrames piped from .NET memory (no file I/O)
+# Access registered data: dotnet['name']
+measurements = dotnet['measurements']
+print('=== .NET In-Memory Data: Measurements ===')
 print(f'Count: {len(measurements)}')
 print(f'Values: {measurements[""value""].tolist()}')
 print()
