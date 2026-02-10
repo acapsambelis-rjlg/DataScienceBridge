@@ -44,7 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataModels.cs" />
-    <Compile Include="ErrorSquiggleOverlay.cs" />
+    <Compile Include="ErrorSquiggleOverlay.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataScienceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -52,7 +54,9 @@
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="JsonHelper.cs" />
-    <Compile Include="LineNumberPanel.cs" />
+    <Compile Include="LineNumberPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
