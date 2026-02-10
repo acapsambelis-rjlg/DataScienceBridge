@@ -16,20 +16,23 @@ DataScienceWorkbench/
   DataScienceWorkbench.csproj       - VS project file
   Properties/
     AssemblyInfo.cs                 - Assembly metadata
-  DataModels.cs          - Data classes and DataGenerator (VS copy)
-  DataScienceControl.cs  - Reusable UserControl (VS copy)
-  JsonHelper.cs          - JSON serializer (VS copy)
-  MainForm.cs            - Host form (VS copy)
-  Program.cs             - Entry point (VS copy)
-  PythonBridge.cs        - Python bridge (VS copy)
+  DataModels.cs                     - Data classes and DataGenerator
+  DataScienceControl.cs             - Reusable UserControl (partial, logic + events)
+  DataScienceControl.Designer.cs    - Designer-generated UI layout
+  DataScienceControl.resx           - Designer resource file
+  JsonHelper.cs                     - JSON serializer
+  MainForm.cs                       - Host form (partial, logic)
+  MainForm.Designer.cs              - Designer-generated form layout
+  MainForm.resx                     - Designer resource file
+  Program.cs                        - Entry point
+  PythonBridge.cs                   - Python bridge
 src/
-  (same .cs files)       - Used by Mono build on Linux/Replit
+  (same .cs files including .Designer.cs) - Used by Mono build on Linux/Replit
 build.sh                 - Mono compiler script (for Linux/Replit)
 run.sh                   - Launch script (Xvfb + x11vnc + mono, for Linux/Replit)
 ```
 Note: Source files exist in both `src/` (for Mono/Replit) and `DataScienceWorkbench/` (for Visual Studio).
 Keep them in sync when making changes.
-```
 
 ## DataScienceControl Public API
 - **LoadData(...)** - Replace dummy data with custom datasets
@@ -69,6 +72,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-10: Added .Designer.cs and .resx files for both DataScienceControl and MainForm (Visual Studio designer support)
 - 2026-02-10: Added Visual Studio solution and project files targeting .NET Framework 4.7.2
 - 2026-02-10: Extracted all functionality from MainForm into DataScienceControl UserControl with public API for reuse
 - 2026-02-10: Initial project creation with full data model, Python editor, data browser, and package manager

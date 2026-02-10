@@ -7,18 +7,8 @@ using System.Windows.Forms;
 
 namespace DataScienceWorkbench
 {
-    public class DataScienceControl : UserControl
+    public partial class DataScienceControl : UserControl
     {
-        private TabControl mainTabs;
-        private TextBox pythonEditor;
-        private RichTextBox outputBox;
-        private TreeView dataTreeView;
-        private DataGridView dataGrid;
-        private TextBox packageNameBox;
-        private ListBox packageListBox;
-        private ComboBox datasetCombo;
-        private Label recordCountLabel;
-
         private PythonRunner pythonRunner;
         private DataGenerator dataGen;
         private List<Product> products;
@@ -36,8 +26,12 @@ namespace DataScienceWorkbench
 
         public DataScienceControl()
         {
+            InitializeComponent();
             InitializeData();
-            InitializeComponents();
+            SetupSnippetMenu();
+            pythonEditor.Text = GetDefaultScript();
+            PopulateDataTree();
+            datasetCombo.SelectedIndex = 0;
             ExportAllData();
         }
 
@@ -142,6 +136,17 @@ namespace DataScienceWorkbench
             pythonRunner = new PythonRunner();
         }
 
+        private void SetupSnippetMenu()
+        {
+            insertSnippetBtn.DropDownItems.Add("Load CSV Data", null, (s, e) => InsertSnippet(GetLoadDataSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Basic Statistics", null, (s, e) => InsertSnippet(GetStatsSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Plot Histogram", null, (s, e) => InsertSnippet(GetHistogramSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Scatter Plot", null, (s, e) => InsertSnippet(GetScatterSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Group By Analysis", null, (s, e) => InsertSnippet(GetGroupBySnippet()));
+            insertSnippetBtn.DropDownItems.Add("Correlation Matrix", null, (s, e) => InsertSnippet(GetCorrelationSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Time Series Plot", null, (s, e) => InsertSnippet(GetTimeSeriesSnippet()));
+        }
+
         private void ExportAllData()
         {
             dataExportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
@@ -234,216 +239,6 @@ namespace DataScienceWorkbench
             File.WriteAllLines(path, lines);
         }
 
-        private void InitializeComponents()
-        {
-            this.Dock = DockStyle.Fill;
-
-            mainTabs = new TabControl();
-            mainTabs.Dock = DockStyle.Fill;
-
-            var editorTab = CreateEditorTab();
-            var dataTab = CreateDataBrowserTab();
-            var packagesTab = CreatePackageManagerTab();
-            mainTabs.TabPages.Add(editorTab);
-            mainTabs.TabPages.Add(dataTab);
-            mainTabs.TabPages.Add(packagesTab);
-
-            mainTabs.SelectedIndexChanged += (s, e) =>
-            {
-                if (mainTabs.SelectedIndex == 2 && !packagesLoaded)
-                {
-                    packagesLoaded = true;
-                    OnRefreshPackages(null, null);
-                }
-            };
-
-            this.Controls.Add(mainTabs);
-        }
-
-        private TabPage CreateEditorTab()
-        {
-            var tab = new TabPage("Python Editor");
-
-            var mainSplit = new SplitContainer
-            {
-                Dock = DockStyle.Fill,
-                Orientation = Orientation.Horizontal,
-                SplitterDistance = 450,
-                SplitterWidth = 6
-            };
-
-            var topSplit = new SplitContainer
-            {
-                Dock = DockStyle.Fill,
-                Orientation = Orientation.Vertical,
-                SplitterDistance = 200,
-                SplitterWidth = 6
-            };
-
-            dataTreeView = new TreeView
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Monospace", 9f)
-            };
-            PopulateDataTree();
-
-            var treePanel = new Panel { Dock = DockStyle.Fill };
-            var treeLabel = new Label { Text = "Available Data:", Dock = DockStyle.Top, Height = 22, Padding = new Padding(4, 4, 0, 0), Font = new Font("Sans", 9f, FontStyle.Bold) };
-            treePanel.Controls.Add(dataTreeView);
-            treePanel.Controls.Add(treeLabel);
-
-            var editorPanel = new Panel { Dock = DockStyle.Fill };
-
-            var toolBar = new ToolStrip();
-            var runBtn = new ToolStripButton("Run (F5)") { DisplayStyle = ToolStripItemDisplayStyle.Text };
-            runBtn.Click += OnRunScript;
-            var clearBtn = new ToolStripButton("Clear Output") { DisplayStyle = ToolStripItemDisplayStyle.Text };
-            clearBtn.Click += (s, e) => outputBox.Clear();
-            var insertSnippetBtn = new ToolStripDropDownButton("Insert Snippet");
-            insertSnippetBtn.DropDownItems.Add("Load CSV Data", null, (s, e) => InsertSnippet(GetLoadDataSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Basic Statistics", null, (s, e) => InsertSnippet(GetStatsSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Plot Histogram", null, (s, e) => InsertSnippet(GetHistogramSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Scatter Plot", null, (s, e) => InsertSnippet(GetScatterSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Group By Analysis", null, (s, e) => InsertSnippet(GetGroupBySnippet()));
-            insertSnippetBtn.DropDownItems.Add("Correlation Matrix", null, (s, e) => InsertSnippet(GetCorrelationSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Time Series Plot", null, (s, e) => InsertSnippet(GetTimeSeriesSnippet()));
-
-            toolBar.Items.AddRange(new ToolStripItem[] { runBtn, new ToolStripSeparator(), clearBtn, new ToolStripSeparator(), insertSnippetBtn });
-
-            pythonEditor = new TextBox
-            {
-                Dock = DockStyle.Fill,
-                Multiline = true,
-                ScrollBars = ScrollBars.Both,
-                WordWrap = false,
-                AcceptsTab = true,
-                Font = new Font("Monospace", 10f),
-                Text = GetDefaultScript()
-            };
-
-            editorPanel.Controls.Add(pythonEditor);
-            editorPanel.Controls.Add(toolBar);
-
-            topSplit.Panel1.Controls.Add(treePanel);
-            topSplit.Panel2.Controls.Add(editorPanel);
-
-            var outputPanel = new Panel { Dock = DockStyle.Fill };
-            var outputLabel = new Label { Text = "Output:", Dock = DockStyle.Top, Height = 22, Padding = new Padding(4, 4, 0, 0), Font = new Font("Sans", 9f, FontStyle.Bold) };
-            outputBox = new RichTextBox
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                Font = new Font("Monospace", 9f),
-                BackColor = Color.FromArgb(30, 30, 30),
-                ForeColor = Color.FromArgb(220, 220, 220),
-                WordWrap = false
-            };
-            outputPanel.Controls.Add(outputBox);
-            outputPanel.Controls.Add(outputLabel);
-
-            mainSplit.Panel1.Controls.Add(topSplit);
-            mainSplit.Panel2.Controls.Add(outputPanel);
-
-            tab.Controls.Add(mainSplit);
-            return tab;
-        }
-
-        private TabPage CreateDataBrowserTab()
-        {
-            var tab = new TabPage("Data Browser");
-
-            var topPanel = new Panel { Dock = DockStyle.Top, Height = 40 };
-            var lbl = new Label { Text = "Dataset:", Location = new Point(10, 10), AutoSize = true };
-            datasetCombo = new ComboBox
-            {
-                Location = new Point(70, 7),
-                Width = 200,
-                DropDownStyle = ComboBoxStyle.DropDownList
-            };
-            datasetCombo.Items.AddRange(new object[] { "Products", "Customers", "Orders", "Employees", "Sensor Readings", "Stock Prices", "Web Events" });
-            datasetCombo.SelectedIndex = 0;
-            datasetCombo.SelectedIndexChanged += OnDatasetChanged;
-
-            recordCountLabel = new Label { Location = new Point(290, 10), AutoSize = true };
-
-            topPanel.Controls.AddRange(new Control[] { lbl, datasetCombo, recordCountLabel });
-
-            dataGrid = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                BackgroundColor = Color.White,
-                Font = new Font("Sans", 9f)
-            };
-
-            tab.Controls.Add(dataGrid);
-            tab.Controls.Add(topPanel);
-
-            OnDatasetChanged(null, null);
-            return tab;
-        }
-
-        private TabPage CreatePackageManagerTab()
-        {
-            var tab = new TabPage("Package Manager");
-
-            var leftPanel = new Panel { Dock = DockStyle.Left, Width = 350, Padding = new Padding(10) };
-
-            var installGroup = new GroupBox { Text = "Install / Uninstall Packages", Dock = DockStyle.Top, Height = 160, Padding = new Padding(10) };
-            var pkgLabel = new Label { Text = "Package name:", Location = new Point(15, 25), AutoSize = true };
-            packageNameBox = new TextBox { Location = new Point(15, 45), Width = 200 };
-
-            var installBtn = new Button { Text = "Install", Location = new Point(220, 44), Width = 90 };
-            installBtn.Click += OnInstallPackage;
-            var uninstallBtn = new Button { Text = "Uninstall", Location = new Point(220, 74), Width = 90 };
-            uninstallBtn.Click += OnUninstallPackage;
-
-            var quickInstallLabel = new Label { Text = "Quick install:", Location = new Point(15, 80), AutoSize = true };
-            var quickCombo = new ComboBox { Location = new Point(15, 100), Width = 200, DropDownStyle = ComboBoxStyle.DropDownList };
-            quickCombo.Items.AddRange(new object[] {
-                "scipy", "scikit-learn", "seaborn", "statsmodels",
-                "plotly", "bokeh", "pillow", "openpyxl",
-                "requests", "beautifulsoup4", "sympy", "networkx"
-            });
-            var quickInstallBtn = new Button { Text = "Install", Location = new Point(220, 99), Width = 90 };
-            quickInstallBtn.Click += (s, e) =>
-            {
-                if (quickCombo.SelectedItem != null)
-                {
-                    packageNameBox.Text = quickCombo.SelectedItem.ToString();
-                    OnInstallPackage(s, e);
-                }
-            };
-
-            installGroup.Controls.AddRange(new Control[] { pkgLabel, packageNameBox, installBtn, uninstallBtn, quickInstallLabel, quickCombo, quickInstallBtn });
-
-            var refreshBtn = new Button { Text = "Refresh Installed Packages", Dock = DockStyle.Top, Height = 30 };
-            refreshBtn.Click += OnRefreshPackages;
-
-            leftPanel.Controls.Add(refreshBtn);
-            leftPanel.Controls.Add(installGroup);
-
-            packageListBox = new ListBox
-            {
-                Dock = DockStyle.Fill,
-                Font = new Font("Monospace", 9f)
-            };
-
-            var rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-            var pkgListLabel = new Label { Text = "Installed Packages:", Dock = DockStyle.Top, Height = 22, Font = new Font("Sans", 9f, FontStyle.Bold) };
-            rightPanel.Controls.Add(packageListBox);
-            rightPanel.Controls.Add(pkgListLabel);
-
-            tab.Controls.Add(rightPanel);
-            tab.Controls.Add(leftPanel);
-
-            return tab;
-        }
-
         private void PopulateDataTree()
         {
             dataTreeView.Nodes.Clear();
@@ -489,6 +284,15 @@ namespace DataScienceWorkbench
             webNode.Nodes.Add("Browser, Device, Country, Duration");
 
             root.Expand();
+        }
+
+        private void mainTabs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (mainTabs.SelectedIndex == 2 && !packagesLoaded)
+            {
+                packagesLoaded = true;
+                OnRefreshPackages(null, null);
+            }
         }
 
         private void OnDatasetChanged(object sender, EventArgs e)
@@ -556,6 +360,11 @@ namespace DataScienceWorkbench
 
             AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.Cyan);
             RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
+        }
+
+        private void OnClearOutput(object sender, EventArgs e)
+        {
+            outputBox.Clear();
         }
 
         private void OnOpenScript(object sender, EventArgs e)
@@ -629,6 +438,15 @@ namespace DataScienceWorkbench
                 RaiseStatus("Uninstall failed for " + pkg);
             }
             OnRefreshPackages(null, null);
+        }
+
+        private void OnQuickInstall(object sender, EventArgs e)
+        {
+            if (quickCombo.SelectedItem != null)
+            {
+                packageNameBox.Text = quickCombo.SelectedItem.ToString();
+                OnInstallPackage(sender, e);
+            }
         }
 
         private void OnRefreshPackages(object sender, EventArgs e)

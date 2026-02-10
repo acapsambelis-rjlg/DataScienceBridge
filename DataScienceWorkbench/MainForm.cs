@@ -4,25 +4,16 @@ using System.Windows.Forms;
 
 namespace DataScienceWorkbench
 {
-    public class MainForm : Form
+    public partial class MainForm : Form
     {
-        private DataScienceControl dataScienceControl;
-        private StatusStrip statusBar;
-        private ToolStripStatusLabel statusLabel;
-
         public MainForm()
         {
-            InitializeComponents();
+            InitializeComponent();
+            SetupMenuAndEvents();
         }
 
-        private void InitializeComponents()
+        private void SetupMenuAndEvents()
         {
-            this.Text = "Data Science Workbench - Python + .NET";
-            this.Size = new Size(1200, 800);
-            this.MinimumSize = new Size(900, 600);
-            this.StartPosition = FormStartPosition.CenterScreen;
-
-            dataScienceControl = new DataScienceControl();
             dataScienceControl.StatusChanged += (s, msg) => SetStatus(msg);
 
             var menuBar = dataScienceControl.CreateMenuStrip();
@@ -31,16 +22,8 @@ namespace DataScienceWorkbench
             fileMenu.DropDownItems.Add(new ToolStripSeparator());
             fileMenu.DropDownItems.Add(exitItem);
             this.MainMenuStrip = menuBar;
-
-            statusBar = new StatusStrip();
-            statusLabel = new ToolStripStatusLabel("Ready");
-            statusBar.Items.Add(statusLabel);
-
-            this.Controls.Add(dataScienceControl);
-            this.Controls.Add(statusBar);
             this.Controls.Add(menuBar);
 
-            this.KeyPreview = true;
             this.KeyDown += (s, e) =>
             {
                 if (dataScienceControl.HandleKeyDown(e.KeyCode))

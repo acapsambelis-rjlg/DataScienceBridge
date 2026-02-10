@@ -43,12 +43,30 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataModels.cs" />
-    <Compile Include="DataScienceControl.cs" />
+    <Compile Include="DataScienceControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataScienceControl.Designer.cs">
+      <DependentUpon>DataScienceControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="JsonHelper.cs" />
-    <Compile Include="MainForm.cs" />
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="PythonBridge.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DataScienceControl.resx">
+      <DependentUpon>DataScienceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
