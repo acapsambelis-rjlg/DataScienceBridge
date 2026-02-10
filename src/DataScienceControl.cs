@@ -186,6 +186,22 @@ namespace DataScienceWorkbench
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
+                else if (e.KeyCode == Keys.Back && !e.Control && pythonEditor.SelectionLength == 0)
+                {
+                    if (HandleBracketAutoDelete(false))
+                    {
+                        e.Handled = true;
+                        e.SuppressKeyPress = true;
+                    }
+                }
+                else if (e.KeyCode == Keys.Delete && !e.Control && pythonEditor.SelectionLength == 0)
+                {
+                    if (HandleBracketAutoDelete(true))
+                    {
+                        e.Handled = true;
+                        e.SuppressKeyPress = true;
+                    }
+                }
             };
 
             pythonEditor.KeyPress += (s, e) =>
@@ -276,6 +292,42 @@ namespace DataScienceWorkbench
             }
 
             return false;
+        }
+
+        private bool HandleBracketAutoDelete(bool isDeleteKey)
+        {
+            string text = pythonEditor.Text;
+            int pos = pythonEditor.SelectionStart;
+
+            int openPos, closePos;
+            if (isDeleteKey)
+            {
+                openPos = pos;
+                closePos = pos + 1;
+            }
+            else
+            {
+                openPos = pos - 1;
+                closePos = pos;
+            }
+
+            if (openPos < 0 || closePos >= text.Length) return false;
+
+            char openChar = text[openPos];
+            char closeChar = text[closePos];
+
+            if (!BracketPairs.ContainsKey(openChar)) return false;
+            if (BracketPairs[openChar] != closeChar) return false;
+
+            PushUndo(text, pos);
+            suppressHighlight = true;
+            pythonEditor.Select(openPos, 2);
+            pythonEditor.SelectedText = "";
+            pythonEditor.SelectionStart = openPos;
+            suppressHighlight = false;
+            ApplySyntaxHighlighting();
+
+            return true;
         }
 
         private void HandleAutoIndent()
