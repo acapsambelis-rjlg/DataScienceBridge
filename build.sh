@@ -13,6 +13,7 @@ mcs $REFS \
     src/JsonHelper.cs \
     src/PythonBridge.cs \
     src/PythonSyntaxHighlighter.cs \
+    src/LineNumberPanel.cs \
     src/DataScienceControl.Designer.cs \
     src/DataScienceControl.cs \
     src/MainForm.Designer.cs \

@@ -50,6 +50,7 @@
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="JsonHelper.cs" />
+    <Compile Include="LineNumberPanel.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>

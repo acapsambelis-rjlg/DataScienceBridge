@@ -25,8 +25,9 @@ DataScienceWorkbench/
   MainForm.Designer.cs              - Designer-generated form layout
   MainForm.resx                     - Designer resource file
   Program.cs                        - Entry point
+  LineNumberPanel.cs                - Line number gutter control
   PythonBridge.cs                   - Python bridge + syntax checker
-  PythonSyntaxHighlighter.cs        - Syntax highlighting + line number panel
+  PythonSyntaxHighlighter.cs        - Syntax highlighting engine
 src/
   (same .cs files including .Designer.cs) - Used by Mono build on Linux/Replit
 build.sh                 - Mono compiler script (for Linux/Replit)
