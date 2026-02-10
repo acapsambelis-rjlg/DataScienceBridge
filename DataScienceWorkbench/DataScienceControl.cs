@@ -503,8 +503,7 @@ namespace DataScienceWorkbench
             editMenu.DropDownItems.Add(pasteItem);
 
             var deleteItem = new ToolStripMenuItem("Delete", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.SelectionLength > 0) pythonEditor.SelectedText = ""; });
-            deleteItem.ShortcutKeys = Keys.Delete;
-            deleteItem.ShowShortcutKeys = false;
+            deleteItem.ShortcutKeyDisplayString = "Del";
             editMenu.DropDownItems.Add(deleteItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
