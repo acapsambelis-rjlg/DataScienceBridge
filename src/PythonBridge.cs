@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace DataScienceWorkbench
 {
@@ -16,12 +15,7 @@ namespace DataScienceWorkbench
                 Directory.CreateDirectory(dir);
 
             string path = Path.Combine(dir, name + ".json");
-            string json = JsonConvert.SerializeObject(data, Formatting.Indented,
-                new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                    DateFormatString = "yyyy-MM-dd HH:mm:ss"
-                });
+            string json = SimpleJson.Serialize(data);
             File.WriteAllText(path, json);
             return path;
         }
