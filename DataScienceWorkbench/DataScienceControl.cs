@@ -33,6 +33,7 @@ namespace DataScienceWorkbench
 
         private AutoCompletePopup autoComplete;
         private bool suppressAutoComplete;
+        private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
 
         private static readonly Dictionary<char, char> BracketPairs = new Dictionary<char, char>
         {
@@ -456,6 +457,26 @@ namespace DataScienceWorkbench
                 syntaxHighlighter.Highlight(pythonEditor);
             }
             catch { }
+            RunSymbolAnalysis();
+        }
+
+        private void RunSymbolAnalysis()
+        {
+            try
+            {
+                string code = pythonEditor.Text;
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    pythonEditor.ClearSymbolErrors();
+                    return;
+                }
+                var errors = symbolAnalyzer.Analyze(code);
+                pythonEditor.SetSymbolErrors(errors);
+            }
+            catch
+            {
+                pythonEditor.ClearSymbolErrors();
+            }
         }
 
         private void RunLiveSyntaxCheck()

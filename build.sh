@@ -14,6 +14,7 @@ mcs $REFS \
     src/AutoCompletePopup.cs \
     src/JsonHelper.cs \
     src/PythonBridge.cs \
+    src/PythonSymbolAnalyzer.cs \
     src/PythonSyntaxHighlighter.cs \
     src/LineNumberPanel.cs \
     src/DataScienceControl.Designer.cs \

@@ -13,8 +13,10 @@ namespace DataScienceWorkbench
 
         private static readonly Color CurrentLineColor = Color.FromArgb(20, 255, 255, 255);
         private static readonly Color BracketHighlightColor = Color.FromArgb(80, 128, 128, 128);
+        private static readonly Color WarningSquiggleColor = Color.FromArgb(220, 180, 50);
         private int matchedBracketPos1 = -1;
         private int matchedBracketPos2 = -1;
+        private List<SymbolError> symbolErrors = new List<SymbolError>();
 
         private static readonly Dictionary<char, char> OpenBrackets = new Dictionary<char, char>
         {
@@ -40,6 +42,21 @@ namespace DataScienceWorkbench
         }
 
         public int ErrorLine { get { return errorLineNumber; } }
+
+        public void SetSymbolErrors(List<SymbolError> errors)
+        {
+            symbolErrors = errors ?? new List<SymbolError>();
+            this.Invalidate();
+        }
+
+        public void ClearSymbolErrors()
+        {
+            if (symbolErrors.Count == 0) return;
+            symbolErrors.Clear();
+            this.Invalidate();
+        }
+
+        public List<SymbolError> SymbolErrors { get { return symbolErrors; } }
 
         public void UpdateBracketMatching()
         {
@@ -128,6 +145,7 @@ namespace DataScienceWorkbench
                     DrawBracketHighlights(g);
                     if (errorLineNumber >= 1)
                         DrawSquiggle(g);
+                    DrawSymbolErrorSquiggles(g);
                 }
             }
             catch { }
@@ -193,6 +211,64 @@ namespace DataScienceWorkbench
             using (var pen = new Pen(Color.FromArgb(120, 180, 180, 180)))
             {
                 g.DrawRectangle(pen, rect);
+            }
+        }
+
+        private void DrawSymbolErrorSquiggles(Graphics g)
+        {
+            if (symbolErrors.Count == 0) return;
+
+            string text = this.Text;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            using (var pen = new Pen(WarningSquiggleColor, 1.0f))
+            {
+                foreach (var err in symbolErrors)
+                {
+                    if (err.StartIndex < 0 || err.StartIndex >= text.Length) continue;
+                    if (err.StartIndex + err.Length > text.Length) continue;
+
+                    Point startPos = this.GetPositionFromCharIndex(err.StartIndex);
+                    int endIdx = err.StartIndex + err.Length - 1;
+                    Point endPos = this.GetPositionFromCharIndex(endIdx);
+
+                    if (startPos.Y != endPos.Y) continue;
+
+                    int charWidth;
+                    if (endIdx + 1 < text.Length && text[endIdx] != '\n')
+                    {
+                        Point nextPos = this.GetPositionFromCharIndex(endIdx + 1);
+                        if (nextPos.Y == endPos.Y && nextPos.X > endPos.X)
+                            charWidth = nextPos.X - endPos.X;
+                        else
+                            charWidth = 8;
+                    }
+                    else
+                    {
+                        charWidth = 8;
+                    }
+
+                    int rightEdge = endPos.X + charWidth;
+                    int squiggleY = startPos.Y + this.Font.Height - 1;
+
+                    if (squiggleY < 0 || squiggleY > this.ClientSize.Height) continue;
+                    if (startPos.X >= rightEdge) continue;
+
+                    int waveHeight = 2;
+                    int waveWidth = 4;
+                    var points = new List<Point>();
+                    int x = startPos.X;
+                    bool up = true;
+                    while (x < rightEdge)
+                    {
+                        points.Add(new Point(x, squiggleY + (up ? 0 : waveHeight)));
+                        x += waveWidth / 2;
+                        up = !up;
+                    }
+
+                    if (points.Count > 1)
+                        g.DrawLines(pen, points.ToArray());
+                }
             }
         }
 

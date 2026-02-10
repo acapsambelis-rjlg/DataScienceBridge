@@ -29,6 +29,7 @@ DataScienceWorkbench/
   ErrorSquiggleOverlay.cs           - SquiggleRichTextBox: error squiggles, line highlight, bracket matching
   LineNumberPanel.cs                - Line number gutter control
   PythonBridge.cs                   - Python bridge + syntax checker
+  PythonSymbolAnalyzer.cs           - Undefined name detection (symbol cache)
   PythonSyntaxHighlighter.cs        - Syntax highlighting engine
 src/
   (same .cs files including .Designer.cs) - Used by Mono build on Linux/Replit
@@ -76,6 +77,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-10: Added Python symbol analyzer for undefined name detection (yellow squiggly lines), tracks definitions (assignments, def, class, for, import, with, except) and flags undefined references
 - 2026-02-10: Added autocomplete popup (Python keywords, builtins, pandas/numpy/matplotlib methods), bracket auto-closing with matching highlight, current line highlighting, and auto-indentation after colon
 - 2026-02-10: Added custom undo/redo system (survives syntax highlighting), full Edit menu with keyboard shortcuts, Find & Replace dialog
 - 2026-02-10: Added Python syntax highlighting (keywords, strings, comments, numbers, decorators, builtins), line numbers, and syntax error checking

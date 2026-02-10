@@ -66,6 +66,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="PythonBridge.cs" />
+    <Compile Include="PythonSymbolAnalyzer.cs" />
     <Compile Include="PythonSyntaxHighlighter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
