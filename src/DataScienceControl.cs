@@ -24,6 +24,7 @@ namespace DataScienceWorkbench
         private PythonSyntaxHighlighter syntaxHighlighter;
         private Timer highlightTimer;
         private bool suppressHighlight;
+        private int lastErrorLine = -1;
 
         public event EventHandler<string> StatusChanged;
 
@@ -101,6 +102,7 @@ namespace DataScienceWorkbench
             {
                 highlightTimer.Stop();
                 ApplySyntaxHighlighting();
+                RunLiveSyntaxCheck();
             };
 
             pythonEditor.TextChanged += (s, e) =>
@@ -121,6 +123,65 @@ namespace DataScienceWorkbench
                 syntaxHighlighter.Highlight(pythonEditor);
             }
             catch { }
+        }
+
+        private void RunLiveSyntaxCheck()
+        {
+            string script = pythonEditor.Text;
+            if (string.IsNullOrWhiteSpace(script))
+            {
+                ClearErrorHighlight();
+                RaiseStatus("Ready");
+                return;
+            }
+
+            try
+            {
+                var result = pythonRunner.CheckSyntax(script);
+                ClearErrorHighlight();
+
+                if (result.Success)
+                {
+                    RaiseStatus("Ready");
+                }
+                else
+                {
+                    int errorLine = ParseErrorLine(result.Error);
+                    if (errorLine > 0)
+                    {
+                        HighlightErrorLine(errorLine);
+                        lastErrorLine = errorLine;
+                        var errorMsg = result.Error.Trim();
+                        var firstLine = errorMsg.Split('\n')[0];
+                        RaiseStatus("Line " + errorLine + ": " + firstLine);
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void ClearErrorHighlight()
+        {
+            if (lastErrorLine < 1 || lastErrorLine > pythonEditor.Lines.Length)
+            {
+                lastErrorLine = -1;
+                return;
+            }
+
+            int selStart = pythonEditor.SelectionStart;
+            int selLen = pythonEditor.SelectionLength;
+
+            int lineIdx = lastErrorLine - 1;
+            int start = pythonEditor.GetFirstCharIndexFromLine(lineIdx);
+            int length = pythonEditor.Lines[lineIdx].Length;
+
+            suppressHighlight = true;
+            pythonEditor.Select(start, length);
+            pythonEditor.SelectionBackColor = Color.FromArgb(30, 30, 30);
+            pythonEditor.Select(selStart, selLen);
+            suppressHighlight = false;
+
+            lastErrorLine = -1;
         }
 
         public void LoadData(
