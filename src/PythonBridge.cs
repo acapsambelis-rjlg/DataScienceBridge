@@ -60,14 +60,23 @@ namespace DataScienceWorkbench
 
         private string FindPython()
         {
-            string[] candidates = { "python3", "python" };
+            bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT
+                          || Environment.OSVersion.Platform == PlatformID.Win32S
+                          || Environment.OSVersion.Platform == PlatformID.Win32Windows
+                          || Environment.OSVersion.Platform == PlatformID.WinCE;
+
+            string locator = isWindows ? "where" : "which";
+            string[] candidates = isWindows
+                ? new[] { "python", "python3", "py" }
+                : new[] { "python3", "python" };
+
             foreach (var cand in candidates)
             {
                 try
                 {
                     var psi = new ProcessStartInfo
                     {
-                        FileName = "which",
+                        FileName = locator,
                         Arguments = cand,
                         RedirectStandardOutput = true,
                         UseShellExecute = false,
@@ -77,11 +86,32 @@ namespace DataScienceWorkbench
                     string output = proc.StandardOutput.ReadToEnd().Trim();
                     proc.WaitForExit();
                     if (proc.ExitCode == 0 && !string.IsNullOrEmpty(output))
-                        return output;
+                    {
+                        string firstLine = output.Split('\n')[0].Trim();
+                        return firstLine;
+                    }
                 }
                 catch { }
             }
-            return "python3";
+
+            if (isWindows)
+            {
+                string[] commonPaths = {
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Python", "Python311", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Python", "Python310", "python.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Python", "Python39", "python.exe"),
+                    @"C:\Python311\python.exe",
+                    @"C:\Python310\python.exe",
+                    @"C:\Python39\python.exe"
+                };
+                foreach (var p in commonPaths)
+                {
+                    if (File.Exists(p))
+                        return p;
+                }
+            }
+
+            return isWindows ? "python" : "python3";
         }
 
         public string GetPythonPath() { return pythonPath; }
