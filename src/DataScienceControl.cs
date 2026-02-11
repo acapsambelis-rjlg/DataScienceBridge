@@ -1563,9 +1563,9 @@ print('Time series chart saved to timeseries.png')
 import pandas as pd
 import numpy as np
 
-# 'dotnet' dict holds DataFrames piped from .NET memory (no file I/O)
-# Access registered data: dotnet['name']
-measurements = dotnet['measurements']
+# 'dotnet' object holds DataFrames piped from .NET memory (no file I/O)
+# Access registered data as members: dotnet.name
+measurements = dotnet.measurements
 print('=== .NET In-Memory Data: Measurements ===')
 print(f'Count: {len(measurements)}')
 print(f'Values: {measurements[""value""].tolist()}')

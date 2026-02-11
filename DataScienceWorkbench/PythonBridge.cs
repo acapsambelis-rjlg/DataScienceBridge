@@ -130,7 +130,9 @@ namespace DataScienceWorkbench
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("import sys, io, pandas as pd");
-                sb.AppendLine("dotnet = {}");
+                sb.AppendLine("class _DotNetData:");
+                sb.AppendLine("    pass");
+                sb.AppendLine("dotnet = _DotNetData()");
                 sb.AppendLine("while True:");
                 sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
                 sb.AppendLine("    if _hdr == '__DONE__': break");
@@ -141,7 +143,8 @@ namespace DataScienceWorkbench
                 sb.AppendLine("        _lines = []");
                 sb.AppendLine("        for _ in range(_nlines):");
                 sb.AppendLine("            _lines.append(sys.stdin.readline())");
-                sb.AppendLine("        dotnet[_name] = pd.read_csv(io.StringIO(''.join(_lines)))");
+                sb.AppendLine("        setattr(dotnet, _name, pd.read_csv(io.StringIO(''.join(_lines))))");
+                sb.AppendLine("del _DotNetData");
                 sb.AppendLine();
                 sb.AppendLine(script);
                 fullScript = sb.ToString();
