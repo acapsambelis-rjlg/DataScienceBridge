@@ -1560,23 +1560,24 @@ print('Time series chart saved to timeseries.png')
         private string GetCustomDataSnippet()
         {
             return @"
-import pandas as pd
-import numpy as np
+# 'dotnet' object holds data piped from .NET memory (no file I/O)
+# Access datasets as members, columns as sub-members:
+#   dotnet.measurements.value.mean()
+#   dotnet.measurements.value.tolist()
+# Use .df to get the raw pandas DataFrame if needed:
+#   dotnet.measurements.df.describe()
 
-# 'dotnet' object holds DataFrames piped from .NET memory (no file I/O)
-# Access registered data as members: dotnet.name
-measurements = dotnet.measurements
 print('=== .NET In-Memory Data: Measurements ===')
-print(f'Count: {len(measurements)}')
-print(f'Values: {measurements[""value""].tolist()}')
+print(f'Count: {len(dotnet.measurements)}')
+print(f'Values: {dotnet.measurements.value.tolist()}')
 print()
 print('Statistics:')
-print(f'  Sum:    {measurements[""value""].sum()}')
-print(f'  Mean:   {measurements[""value""].mean():.2f}')
-print(f'  Median: {measurements[""value""].median():.1f}')
-print(f'  Std:    {measurements[""value""].std():.2f}')
-print(f'  Min:    {measurements[""value""].min()}')
-print(f'  Max:    {measurements[""value""].max()}')
+print(f'  Sum:    {dotnet.measurements.value.sum()}')
+print(f'  Mean:   {dotnet.measurements.value.mean():.2f}')
+print(f'  Median: {dotnet.measurements.value.median():.1f}')
+print(f'  Std:    {dotnet.measurements.value.std():.2f}')
+print(f'  Min:    {dotnet.measurements.value.min()}')
+print(f'  Max:    {dotnet.measurements.value.max()}')
 ";
         }
     }

@@ -130,6 +130,23 @@ namespace DataScienceWorkbench
             {
                 var sb = new StringBuilder();
                 sb.AppendLine("import sys, io, pandas as pd");
+                sb.AppendLine("class _DotNetDataset:");
+                sb.AppendLine("    def __init__(self, df):");
+                sb.AppendLine("        object.__setattr__(self, '_df', df)");
+                sb.AppendLine("    def __getattr__(self, name):");
+                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+                sb.AppendLine("        if name in _df.columns:");
+                sb.AppendLine("            return _df[name]");
+                sb.AppendLine("        return getattr(_df, name)");
+                sb.AppendLine("    def __repr__(self):");
+                sb.AppendLine("        return repr(object.__getattribute__(self, '_df'))");
+                sb.AppendLine("    def __len__(self):");
+                sb.AppendLine("        return len(object.__getattribute__(self, '_df'))");
+                sb.AppendLine("    def __getitem__(self, key):");
+                sb.AppendLine("        return object.__getattribute__(self, '_df')[key]");
+                sb.AppendLine("    @property");
+                sb.AppendLine("    def df(self):");
+                sb.AppendLine("        return object.__getattribute__(self, '_df')");
                 sb.AppendLine("class _DotNetData:");
                 sb.AppendLine("    pass");
                 sb.AppendLine("dotnet = _DotNetData()");
@@ -143,8 +160,8 @@ namespace DataScienceWorkbench
                 sb.AppendLine("        _lines = []");
                 sb.AppendLine("        for _ in range(_nlines):");
                 sb.AppendLine("            _lines.append(sys.stdin.readline())");
-                sb.AppendLine("        setattr(dotnet, _name, pd.read_csv(io.StringIO(''.join(_lines))))");
-                sb.AppendLine("del _DotNetData");
+                sb.AppendLine("        setattr(dotnet, _name, _DotNetDataset(pd.read_csv(io.StringIO(''.join(_lines)))))");
+                sb.AppendLine("del _DotNetData, _DotNetDataset");
                 sb.AppendLine();
                 sb.AppendLine(script);
                 fullScript = sb.ToString();
