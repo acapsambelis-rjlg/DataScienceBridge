@@ -137,12 +137,18 @@ namespace DataScienceWorkbench
             var matches = pattern.Matches(text);
             foreach (Match m in matches)
             {
-                if (IsRegionPainted(painted, m.Index, m.Length)) continue;
+                if (IsStartPainted(painted, m.Index)) continue;
 
                 editor.Select(m.Index, m.Length);
                 editor.SelectionColor = color;
                 MarkPainted(painted, m.Index, m.Length);
             }
+        }
+
+        private bool IsStartPainted(bool[] painted, int start)
+        {
+            if (start >= painted.Length) return false;
+            return painted[start];
         }
 
         private bool IsRegionPainted(bool[] painted, int start, int length)
