@@ -217,11 +217,11 @@ namespace DataScienceWorkbench
             // 
             // outputBox
             // 
-            this.outputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.outputBox.BackColor = System.Drawing.Color.White;
             this.outputBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.outputBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.outputBox.Font = new System.Drawing.Font("Consolas", 9.5F);
-            this.outputBox.ForeColor = System.Drawing.Color.White;
+            this.outputBox.ForeColor = System.Drawing.Color.FromArgb(30, 30, 30);
             this.outputBox.Location = new System.Drawing.Point(0, 22);
             this.outputBox.Name = "outputBox";
             this.outputBox.ReadOnly = true;

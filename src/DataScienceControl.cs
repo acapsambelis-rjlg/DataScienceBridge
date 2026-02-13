@@ -1609,7 +1609,7 @@ namespace DataScienceWorkbench
             string script = pythonEditor.Text;
             if (string.IsNullOrWhiteSpace(script))
             {
-                AppendOutput("No script to run.\n", Color.Yellow);
+                AppendOutput("No script to run.\n", Color.FromArgb(180, 140, 0));
                 return;
             }
 
@@ -1657,7 +1657,7 @@ namespace DataScienceWorkbench
             string script = pythonEditor.Text;
             if (string.IsNullOrWhiteSpace(script))
             {
-                AppendOutput("No script to check.\n", Color.Yellow);
+                AppendOutput("No script to check.\n", Color.FromArgb(180, 140, 0));
                 return;
             }
 
@@ -1667,12 +1667,12 @@ namespace DataScienceWorkbench
             if (result.Success)
             {
                 pythonEditor.ClearError();
-                AppendOutput("Syntax OK - no errors found.\n", Color.LightGreen);
+                AppendOutput("Syntax OK - no errors found.\n", Color.FromArgb(0, 128, 0));
                 RaiseStatus("Syntax check passed.");
             }
             else
             {
-                AppendOutput("Syntax Error:\n" + result.Error + "\n", Color.FromArgb(255, 100, 100));
+                AppendOutput("Syntax Error:\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
 
                 int errorLine = ParseErrorLine(result.Error);
                 if (errorLine > 0)
@@ -1854,12 +1854,12 @@ namespace DataScienceWorkbench
             var result = pythonRunner.InstallPackage(pkg);
             if (result.Success)
             {
-                AppendOutput("Successfully installed: " + pkg + "\n", Color.LightGreen);
+                AppendOutput("Successfully installed: " + pkg + "\n", Color.FromArgb(0, 128, 0));
                 RaiseStatus(pkg + " installed successfully.");
             }
             else
             {
-                AppendOutput("Failed to install " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(255, 100, 100));
+                AppendOutput("Failed to install " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
                 RaiseStatus("Installation failed for " + pkg);
             }
 
@@ -1881,12 +1881,12 @@ namespace DataScienceWorkbench
             var result = pythonRunner.UninstallPackage(pkg);
             if (result.Success)
             {
-                AppendOutput("Successfully uninstalled: " + pkg + "\n", Color.LightGreen);
+                AppendOutput("Successfully uninstalled: " + pkg + "\n", Color.FromArgb(0, 128, 0));
                 RaiseStatus(pkg + " uninstalled.");
             }
             else
             {
-                AppendOutput("Failed to uninstall " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(255, 100, 100));
+                AppendOutput("Failed to uninstall " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
                 RaiseStatus("Uninstall failed for " + pkg);
             }
             OnRefreshPackages(null, null);
