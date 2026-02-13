@@ -52,6 +52,7 @@ Keep them in sync when making changes.
 - **SetContext(key, value)** - Send a variable to the Python environment (overloads: string, double, int, bool, string[], double[], Dict<string,string>, Dict<string,double>)
 - **RemoveContext(key)** - Remove a context variable
 - **ClearContext()** - Remove all context variables
+- **ResetPythonEnvironment()** - Delete and recreate the virtual environment (bin/python folder)
 - **RunScript()** - Execute the current Python script
 - **ScriptText** - Get/set the Python editor text
 - **OutputText** - Get the output panel text
@@ -67,6 +68,7 @@ Keep them in sync when making changes.
 - **Data Reference** tab with TreeView showing all datasets, columns, types, registered classes, and context variables with detail panel and example Python code
 - **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)
 - **In-memory data bridge**: All .NET data streamed to Python via stdin as pre-loaded variables (e.g., `customers.CreditLimit.mean()`)
+- **Virtual environment**: Auto-creates isolated Python venv in `bin/python/` on first run; installs pandas, numpy, matplotlib; temp files stored in `bin/python/temp/`; can be reset via Run menu or `ResetPythonEnvironment()` API; falls back to system Python if venv creation fails
 
 ## Build & Run
 
@@ -88,6 +90,9 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added virtual environment support: auto-creates isolated Python venv in bin/python/ on first run with pandas/numpy/matplotlib pre-installed; all temp script files stored in bin/python/temp/; pip install no longer uses --user flag; falls back to system Python if venv creation fails; added ResetPythonEnvironment() public API and Run > Reset Python Environment menu item with confirmation dialog; PythonRunner exposes VenvReady/VenvError/VenvPath properties; status bar shows "(venv)" or "(system)" indicator
+- 2026-02-13: Added comprehensive Python error handling: PythonRunner validates Python availability at startup with PythonAvailable/PythonError/PythonVersion properties; all Process.Start calls wrapped in try/catch; all WaitForExit calls detect timeouts and kill hung processes; DataScienceControl guards all pythonRunner call sites; startup warning shown if Python missing; live syntax check silently skips when unavailable
+- 2026-02-13: Added PythonClassInfo model for registered classes with Description, Example, and Notes metadata; RegisterPythonClass overload with custom reference info; Data Reference detail panel shows structured sections; filter searches description/notes fields
 - 2026-02-13: Added Example property to [UserVisible] attribute: developers can set `[UserVisible("description", Example = "code")]` to override the default type-based example code shown in Data Reference detail panel. Supports `{dataset}` and `{field}` placeholders that resolve at display time. Lines starting with `#` render as comments. Falls back to type-based defaults (string/bool/datetime/numeric) when Example is not set.
 - 2026-02-13: Changed Find & Replace from popup Form to inline panel overlaid on top-right corner of Python editor. Escape key from editor also dismisses the panel.
 - 2026-02-13: Added Ctrl+F shortcut to open Find & Replace dialog from the Python editor. Added search/filter box to Data Reference tab: filters datasets by name, column name/type, and [UserVisible] description text; also filters registered classes and context variables. Uses placeholder text pattern.

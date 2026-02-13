@@ -1249,6 +1249,34 @@ namespace DataScienceWorkbench
             OnRunScript(this, EventArgs.Empty);
         }
 
+        public void ResetPythonEnvironment()
+        {
+            AppendOutput("Resetting Python environment...\n", Color.FromArgb(0, 100, 180));
+            Application.DoEvents();
+
+            pythonRunner.SetupProgress += OnPythonSetupProgress;
+            var result = pythonRunner.ResetEnvironment();
+            pythonRunner.SetupProgress -= OnPythonSetupProgress;
+
+            if (result.Success)
+            {
+                AppendOutput(result.Output, Color.FromArgb(0, 128, 0));
+                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
+            }
+            else
+            {
+                AppendOutput("Reset failed: " + result.Error + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Environment reset failed");
+            }
+        }
+
+        private void OnPythonSetupProgress(string message)
+        {
+            AppendOutput(message + "\n", Color.FromArgb(100, 100, 100));
+            RaiseStatus(message);
+            Application.DoEvents();
+        }
+
         public string ScriptText
         {
             get { return pythonEditor.Text; }
@@ -1357,6 +1385,16 @@ namespace DataScienceWorkbench
 
             var runMenu = new ToolStripMenuItem("Run");
             runMenu.DropDownItems.Add("Execute Script (F5)", null, OnRunScript);
+            runMenu.DropDownItems.Add("Check Syntax", null, OnCheckSyntax);
+            runMenu.DropDownItems.Add(new ToolStripSeparator());
+            runMenu.DropDownItems.Add("Reset Python Environment", null, (s, e) =>
+            {
+                var confirm = MessageBox.Show(
+                    "This will delete the virtual environment and recreate it.\nAll installed packages will need to be reinstalled.\n\nContinue?",
+                    "Reset Python Environment", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (confirm == DialogResult.Yes)
+                    ResetPythonEnvironment();
+            });
 
             var helpMenu = new ToolStripMenuItem("Help");
             helpMenu.DropDownItems.Add("Quick Start Guide", null, OnShowHelp);
@@ -1399,7 +1437,18 @@ namespace DataScienceWorkbench
             }
             else
             {
-                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ")");
+                pythonRunner.SetupProgress += OnPythonSetupProgress;
+                pythonRunner.EnsureVenv();
+                pythonRunner.SetupProgress -= OnPythonSetupProgress;
+
+                if (pythonRunner.VenvReady)
+                    RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
+                else
+                {
+                    AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
+                    AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
+                    RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
+                }
             }
         }
 

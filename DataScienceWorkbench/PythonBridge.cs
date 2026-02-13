@@ -9,27 +9,248 @@ namespace DataScienceWorkbench
 {
     public class PythonRunner
     {
+        private string systemPythonPath;
         private string pythonPath;
         private bool pythonAvailable;
         private string pythonError;
         private string pythonVersion;
+        private string venvPath;
+        private string tempPath;
+        private bool venvReady;
+        private string venvError;
 
         public bool PythonAvailable { get { return pythonAvailable; } }
         public string PythonError { get { return pythonError; } }
         public string PythonVersion { get { return pythonVersion; } }
+        public string VenvPath { get { return venvPath; } }
+        public bool VenvReady { get { return venvReady; } }
+        public string VenvError { get { return venvError; } }
+
+        public event Action<string> SetupProgress;
 
         public PythonRunner()
         {
-            pythonPath = FindPython();
+            string appDir = AppDomain.CurrentDomain.BaseDirectory;
+            string binPython = Path.Combine(appDir, "bin", "python");
+            venvPath = binPython;
+            tempPath = Path.Combine(binPython, "temp");
+
+            systemPythonPath = FindPython();
+            pythonPath = systemPythonPath;
             ValidatePython();
+        }
+
+        public void EnsureVenv()
+        {
+            if (!pythonAvailable)
+            {
+                venvReady = false;
+                venvError = "Cannot create virtual environment: " + pythonError;
+                return;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(venvPath);
+                Directory.CreateDirectory(tempPath);
+            }
+            catch (Exception ex)
+            {
+                venvReady = false;
+                venvError = "Failed to create bin/python directory: " + ex.Message;
+                return;
+            }
+
+            string venvPython = GetVenvPythonPath();
+            if (File.Exists(venvPython))
+            {
+                pythonPath = venvPython;
+                ValidatePython();
+
+                if (pythonAvailable)
+                {
+                    venvReady = true;
+                    venvError = null;
+                    RaiseProgress("Using existing virtual environment.");
+                    return;
+                }
+                else
+                {
+                    pythonPath = systemPythonPath;
+                    venvReady = false;
+                    venvError = "Existing virtual environment Python is not working: " + pythonError;
+                    ValidatePython();
+                    return;
+                }
+            }
+
+            RaiseProgress("Creating virtual environment...");
+
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = systemPythonPath,
+                    Arguments = "-m venv \"" + venvPath + "\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                var proc = Process.Start(psi);
+                proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+                bool exited = proc.WaitForExit(120000);
+
+                if (!exited)
+                {
+                    try { proc.Kill(); } catch { }
+                    venvReady = false;
+                    venvError = "Virtual environment creation timed out after 120 seconds.";
+                    return;
+                }
+
+                if (proc.ExitCode != 0)
+                {
+                    venvReady = false;
+                    venvError = "Failed to create virtual environment: " + stderr;
+                    return;
+                }
+
+                if (!File.Exists(venvPython))
+                {
+                    venvReady = false;
+                    venvError = "Virtual environment was created but Python executable not found at expected location.";
+                    return;
+                }
+
+                pythonPath = venvPython;
+                venvReady = true;
+                venvError = null;
+                ValidatePython();
+
+                if (!pythonAvailable)
+                {
+                    pythonPath = systemPythonPath;
+                    venvReady = false;
+                    venvError = "Virtual environment was created but its Python could not be validated: " + pythonError;
+                    ValidatePython();
+                    return;
+                }
+
+                RaiseProgress("Virtual environment created. Installing base packages...");
+                InstallBasePackages();
+                RaiseProgress("Virtual environment ready.");
+            }
+            catch (Exception ex)
+            {
+                venvReady = false;
+                venvError = "Error creating virtual environment: " + ex.Message;
+            }
+        }
+
+        private string GetVenvPythonPath()
+        {
+            bool isWindows = IsWindows();
+            if (isWindows)
+                return Path.Combine(venvPath, "Scripts", "python.exe");
+
+            string python3 = Path.Combine(venvPath, "bin", "python3");
+            if (File.Exists(python3))
+                return python3;
+            return Path.Combine(venvPath, "bin", "python");
+        }
+
+        private void InstallBasePackages()
+        {
+            string[] basePackages = { "pandas", "numpy", "matplotlib" };
+            foreach (var pkg in basePackages)
+            {
+                RaiseProgress("Installing " + pkg + "...");
+                var result = InstallPackage(pkg);
+                if (!result.Success)
+                    RaiseProgress("Warning: Failed to install " + pkg + ": " + result.Error);
+            }
+        }
+
+        public PythonResult ResetEnvironment()
+        {
+            try
+            {
+                pythonPath = systemPythonPath;
+
+                if (Directory.Exists(venvPath))
+                {
+                    try
+                    {
+                        Directory.Delete(venvPath, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        return new PythonResult
+                        {
+                            ExitCode = -1,
+                            Output = "",
+                            Error = "Failed to delete existing environment: " + ex.Message,
+                            Success = false
+                        };
+                    }
+                }
+
+                venvReady = false;
+                venvError = null;
+                EnsureVenv();
+
+                if (venvReady)
+                {
+                    return new PythonResult
+                    {
+                        ExitCode = 0,
+                        Output = "Virtual environment has been reset successfully.\n",
+                        Error = "",
+                        Success = true
+                    };
+                }
+                else
+                {
+                    return new PythonResult
+                    {
+                        ExitCode = -1,
+                        Output = "",
+                        Error = "Environment was deleted but recreation failed: " + (venvError ?? "Unknown error"),
+                        Success = false
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                return new PythonResult
+                {
+                    ExitCode = -1,
+                    Output = "",
+                    Error = "Error resetting environment: " + ex.Message,
+                    Success = false
+                };
+            }
+        }
+
+        private void RaiseProgress(string message)
+        {
+            if (SetupProgress != null)
+                SetupProgress(message);
+        }
+
+        private bool IsWindows()
+        {
+            return Environment.OSVersion.Platform == PlatformID.Win32NT
+                || Environment.OSVersion.Platform == PlatformID.Win32S
+                || Environment.OSVersion.Platform == PlatformID.Win32Windows
+                || Environment.OSVersion.Platform == PlatformID.WinCE;
         }
 
         private string FindPython()
         {
-            bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT
-                          || Environment.OSVersion.Platform == PlatformID.Win32S
-                          || Environment.OSVersion.Platform == PlatformID.Win32Windows
-                          || Environment.OSVersion.Platform == PlatformID.WinCE;
+            bool isWindows = IsWindows();
 
             string locator = isWindows ? "where" : "which";
             string[] candidates = isWindows
@@ -139,13 +360,36 @@ namespace DataScienceWorkbench
 
         public string GetPythonPath() { return pythonPath ?? "(not found)"; }
 
+        private string GetTempFilePath(string suffix)
+        {
+            if (Directory.Exists(tempPath))
+            {
+                string name = Guid.NewGuid().ToString("N") + suffix;
+                return Path.Combine(tempPath, name);
+            }
+            return Path.GetTempFileName() + suffix;
+        }
+
+        private void CleanTempFiles()
+        {
+            if (!Directory.Exists(tempPath)) return;
+            try
+            {
+                foreach (var file in Directory.GetFiles(tempPath, "*.py"))
+                {
+                    try { File.Delete(file); } catch { }
+                }
+            }
+            catch { }
+        }
+
         private PythonResult CreateUnavailableResult(string operation)
         {
             return new PythonResult
             {
                 ExitCode = -1,
                 Output = "",
-                Error = "Python is not available — cannot " + operation + ".\n" + (pythonError ?? "Unknown error."),
+                Error = "Python is not available \u2014 cannot " + operation + ".\n" + (pythonError ?? "Unknown error."),
                 Success = false
             };
         }
@@ -230,7 +474,7 @@ namespace DataScienceWorkbench
                 fullScript = script;
             }
 
-            string tempScript = Path.GetTempFileName() + ".py";
+            string tempScript = GetTempFilePath(".py");
             File.WriteAllText(tempScript, fullScript);
 
             try
@@ -337,7 +581,7 @@ namespace DataScienceWorkbench
                 var psi = new ProcessStartInfo
                 {
                     FileName = pythonPath,
-                    Arguments = "-m pip install --user " + packageName,
+                    Arguments = "-m pip install " + packageName,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     UseShellExecute = false,
@@ -428,10 +672,10 @@ namespace DataScienceWorkbench
             if (!pythonAvailable)
                 return CreateUnavailableResult("check syntax");
 
-            string scriptFile = Path.GetTempFileName() + "_src.py";
+            string scriptFile = GetTempFilePath("_src.py");
             File.WriteAllText(scriptFile, script);
 
-            string checkFile = Path.GetTempFileName() + ".py";
+            string checkFile = GetTempFilePath("_chk.py");
             File.WriteAllText(checkFile,
                 "import ast, sys\n" +
                 "try:\n" +
