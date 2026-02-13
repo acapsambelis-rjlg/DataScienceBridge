@@ -51,9 +51,10 @@ namespace DataScienceWorkbench
             string text = lastTooltipText;
             if (string.IsNullOrEmpty(text)) return;
             using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            using (var font = new Font("Segoe UI", 9f))
             {
-                var size = TextRenderer.MeasureText(g, text, new Font("Segoe UI", 9f), new Size(600, 0), TextFormatFlags.Left | TextFormatFlags.WordBreak);
-                e.ToolTipSize = new Size(size.Width + 16, size.Height + 10);
+                var size = g.MeasureString(text, font, 600);
+                e.ToolTipSize = new Size((int)Math.Ceiling(size.Width) + 20, (int)Math.Ceiling(size.Height) + 12);
             }
         }
 
@@ -70,7 +71,7 @@ namespace DataScienceWorkbench
             using (var textBrush = new SolidBrush(Color.FromArgb(240, 240, 240)))
             using (var font = new Font("Segoe UI", 9f))
             {
-                var textRect = new Rectangle(e.Bounds.X + 8, e.Bounds.Y + 5, e.Bounds.Width - 16, e.Bounds.Height - 10);
+                var textRect = new RectangleF(e.Bounds.X + 10, e.Bounds.Y + 6, e.Bounds.Width - 20, e.Bounds.Height - 12);
                 e.Graphics.DrawString(e.ToolTipText, font, textBrush, textRect);
             }
         }
