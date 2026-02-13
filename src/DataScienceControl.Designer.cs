@@ -44,6 +44,10 @@ namespace DataScienceWorkbench
             this.recordCountLabel = new System.Windows.Forms.Label();
             this.datasetCombo = new System.Windows.Forms.ComboBox();
             this.datasetLabel = new System.Windows.Forms.Label();
+            this.referenceTab = new System.Windows.Forms.TabPage();
+            this.refSplit = new System.Windows.Forms.SplitContainer();
+            this.refTreeView = new System.Windows.Forms.TreeView();
+            this.refDetailBox = new System.Windows.Forms.RichTextBox();
             this.packagesTab = new System.Windows.Forms.TabPage();
             this.pkgRightPanel = new System.Windows.Forms.Panel();
             this.packageListBox = new System.Windows.Forms.ListBox();
@@ -75,6 +79,11 @@ namespace DataScienceWorkbench
             this.dataTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
             this.dataTopPanel.SuspendLayout();
+            this.referenceTab.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.refSplit)).BeginInit();
+            this.refSplit.Panel1.SuspendLayout();
+            this.refSplit.Panel2.SuspendLayout();
+            this.refSplit.SuspendLayout();
             this.packagesTab.SuspendLayout();
             this.pkgRightPanel.SuspendLayout();
             this.pkgLeftPanel.SuspendLayout();
@@ -85,6 +94,7 @@ namespace DataScienceWorkbench
             // 
             this.mainTabs.Controls.Add(this.editorTab);
             this.mainTabs.Controls.Add(this.dataTab);
+            this.mainTabs.Controls.Add(this.referenceTab);
             this.mainTabs.Controls.Add(this.packagesTab);
             this.mainTabs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTabs.Location = new System.Drawing.Point(0, 0);
@@ -374,6 +384,58 @@ namespace DataScienceWorkbench
             this.datasetLabel.TabIndex = 0;
             this.datasetLabel.Text = "Dataset:";
             // 
+            // referenceTab
+            // 
+            this.referenceTab.Controls.Add(this.refSplit);
+            this.referenceTab.Location = new System.Drawing.Point(4, 22);
+            this.referenceTab.Name = "referenceTab";
+            this.referenceTab.Size = new System.Drawing.Size(792, 574);
+            this.referenceTab.TabIndex = 3;
+            this.referenceTab.Text = "Data Reference";
+            this.referenceTab.UseVisualStyleBackColor = true;
+            // 
+            // refSplit
+            // 
+            this.refSplit.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.refSplit.Location = new System.Drawing.Point(0, 0);
+            this.refSplit.Name = "refSplit";
+            // 
+            // refSplit.Panel1
+            // 
+            this.refSplit.Panel1.Controls.Add(this.refTreeView);
+            // 
+            // refSplit.Panel2
+            // 
+            this.refSplit.Panel2.Controls.Add(this.refDetailBox);
+            this.refSplit.Size = new System.Drawing.Size(792, 574);
+            this.refSplit.SplitterDistance = 260;
+            this.refSplit.SplitterWidth = 6;
+            this.refSplit.TabIndex = 0;
+            // 
+            // refTreeView
+            // 
+            this.refTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.refTreeView.Font = new System.Drawing.Font("Consolas", 9.5F);
+            this.refTreeView.Location = new System.Drawing.Point(0, 0);
+            this.refTreeView.Name = "refTreeView";
+            this.refTreeView.Size = new System.Drawing.Size(260, 574);
+            this.refTreeView.TabIndex = 0;
+            this.refTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.OnRefTreeSelect);
+            // 
+            // refDetailBox
+            // 
+            this.refDetailBox.BackColor = System.Drawing.Color.White;
+            this.refDetailBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.refDetailBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.refDetailBox.Font = new System.Drawing.Font("Consolas", 10F);
+            this.refDetailBox.Location = new System.Drawing.Point(0, 0);
+            this.refDetailBox.Name = "refDetailBox";
+            this.refDetailBox.ReadOnly = true;
+            this.refDetailBox.Size = new System.Drawing.Size(526, 574);
+            this.refDetailBox.TabIndex = 0;
+            this.refDetailBox.Text = "";
+            this.refDetailBox.WordWrap = false;
+            // 
             // packagesTab
             // 
             this.packagesTab.Controls.Add(this.pkgRightPanel);
@@ -381,7 +443,7 @@ namespace DataScienceWorkbench
             this.packagesTab.Location = new System.Drawing.Point(4, 22);
             this.packagesTab.Name = "packagesTab";
             this.packagesTab.Size = new System.Drawing.Size(792, 574);
-            this.packagesTab.TabIndex = 2;
+            this.packagesTab.TabIndex = 4;
             this.packagesTab.Text = "Package Manager";
             this.packagesTab.UseVisualStyleBackColor = true;
             // 
@@ -559,6 +621,11 @@ namespace DataScienceWorkbench
             ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
             this.dataTopPanel.ResumeLayout(false);
             this.dataTopPanel.PerformLayout();
+            this.referenceTab.ResumeLayout(false);
+            this.refSplit.Panel1.ResumeLayout(false);
+            this.refSplit.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.refSplit)).EndInit();
+            this.refSplit.ResumeLayout(false);
             this.packagesTab.ResumeLayout(false);
             this.pkgRightPanel.ResumeLayout(false);
             this.pkgLeftPanel.ResumeLayout(false);
@@ -596,6 +663,10 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.Label recordCountLabel;
         private System.Windows.Forms.ComboBox datasetCombo;
         private System.Windows.Forms.Label datasetLabel;
+        private System.Windows.Forms.TabPage referenceTab;
+        private System.Windows.Forms.SplitContainer refSplit;
+        private System.Windows.Forms.TreeView refTreeView;
+        private System.Windows.Forms.RichTextBox refDetailBox;
         private System.Windows.Forms.TabPage packagesTab;
         private System.Windows.Forms.Panel pkgRightPanel;
         private System.Windows.Forms.ListBox packageListBox;

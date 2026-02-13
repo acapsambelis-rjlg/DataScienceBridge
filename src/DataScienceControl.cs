@@ -109,6 +109,7 @@ namespace DataScienceWorkbench
             ResetUndoStack();
             ApplySyntaxHighlighting();
             PopulateDataTree();
+            PopulateReferenceTree();
             datasetCombo.SelectedIndex = 0;
             ExportAllData();
         }
@@ -601,6 +602,7 @@ namespace DataScienceWorkbench
                 }
                 return sb.ToString();
             };
+            PopulateReferenceTree();
         }
 
         public void RegisterInMemoryData<T>(string name, Func<List<T>> dataProvider) where T : class
@@ -639,6 +641,7 @@ namespace DataScienceWorkbench
                 }
                 return sb.ToString();
             };
+            PopulateReferenceTree();
         }
 
         public void RegisterInMemoryData(string name, Func<System.Data.DataTable> dataProvider)
@@ -665,11 +668,13 @@ namespace DataScienceWorkbench
                 }
                 return sb.ToString();
             };
+            PopulateReferenceTree();
         }
 
         public void UnregisterInMemoryData(string name)
         {
             inMemoryDataSources.Remove(name);
+            PopulateReferenceTree();
         }
 
         private Dictionary<string, string> SerializeInMemoryData()
@@ -964,9 +969,345 @@ namespace DataScienceWorkbench
             root.Expand();
         }
 
+        private void PopulateReferenceTree()
+        {
+            refTreeView.Nodes.Clear();
+
+            var datasets = new[]
+            {
+                new { Name = "products", Class = "Product", Count = products.Count, Tag = "products" },
+                new { Name = "customers", Class = "Customer", Count = customers.Count, Tag = "customers" },
+                new { Name = "orders", Class = "Order", Count = orders.Count, Tag = "orders" },
+                new { Name = "order_items", Class = "OrderItem", Count = orders.Sum(o => o.Items != null ? o.Items.Count : 0), Tag = "order_items" },
+                new { Name = "employees", Class = "Employee", Count = employees.Count, Tag = "employees" },
+                new { Name = "sensor_readings", Class = "SensorReading", Count = sensorReadings.Count, Tag = "sensor_readings" },
+                new { Name = "stock_prices", Class = "StockPrice", Count = stockPrices.Count, Tag = "stock_prices" },
+                new { Name = "web_events", Class = "WebEvent", Count = webEvents.Count, Tag = "web_events" },
+            };
+
+            foreach (var ds in datasets)
+            {
+                var node = refTreeView.Nodes.Add(ds.Name + "  (" + ds.Count + ")");
+                node.Tag = ds.Tag;
+                node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+
+                var columns = GetColumnsForDataset(ds.Tag);
+                foreach (var col in columns)
+                {
+                    var child = node.Nodes.Add(col.Item1 + "  :  " + col.Item2);
+                    child.Tag = ds.Tag;
+                    child.ForeColor = Color.FromArgb(80, 80, 80);
+                }
+            }
+
+            if (inMemoryDataSources.Count > 0)
+            {
+                var memNode = refTreeView.Nodes.Add("In-Memory Data Sources");
+                memNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                memNode.Tag = "inmemory";
+                foreach (var name in inMemoryDataSources.Keys)
+                {
+                    var child = memNode.Nodes.Add("dotnet." + name);
+                    child.Tag = "inmemory_" + name;
+                    child.ForeColor = Color.FromArgb(80, 80, 80);
+                }
+                memNode.Expand();
+            }
+
+            if (refTreeView.Nodes.Count > 0)
+                refTreeView.SelectedNode = refTreeView.Nodes[0];
+        }
+
+        private List<Tuple<string, string>> GetColumnsForDataset(string tag)
+        {
+            var cols = new List<Tuple<string, string>>();
+            switch (tag)
+            {
+                case "products":
+                    cols.Add(Tuple.Create("Id", "int"));
+                    cols.Add(Tuple.Create("Name", "string"));
+                    cols.Add(Tuple.Create("Category", "string"));
+                    cols.Add(Tuple.Create("SubCategory", "string"));
+                    cols.Add(Tuple.Create("SKU", "string"));
+                    cols.Add(Tuple.Create("Price", "float"));
+                    cols.Add(Tuple.Create("Cost", "float"));
+                    cols.Add(Tuple.Create("StockQuantity", "int"));
+                    cols.Add(Tuple.Create("ReorderLevel", "int"));
+                    cols.Add(Tuple.Create("Weight", "float"));
+                    cols.Add(Tuple.Create("Supplier", "string"));
+                    cols.Add(Tuple.Create("Rating", "float"));
+                    cols.Add(Tuple.Create("ReviewCount", "int"));
+                    cols.Add(Tuple.Create("IsDiscontinued", "bool"));
+                    cols.Add(Tuple.Create("DateAdded", "datetime"));
+                    cols.Add(Tuple.Create("Margin", "float (computed)"));
+                    cols.Add(Tuple.Create("MarginPercent", "float (computed)"));
+                    break;
+                case "customers":
+                    cols.Add(Tuple.Create("Id", "int"));
+                    cols.Add(Tuple.Create("FirstName", "string"));
+                    cols.Add(Tuple.Create("LastName", "string"));
+                    cols.Add(Tuple.Create("Email", "string"));
+                    cols.Add(Tuple.Create("Phone", "string"));
+                    cols.Add(Tuple.Create("DateOfBirth", "datetime"));
+                    cols.Add(Tuple.Create("RegistrationDate", "datetime"));
+                    cols.Add(Tuple.Create("Tier", "string"));
+                    cols.Add(Tuple.Create("CreditLimit", "float"));
+                    cols.Add(Tuple.Create("IsActive", "bool"));
+                    cols.Add(Tuple.Create("Street", "string (Address)"));
+                    cols.Add(Tuple.Create("City", "string (Address)"));
+                    cols.Add(Tuple.Create("State", "string (Address)"));
+                    cols.Add(Tuple.Create("ZipCode", "string (Address)"));
+                    cols.Add(Tuple.Create("Country", "string (Address)"));
+                    cols.Add(Tuple.Create("Latitude", "float (Address)"));
+                    cols.Add(Tuple.Create("Longitude", "float (Address)"));
+                    cols.Add(Tuple.Create("FullName", "string (computed)"));
+                    cols.Add(Tuple.Create("Age", "int (computed)"));
+                    break;
+                case "orders":
+                    cols.Add(Tuple.Create("Id", "int"));
+                    cols.Add(Tuple.Create("CustomerId", "int"));
+                    cols.Add(Tuple.Create("OrderDate", "datetime"));
+                    cols.Add(Tuple.Create("ShipDate", "datetime"));
+                    cols.Add(Tuple.Create("Status", "string"));
+                    cols.Add(Tuple.Create("ShipMethod", "string"));
+                    cols.Add(Tuple.Create("ShippingCost", "float"));
+                    cols.Add(Tuple.Create("PaymentMethod", "string"));
+                    cols.Add(Tuple.Create("Subtotal", "float (computed)"));
+                    cols.Add(Tuple.Create("Total", "float (computed)"));
+                    cols.Add(Tuple.Create("ItemCount", "int (computed)"));
+                    break;
+                case "order_items":
+                    cols.Add(Tuple.Create("OrderId", "int"));
+                    cols.Add(Tuple.Create("ProductId", "int"));
+                    cols.Add(Tuple.Create("ProductName", "string"));
+                    cols.Add(Tuple.Create("Quantity", "int"));
+                    cols.Add(Tuple.Create("UnitPrice", "float"));
+                    cols.Add(Tuple.Create("Discount", "float"));
+                    cols.Add(Tuple.Create("LineTotal", "float (computed)"));
+                    break;
+                case "employees":
+                    cols.Add(Tuple.Create("Id", "int"));
+                    cols.Add(Tuple.Create("FirstName", "string"));
+                    cols.Add(Tuple.Create("LastName", "string"));
+                    cols.Add(Tuple.Create("Department", "string"));
+                    cols.Add(Tuple.Create("Title", "string"));
+                    cols.Add(Tuple.Create("HireDate", "datetime"));
+                    cols.Add(Tuple.Create("Salary", "float"));
+                    cols.Add(Tuple.Create("PerformanceScore", "float"));
+                    cols.Add(Tuple.Create("ManagerId", "int"));
+                    cols.Add(Tuple.Create("IsRemote", "bool"));
+                    cols.Add(Tuple.Create("Office", "string"));
+                    cols.Add(Tuple.Create("FullName", "string (computed)"));
+                    cols.Add(Tuple.Create("YearsEmployed", "int (computed)"));
+                    break;
+                case "sensor_readings":
+                    cols.Add(Tuple.Create("SensorId", "int"));
+                    cols.Add(Tuple.Create("SensorType", "string"));
+                    cols.Add(Tuple.Create("Location", "string"));
+                    cols.Add(Tuple.Create("Timestamp", "datetime"));
+                    cols.Add(Tuple.Create("Value", "float"));
+                    cols.Add(Tuple.Create("Unit", "string"));
+                    cols.Add(Tuple.Create("Status", "string"));
+                    cols.Add(Tuple.Create("BatteryLevel", "float"));
+                    break;
+                case "stock_prices":
+                    cols.Add(Tuple.Create("Symbol", "string"));
+                    cols.Add(Tuple.Create("CompanyName", "string"));
+                    cols.Add(Tuple.Create("Date", "datetime"));
+                    cols.Add(Tuple.Create("Open", "float"));
+                    cols.Add(Tuple.Create("High", "float"));
+                    cols.Add(Tuple.Create("Low", "float"));
+                    cols.Add(Tuple.Create("Close", "float"));
+                    cols.Add(Tuple.Create("Volume", "int"));
+                    cols.Add(Tuple.Create("AdjClose", "float"));
+                    break;
+                case "web_events":
+                    cols.Add(Tuple.Create("SessionId", "string"));
+                    cols.Add(Tuple.Create("UserId", "string"));
+                    cols.Add(Tuple.Create("Timestamp", "datetime"));
+                    cols.Add(Tuple.Create("EventType", "string"));
+                    cols.Add(Tuple.Create("Page", "string"));
+                    cols.Add(Tuple.Create("Referrer", "string"));
+                    cols.Add(Tuple.Create("Browser", "string"));
+                    cols.Add(Tuple.Create("Device", "string"));
+                    cols.Add(Tuple.Create("Country", "string"));
+                    cols.Add(Tuple.Create("Duration", "int"));
+                    break;
+            }
+            return cols;
+        }
+
+        private void OnRefTreeSelect(object sender, TreeViewEventArgs e)
+        {
+            if (e.Node == null || e.Node.Tag == null) return;
+            string tag = e.Node.Tag.ToString();
+
+            if (tag.StartsWith("inmemory"))
+            {
+                ShowInMemoryDetail(tag);
+                return;
+            }
+
+            ShowDatasetDetail(tag);
+        }
+
+        private void ShowDatasetDetail(string tag)
+        {
+            refDetailBox.Clear();
+            var columns = GetColumnsForDataset(tag);
+            string className = GetClassNameForTag(tag);
+            int count = GetRecordCountForTag(tag);
+
+            AppendRefText(className + " Dataset", Color.FromArgb(0, 0, 180), true, 12);
+            AppendRefText("\n\n", Color.Black, false, 10);
+
+            AppendRefText("CSV File:  ", Color.FromArgb(100, 100, 100), false, 10);
+            AppendRefText(tag + ".csv\n", Color.FromArgb(0, 0, 0), false, 10);
+
+            AppendRefText("Records:   ", Color.FromArgb(100, 100, 100), false, 10);
+            AppendRefText(count.ToString("N0") + "\n", Color.FromArgb(0, 0, 0), false, 10);
+
+            AppendRefText("Python:    ", Color.FromArgb(100, 100, 100), false, 10);
+            AppendRefText("pd.read_csv('data_exports/" + tag + ".csv')\n\n", Color.FromArgb(0, 0, 0), false, 10);
+
+            AppendRefText("Columns (" + columns.Count + ")\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+
+            int maxNameLen = 0;
+            foreach (var c in columns)
+                if (c.Item1.Length > maxNameLen) maxNameLen = c.Item1.Length;
+
+            foreach (var col in columns)
+            {
+                string name = col.Item1.PadRight(maxNameLen + 2);
+                bool isComputed = col.Item2.Contains("computed");
+                Color nameColor = isComputed ? Color.FromArgb(128, 0, 128) : Color.FromArgb(0, 0, 0);
+                AppendRefText("  " + name, nameColor, false, 10);
+                AppendRefText(col.Item2 + "\n", Color.FromArgb(100, 100, 100), false, 10);
+            }
+
+            AppendRefText("\n", Color.Black, false, 10);
+            AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            string example = GetExampleCode(tag);
+            AppendRefText(example + "\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            refDetailBox.SelectionStart = 0;
+            refDetailBox.ScrollToCaret();
+        }
+
+        private void ShowInMemoryDetail(string tag)
+        {
+            refDetailBox.Clear();
+
+            if (tag == "inmemory")
+            {
+                AppendRefText("In-Memory Data Sources\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("Data registered via RegisterInMemoryData() from .NET.\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Accessed in Python via the 'dotnet' object.\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Registered Sources: " + inMemoryDataSources.Count + "\n\n", Color.Black, false, 10);
+
+                foreach (var name in inMemoryDataSources.Keys)
+                {
+                    AppendRefText("  dotnet." + name + "\n", Color.FromArgb(128, 0, 128), false, 10);
+                }
+
+                AppendRefText("\n", Color.Black, false, 10);
+                AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                AppendRefText("# Access in-memory data:\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("print(dotnet.dataset_name.head())\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(dotnet.dataset_name.column.mean())\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else
+            {
+                string name = tag.Substring("inmemory_".Length);
+                AppendRefText("dotnet." + name + "\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("In-memory data source registered from .NET.\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Streamed via stdin (no file I/O).\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                AppendRefText("# Access this data source:\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("df = dotnet." + name + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(df.head())\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(df.describe())\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            refDetailBox.SelectionStart = 0;
+            refDetailBox.ScrollToCaret();
+        }
+
+        private void AppendRefText(string text, Color color, bool bold, float size)
+        {
+            int start = refDetailBox.TextLength;
+            refDetailBox.AppendText(text);
+            refDetailBox.Select(start, text.Length);
+            Font f = bold ? new Font("Consolas", size, FontStyle.Bold) : new Font("Consolas", size);
+            refDetailBox.SelectionFont = f;
+            refDetailBox.SelectionColor = color;
+            refDetailBox.SelectionLength = 0;
+        }
+
+        private string GetClassNameForTag(string tag)
+        {
+            switch (tag)
+            {
+                case "products": return "Product";
+                case "customers": return "Customer";
+                case "orders": return "Order";
+                case "order_items": return "OrderItem";
+                case "employees": return "Employee";
+                case "sensor_readings": return "SensorReading";
+                case "stock_prices": return "StockPrice";
+                case "web_events": return "WebEvent";
+                default: return tag;
+            }
+        }
+
+        private int GetRecordCountForTag(string tag)
+        {
+            switch (tag)
+            {
+                case "products": return products.Count;
+                case "customers": return customers.Count;
+                case "orders": return orders.Count;
+                case "order_items": return orders.Sum(o => o.Items != null ? o.Items.Count : 0);
+                case "employees": return employees.Count;
+                case "sensor_readings": return sensorReadings.Count;
+                case "stock_prices": return stockPrices.Count;
+                case "web_events": return webEvents.Count;
+                default: return 0;
+            }
+        }
+
+        private string GetExampleCode(string tag)
+        {
+            switch (tag)
+            {
+                case "products":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/products.csv')\n\n# Top 10 most expensive products\nprint(df.nlargest(10, 'Price')[['Name', 'Price', 'Category']])\n\n# Average price by category\nprint(df.groupby('Category')['Price'].mean().sort_values(ascending=False))";
+                case "customers":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/customers.csv')\n\n# Customer count by tier\nprint(df['Tier'].value_counts())\n\n# Average credit limit by tier\nprint(df.groupby('Tier')['CreditLimit'].mean())";
+                case "orders":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/orders.csv')\n\n# Orders by status\nprint(df['Status'].value_counts())\n\n# Revenue by payment method\nprint(df.groupby('PaymentMethod')['Total'].sum().sort_values(ascending=False))";
+                case "order_items":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/order_items.csv')\n\n# Best selling products by quantity\nprint(df.groupby('ProductName')['Quantity'].sum().nlargest(10))\n\n# Average discount by product\nprint(df.groupby('ProductName')['Discount'].mean().nlargest(10))";
+                case "employees":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/employees.csv')\n\n# Average salary by department\nprint(df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(df['IsRemote'].value_counts())";
+                case "sensor_readings":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/sensor_readings.csv')\ndf['Timestamp'] = pd.to_datetime(df['Timestamp'])\n\n# Average value by sensor type\nprint(df.groupby('SensorType')['Value'].mean())\n\n# Readings by status\nprint(df['Status'].value_counts())";
+                case "stock_prices":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/stock_prices.csv')\ndf['Date'] = pd.to_datetime(df['Date'])\n\n# Latest closing prices\nlatest = df.sort_values('Date').groupby('Symbol').last()\nprint(latest[['CompanyName', 'Close', 'Volume']])";
+                case "web_events":
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/web_events.csv')\n\n# Events by type\nprint(df['EventType'].value_counts())\n\n# Average duration by page\nprint(df.groupby('Page')['Duration'].mean().sort_values(ascending=False).head(10))";
+                default:
+                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/" + tag + ".csv')\nprint(df.head())\nprint(df.describe())";
+            }
+        }
+
         private void mainTabs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (mainTabs.SelectedIndex == 2 && !packagesLoaded)
+            if (mainTabs.SelectedIndex == 3 && !packagesLoaded)
             {
                 packagesLoaded = true;
                 OnRefreshPackages(null, null);

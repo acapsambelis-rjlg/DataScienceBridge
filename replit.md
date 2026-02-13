@@ -84,6 +84,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added Data Reference tab with TreeView showing all datasets, columns, types (including computed properties), and detail panel with example Python code
 - 2026-02-10: Added ExportCustomData API (3 overloads: IEnumerable, DataTable, List<T>) with demo of static List<int> from MainForm, plus "Read .NET Custom Data" snippet
 - 2026-02-10: Added Python symbol analyzer for undefined name detection (yellow squiggly lines), tracks definitions (assignments, def, class, for, import, with, except) and flags undefined references
 - 2026-02-10: Added autocomplete popup (Python keywords, builtins, pandas/numpy/matplotlib methods), bracket auto-closing with matching highlight, current line highlighting, and auto-indentation after colon
