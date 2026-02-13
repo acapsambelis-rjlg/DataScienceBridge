@@ -15,7 +15,7 @@ The application leverages Mono (C# / .NET Framework 4.7.2 compatible) for cross-
 - **Data Reference Tab:** A TreeView displays all loaded datasets, their columns, data types, registered Python classes, and context variables. A detail panel provides additional information and example Python code snippets. It includes search and filter capabilities.
 - **Package Manager Tab:** Allows users to install and uninstall pip packages within the isolated Python environment. The package list displays grouped categories (Base Packages, User Installed, Dependencies) using owner-drawn rendering with visual distinction. Dependency classification uses `packaging.requirements` and `importlib.metadata` for accurate transitive dependency tracing. Pip commands override Nix's global `PIP_USER=yes` setting via `PIP_USER=0` environment variable.
 - **In-memory Data Bridge:** All .NET data is streamed directly into the Python environment as pre-loaded variables, eliminating file I/O for data transfer.
-- **Virtual Environment Management:** Automatically creates and manages an isolated Python virtual environment in `bin/python/` on first run, pre-installing essential packages like pandas, numpy, and matplotlib. It falls back to the system Python if venv creation fails and includes a mechanism to reset the environment.
+- **Virtual Environment Management:** Automatically creates and manages an isolated Python virtual environment in `python/venv/` on first run, pre-installing essential packages like pandas, numpy, and matplotlib. It falls back to the system Python if venv creation fails and includes a mechanism to reset the environment.
 - **Plot Viewer:** Supports `plt.show()` from matplotlib, capturing generated plots and displaying them in an interactive viewer with navigation and saving capabilities.
 - **Python Class Registration and Context Hub:** Provides APIs (`RegisterPythonClass`, `SetContext`) for the host application to inject Python class definitions and named variables (strings, numbers, booleans, lists, dictionaries) into the Python execution environment. These registered elements are visible in the Data Reference tab and are recognized by the autocomplete and symbol analyzer.
 - **Public API (`DataScienceControl`):** Offers methods for loading custom data (`LoadData`), registering in-memory data sources, managing registered Python classes and context variables, executing scripts (`RunScript`), and controlling the editor's content and output. It also provides eventing for status updates and menu strip creation for shortcut key routing.
@@ -68,7 +68,7 @@ Keep them in sync when making changes.
 - **SetContext(key, value)** - Send a variable to the Python environment (overloads: string, double, int, bool, string[], double[], Dict<string,string>, Dict<string,double>)
 - **RemoveContext(key)** - Remove a context variable
 - **ClearContext()** - Remove all context variables
-- **ResetPythonEnvironment()** - Delete and recreate the virtual environment (bin/python folder)
+- **ResetPythonEnvironment()** - Delete and recreate the virtual environment (python/venv folder)
 - **RunScript()** - Execute the current Python script
 - **ScriptText** - Get/set the Python editor text
 - **OutputText** - Get the output panel text

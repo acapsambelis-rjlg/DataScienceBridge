@@ -9,7 +9,7 @@ namespace DataScienceWorkbench
 {
     public class PythonRunner
     {
-        private static string _venvRelativePath = Path.Combine("bin", "python", "venv");
+        private static string _venvRelativePath = Path.Combine("python", "venv");
 
         public static string VenvRelativePath
         {
@@ -64,7 +64,7 @@ namespace DataScienceWorkbench
             catch (Exception ex)
             {
                 venvReady = false;
-                venvError = "Failed to create bin/python directory: " + ex.Message;
+                venvError = "Failed to create python/venv directory: " + ex.Message;
                 return;
             }
 
