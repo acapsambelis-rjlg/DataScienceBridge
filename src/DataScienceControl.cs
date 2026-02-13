@@ -10,14 +10,8 @@ namespace DataScienceWorkbench
     public partial class DataScienceControl : UserControl
     {
         private PythonRunner pythonRunner;
-        private DataGenerator dataGen;
-        private List<Product> products;
         private List<Customer> customers;
-        private List<Order> orders;
         private List<Employee> employees;
-        private List<SensorReading> sensorReadings;
-        private List<StockPrice> stockPrices;
-        private List<WebEvent> webEvents;
 
         private bool packagesLoaded;
         private PythonSyntaxHighlighter syntaxHighlighter;
@@ -830,22 +824,10 @@ namespace DataScienceWorkbench
             catch { }
         }
 
-        public void LoadData(
-            List<Product> products,
-            List<Customer> customers,
-            List<Order> orders,
-            List<Employee> employees,
-            List<SensorReading> sensorReadings,
-            List<StockPrice> stockPrices,
-            List<WebEvent> webEvents)
+        public void LoadData(List<Customer> customers, List<Employee> employees)
         {
-            this.products = products;
             this.customers = customers;
-            this.orders = orders;
             this.employees = employees;
-            this.sensorReadings = sensorReadings;
-            this.stockPrices = stockPrices;
-            this.webEvents = webEvents;
 
             RegisterAllDatasetsInMemory();
             PopulateReferenceTree();
@@ -1300,14 +1282,10 @@ namespace DataScienceWorkbench
 
         private void InitializeData()
         {
-            dataGen = new DataGenerator(42);
-            products = dataGen.GenerateProducts(200);
+            var dataGen = new DataGenerator(42);
+            var products = dataGen.GenerateProducts(200);
             customers = dataGen.GenerateCustomers(150, products);
-            orders = dataGen.GenerateOrders(customers, products, 500);
             employees = dataGen.GenerateEmployees(100);
-            sensorReadings = dataGen.GenerateSensorReadings(1000);
-            stockPrices = dataGen.GenerateStockPrices(365);
-            webEvents = dataGen.GenerateWebEvents(2000);
 
             pythonRunner = new PythonRunner();
         }
@@ -1321,7 +1299,6 @@ namespace DataScienceWorkbench
             insertSnippetBtn.DropDownItems.Add("Group By Analysis", null, (s, e) => InsertSnippet(GetGroupBySnippet()));
             insertSnippetBtn.DropDownItems.Add("Correlation Matrix", null, (s, e) => InsertSnippet(GetCorrelationSnippet()));
             insertSnippetBtn.DropDownItems.Add("Time Series Plot", null, (s, e) => InsertSnippet(GetTimeSeriesSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Custom Data Access", null, (s, e) => InsertSnippet(GetCustomDataSnippet()));
         }
 
         private void RegisterAllDatasetsInMemory()
@@ -1392,25 +1369,6 @@ namespace DataScienceWorkbench
             var cols = new List<Tuple<string, string>>();
             switch (tag)
             {
-                case "products":
-                    cols.Add(Tuple.Create("Id", "int"));
-                    cols.Add(Tuple.Create("Name", "string"));
-                    cols.Add(Tuple.Create("Category", "string"));
-                    cols.Add(Tuple.Create("SubCategory", "string"));
-                    cols.Add(Tuple.Create("SKU", "string"));
-                    cols.Add(Tuple.Create("Price", "float"));
-                    cols.Add(Tuple.Create("Cost", "float"));
-                    cols.Add(Tuple.Create("StockQuantity", "int"));
-                    cols.Add(Tuple.Create("ReorderLevel", "int"));
-                    cols.Add(Tuple.Create("Weight", "float"));
-                    cols.Add(Tuple.Create("Supplier", "string"));
-                    cols.Add(Tuple.Create("Rating", "float"));
-                    cols.Add(Tuple.Create("ReviewCount", "int"));
-                    cols.Add(Tuple.Create("IsDiscontinued", "bool"));
-                    cols.Add(Tuple.Create("DateAdded", "datetime"));
-                    cols.Add(Tuple.Create("Margin", "float (computed)"));
-                    cols.Add(Tuple.Create("MarginPercent", "float (computed)"));
-                    break;
                 case "customers":
                     cols.Add(Tuple.Create("Id", "int"));
                     cols.Add(Tuple.Create("FirstName", "string"));
@@ -1432,28 +1390,6 @@ namespace DataScienceWorkbench
                     cols.Add(Tuple.Create("FullName", "string (computed)"));
                     cols.Add(Tuple.Create("Age", "int (computed)"));
                     break;
-                case "orders":
-                    cols.Add(Tuple.Create("Id", "int"));
-                    cols.Add(Tuple.Create("CustomerId", "int"));
-                    cols.Add(Tuple.Create("OrderDate", "datetime"));
-                    cols.Add(Tuple.Create("ShipDate", "datetime"));
-                    cols.Add(Tuple.Create("Status", "string"));
-                    cols.Add(Tuple.Create("ShipMethod", "string"));
-                    cols.Add(Tuple.Create("ShippingCost", "float"));
-                    cols.Add(Tuple.Create("PaymentMethod", "string"));
-                    cols.Add(Tuple.Create("Subtotal", "float (computed)"));
-                    cols.Add(Tuple.Create("Total", "float (computed)"));
-                    cols.Add(Tuple.Create("ItemCount", "int (computed)"));
-                    break;
-                case "order_items":
-                    cols.Add(Tuple.Create("OrderId", "int"));
-                    cols.Add(Tuple.Create("ProductId", "int"));
-                    cols.Add(Tuple.Create("ProductName", "string"));
-                    cols.Add(Tuple.Create("Quantity", "int"));
-                    cols.Add(Tuple.Create("UnitPrice", "float"));
-                    cols.Add(Tuple.Create("Discount", "float"));
-                    cols.Add(Tuple.Create("LineTotal", "float (computed)"));
-                    break;
                 case "employees":
                     cols.Add(Tuple.Create("Id", "int"));
                     cols.Add(Tuple.Create("FirstName", "string"));
@@ -1468,39 +1404,6 @@ namespace DataScienceWorkbench
                     cols.Add(Tuple.Create("Office", "string"));
                     cols.Add(Tuple.Create("FullName", "string (computed)"));
                     cols.Add(Tuple.Create("YearsEmployed", "int (computed)"));
-                    break;
-                case "sensor_readings":
-                    cols.Add(Tuple.Create("SensorId", "int"));
-                    cols.Add(Tuple.Create("SensorType", "string"));
-                    cols.Add(Tuple.Create("Location", "string"));
-                    cols.Add(Tuple.Create("Timestamp", "datetime"));
-                    cols.Add(Tuple.Create("Value", "float"));
-                    cols.Add(Tuple.Create("Unit", "string"));
-                    cols.Add(Tuple.Create("Status", "string"));
-                    cols.Add(Tuple.Create("BatteryLevel", "float"));
-                    break;
-                case "stock_prices":
-                    cols.Add(Tuple.Create("Symbol", "string"));
-                    cols.Add(Tuple.Create("CompanyName", "string"));
-                    cols.Add(Tuple.Create("Date", "datetime"));
-                    cols.Add(Tuple.Create("Open", "float"));
-                    cols.Add(Tuple.Create("High", "float"));
-                    cols.Add(Tuple.Create("Low", "float"));
-                    cols.Add(Tuple.Create("Close", "float"));
-                    cols.Add(Tuple.Create("Volume", "int"));
-                    cols.Add(Tuple.Create("AdjClose", "float"));
-                    break;
-                case "web_events":
-                    cols.Add(Tuple.Create("SessionId", "string"));
-                    cols.Add(Tuple.Create("UserId", "string"));
-                    cols.Add(Tuple.Create("Timestamp", "datetime"));
-                    cols.Add(Tuple.Create("EventType", "string"));
-                    cols.Add(Tuple.Create("Page", "string"));
-                    cols.Add(Tuple.Create("Referrer", "string"));
-                    cols.Add(Tuple.Create("Browser", "string"));
-                    cols.Add(Tuple.Create("Device", "string"));
-                    cols.Add(Tuple.Create("Country", "string"));
-                    cols.Add(Tuple.Create("Duration", "int"));
                     break;
             }
             return cols;
@@ -1686,14 +1589,8 @@ namespace DataScienceWorkbench
         {
             switch (tag)
             {
-                case "products": return "Product";
                 case "customers": return "Customer";
-                case "orders": return "Order";
-                case "order_items": return "OrderItem";
                 case "employees": return "Employee";
-                case "sensor_readings": return "SensorReading";
-                case "stock_prices": return "StockPrice";
-                case "web_events": return "WebEvent";
                 default: return tag;
             }
         }
@@ -1702,14 +1599,8 @@ namespace DataScienceWorkbench
         {
             switch (tag)
             {
-                case "products": return products.Count;
                 case "customers": return customers.Count;
-                case "orders": return orders.Count;
-                case "order_items": return orders.Sum(o => o.Items != null ? o.Items.Count : 0);
                 case "employees": return employees.Count;
-                case "sensor_readings": return sensorReadings.Count;
-                case "stock_prices": return stockPrices.Count;
-                case "web_events": return webEvents.Count;
                 default: return 0;
             }
         }
@@ -1718,22 +1609,10 @@ namespace DataScienceWorkbench
         {
             switch (tag)
             {
-                case "products":
-                    return "# Top 10 most expensive products\nprint(products.df.nlargest(10, 'Price')[['Name', 'Price', 'Category']])\n\n# Average price by category\nprint(products.df.groupby('Category')['Price'].mean().sort_values(ascending=False))\n\n# Direct column access:\nprint(products.Price.mean())";
                 case "customers":
                     return "# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
-                case "orders":
-                    return "# Orders by status\nprint(orders.Status.value_counts())\n\n# Revenue by payment method\nprint(orders.df.groupby('PaymentMethod')['Total'].sum().sort_values(ascending=False))";
-                case "order_items":
-                    return "# Best selling products by quantity\nprint(order_items.df.groupby('ProductName')['Quantity'].sum().nlargest(10))\n\n# Average discount by product\nprint(order_items.df.groupby('ProductName')['Discount'].mean().nlargest(10))";
                 case "employees":
                     return "# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
-                case "sensor_readings":
-                    return "# Average value by sensor type\nprint(sensor_readings.df.groupby('SensorType')['Value'].mean())\n\n# Readings by status\nprint(sensor_readings.Status.value_counts())";
-                case "stock_prices":
-                    return "import pandas as pd\n\n# Latest closing prices\ndf = stock_prices.df.copy()\ndf['Date'] = pd.to_datetime(df['Date'])\nlatest = df.sort_values('Date').groupby('Symbol').last()\nprint(latest[['CompanyName', 'Close', 'Volume']])";
-                case "web_events":
-                    return "# Events by type\nprint(web_events.EventType.value_counts())\n\n# Average duration by page\nprint(web_events.df.groupby('Page')['Duration'].mean().sort_values(ascending=False).head(10))";
                 default:
                     return "print(" + tag + ".head())\nprint(" + tag + ".describe())";
             }
@@ -2084,7 +1963,7 @@ TIPS:
   - Matplotlib plots save as PNG files
   - All standard Python libraries available
   - Install any pip package via Package Manager
-  - .NET controls can push data via RegisterInMemoryData()";
+  - .NET host can register classes and context variables";
 
             MessageBox.Show(help, "Quick Start Guide", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -2245,28 +2124,6 @@ plt.show()
 ";
         }
 
-        private string GetCustomDataSnippet()
-        {
-            return @"
-# Datasets are pre-loaded as top-level Python variables
-# Access columns directly as attributes:
-#   customers.CreditLimit.mean()
-#   employees.Salary.tolist()
-# Use .df to get the raw pandas DataFrame:
-#   customers.df.describe()
-
-print('=== .NET In-Memory Data: Employees ===')
-print(f'Count: {len(employees)}')
-print()
-print('Salary Statistics:')
-print(f'  Sum:    {employees.Salary.sum():.2f}')
-print(f'  Mean:   {employees.Salary.mean():.2f}')
-print(f'  Median: {employees.Salary.median():.2f}')
-print(f'  Std:    {employees.Salary.std():.2f}')
-print(f'  Min:    {employees.Salary.min():.2f}')
-print(f'  Max:    {employees.Salary.max():.2f}')
-";
-        }
     }
 
     public class ContextVariable

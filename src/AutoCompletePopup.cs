@@ -65,14 +65,8 @@ namespace DataScienceWorkbench
         };
 
         private static readonly Dictionary<string, List<string>> DatasetColumns = new Dictionary<string, List<string>> {
-            { "products", new List<string> { "Id", "Name", "Category", "SubCategory", "SKU", "Price", "Cost", "StockQuantity", "ReorderLevel", "Weight", "Supplier", "Rating", "ReviewCount", "IsDiscontinued", "DateAdded", "Margin", "MarginPercent" } },
             { "customers", new List<string> { "Id", "FirstName", "LastName", "Email", "Phone", "DateOfBirth", "RegistrationDate", "Tier", "CreditLimit", "IsActive", "FullName", "Age" } },
-            { "orders", new List<string> { "Id", "CustomerId", "OrderDate", "ShipDate", "Status", "ShipMethod", "ShippingCost", "PaymentMethod", "Subtotal", "Total", "ItemCount" } },
-            { "order_items", new List<string> { "ProductId", "ProductName", "Quantity", "UnitPrice", "Discount", "LineTotal" } },
-            { "employees", new List<string> { "Id", "FirstName", "LastName", "Department", "Title", "HireDate", "Salary", "PerformanceScore", "ManagerId", "IsRemote", "Office", "FullName", "YearsEmployed" } },
-            { "sensor_readings", new List<string> { "SensorId", "SensorType", "Location", "Timestamp", "Value", "Unit", "Status", "BatteryLevel" } },
-            { "stock_prices", new List<string> { "Symbol", "CompanyName", "Date", "Open", "High", "Low", "Close", "Volume", "AdjClose" } },
-            { "web_events", new List<string> { "SessionId", "UserId", "Timestamp", "EventType", "Page", "Referrer", "Browser", "Device", "Country", "Duration" } }
+            { "employees", new List<string> { "Id", "FirstName", "LastName", "Department", "Title", "HireDate", "Salary", "PerformanceScore", "ManagerId", "IsRemote", "Office", "FullName", "YearsEmployed" } }
         };
 
         static AutoCompletePopup()
@@ -129,8 +123,7 @@ namespace DataScienceWorkbench
             };
 
             var datasetNames = new[] {
-                "products", "customers", "orders", "order_items",
-                "employees", "sensor_readings", "stock_prices", "web_events"
+                "customers", "employees"
             };
 
             AllItems.AddRange(keywords);
