@@ -73,6 +73,7 @@
     <Compile Include="PythonWorkbench\PythonSymbolAnalyzer.cs" />
     <Compile Include="PythonWorkbench\PythonSyntaxHighlighter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PythonWorkbench\UserVisibleAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.manifest" />

@@ -936,7 +936,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             inMemoryDataSources[name] = () =>
             {
                 var data = dataProvider();
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(typeof(T));
+                var visibleProps = UserVisibleProperties.GetVisibleProperties(typeof(T));
                 var sb = new System.Text.StringBuilder();
 
                 var headerParts = new List<string>();
@@ -1204,7 +1204,7 @@ namespace DataScienceWorkbench.PythonWorkbench
                 var colMap = new Dictionary<string, List<string>>();
                 foreach (var kvp in inMemoryDataTypes)
                 {
-                    var visibleProps = UserVisibleHelper.GetVisibleProperties(kvp.Value);
+                    var visibleProps = UserVisibleProperties.GetVisibleProperties(kvp.Value);
                     var colNames = new List<string>();
                     foreach (var p in visibleProps)
                         colNames.Add(p.Name);
@@ -1453,7 +1453,7 @@ namespace DataScienceWorkbench.PythonWorkbench
                     }
                 }
 
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
+                var visibleProps = UserVisibleProperties.GetVisibleProperties(type);
                 foreach (var p in visibleProps)
                 {
                     if (matchedColNames.Contains(p.Name)) continue;
@@ -1603,10 +1603,10 @@ namespace DataScienceWorkbench.PythonWorkbench
             if (!inMemoryDataTypes.TryGetValue(tag, out type))
                 return cols;
 
-            var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
+            var visibleProps = UserVisibleProperties.GetVisibleProperties(type);
             foreach (var p in visibleProps)
             {
-                string typeName = UserVisibleHelper.GetPythonTypeName(p.PropertyType);
+                string typeName = UserVisibleProperties.GetPythonTypeName(p.PropertyType);
                 bool isComputed = p.GetSetMethod() == null;
                 if (isComputed)
                     typeName += " (computed)";
@@ -1651,7 +1651,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             var prop = type.GetProperty(fieldName);
             if (prop == null) return;
 
-            string typeName = UserVisibleHelper.GetPythonTypeName(prop.PropertyType);
+            string typeName = UserVisibleProperties.GetPythonTypeName(prop.PropertyType);
             bool isComputed = prop.GetSetMethod() == null;
 
             refDetailBox.Clear();
