@@ -19,6 +19,7 @@ namespace DataScienceWorkbench
         private static readonly Color SelfColor = Color.FromArgb(0, 0, 255);
         private static readonly Color FunctionDefColor = Color.FromArgb(116, 83, 0);
         private static readonly Color ClassDefColor = Color.FromArgb(38, 127, 153);
+        private static readonly Color FStringBraceColor = Color.FromArgb(0, 0, 255);
 
         private static readonly HashSet<string> Keywords = new HashSet<string> {
             "False", "None", "True", "and", "as", "assert", "async", "await",
@@ -44,8 +45,12 @@ namespace DataScienceWorkbench
         private static readonly Regex TripleSingleQuoteRegex = new Regex("'''[\\s\\S]*?'''", RegexOptions.Compiled);
         private static readonly Regex DoubleQuoteRegex = new Regex("\"(?:[^\"\\\\]|\\\\.)*\"", RegexOptions.Compiled);
         private static readonly Regex SingleQuoteRegex = new Regex("'(?:[^'\\\\]|\\\\.)*'", RegexOptions.Compiled);
-        private static readonly Regex FStringRegex = new Regex("[fFrRbBuU]{1,2}\"(?:[^\"\\\\]|\\\\.)*\"", RegexOptions.Compiled);
-        private static readonly Regex FSingleRegex = new Regex("[fFrRbBuU]{1,2}'(?:[^'\\\\]|\\\\.)*'", RegexOptions.Compiled);
+        private static readonly Regex FStringDoubleRegex = new Regex("[fF]\"(?:[^\"\\\\]|\\\\.)*\"", RegexOptions.Compiled);
+        private static readonly Regex FStringSingleRegex = new Regex("[fF]'(?:[^'\\\\]|\\\\.)*'", RegexOptions.Compiled);
+        private static readonly Regex FStringTripleDoubleRegex = new Regex("[fF]\"\"\"[\\s\\S]*?\"\"\"", RegexOptions.Compiled);
+        private static readonly Regex FStringTripleSingleRegex = new Regex("[fF]'''[\\s\\S]*?'''", RegexOptions.Compiled);
+        private static readonly Regex PrefixedStringRegex = new Regex("[rRbBuU]{1,2}\"(?:[^\"\\\\]|\\\\.)*\"", RegexOptions.Compiled);
+        private static readonly Regex PrefixedSingleRegex = new Regex("[rRbBuU]{1,2}'(?:[^'\\\\]|\\\\.)*'", RegexOptions.Compiled);
         private static readonly Regex CommentRegex = new Regex("#[^\n]*", RegexOptions.Compiled);
         private static readonly Regex NumberRegex = new Regex(@"\b\d+\.?\d*(?:[eE][+-]?\d+)?\b", RegexOptions.Compiled);
         private static readonly Regex DecoratorRegex = new Regex(@"^[ \t]*@\w+", RegexOptions.Compiled | RegexOptions.Multiline);
@@ -74,10 +79,27 @@ namespace DataScienceWorkbench
 
                 ApplyPatternColor(editor, text, painted, TripleDoubleQuoteRegex, StringColor);
                 ApplyPatternColor(editor, text, painted, TripleSingleQuoteRegex, StringColor);
-                ApplyPatternColor(editor, text, painted, FStringRegex, StringColor);
-                ApplyPatternColor(editor, text, painted, FSingleRegex, StringColor);
+
+                var fstringMatches = new List<Match>();
+                CollectFStringMatches(text, painted, FStringTripleDoubleRegex, fstringMatches);
+                CollectFStringMatches(text, painted, FStringTripleSingleRegex, fstringMatches);
+                CollectFStringMatches(text, painted, FStringDoubleRegex, fstringMatches);
+                CollectFStringMatches(text, painted, FStringSingleRegex, fstringMatches);
+
+                foreach (var m in fstringMatches)
+                {
+                    editor.Select(m.Index, m.Length);
+                    editor.SelectionColor = StringColor;
+                    MarkPainted(painted, m.Index, m.Length);
+                }
+
+                ApplyPatternColor(editor, text, painted, PrefixedStringRegex, StringColor);
+                ApplyPatternColor(editor, text, painted, PrefixedSingleRegex, StringColor);
                 ApplyPatternColor(editor, text, painted, DoubleQuoteRegex, StringColor);
                 ApplyPatternColor(editor, text, painted, SingleQuoteRegex, StringColor);
+
+                HighlightFStringExpressions(editor, text, painted, fstringMatches);
+
                 ApplyPatternColor(editor, text, painted, CommentRegex, CommentColor);
                 ApplyPatternColor(editor, text, painted, DecoratorRegex, DecoratorColor);
                 ApplyPatternColor(editor, text, painted, NumberRegex, NumberColor);
@@ -132,6 +154,180 @@ namespace DataScienceWorkbench
             }
         }
 
+        private void CollectFStringMatches(string text, bool[] painted, Regex pattern, List<Match> results)
+        {
+            var matches = pattern.Matches(text);
+            foreach (Match m in matches)
+            {
+                if (IsStartPainted(painted, m.Index)) continue;
+                char first = text[m.Index];
+                if (first != 'f' && first != 'F') continue;
+                results.Add(m);
+            }
+        }
+
+        private void HighlightFStringExpressions(RichTextBox editor, string text, bool[] painted, List<Match> fstringMatches)
+        {
+            foreach (var m in fstringMatches)
+            {
+                int prefixLen = 1;
+                int quoteLen = 1;
+                if (m.Length > 4)
+                {
+                    int afterPrefix = m.Index + prefixLen;
+                    if (afterPrefix + 2 < text.Length && text[afterPrefix] == text[afterPrefix + 1] && text[afterPrefix] == text[afterPrefix + 2])
+                        quoteLen = 3;
+                }
+
+                int contentStart = m.Index + prefixLen + quoteLen;
+                int contentEnd = m.Index + m.Length - quoteLen;
+
+                var expressions = FindFStringExpressions(text, contentStart, contentEnd);
+
+                foreach (var expr in expressions)
+                {
+                    editor.Select(expr.BraceOpen, 1);
+                    editor.SelectionColor = FStringBraceColor;
+
+                    if (expr.ExprStart < expr.ExprEnd)
+                    {
+                        int exprLen = expr.ExprEnd - expr.ExprStart;
+                        editor.Select(expr.ExprStart, exprLen);
+                        editor.SelectionColor = DefaultColor;
+                        UnmarkPainted(painted, expr.ExprStart, exprLen);
+
+                        HighlightExpressionTokens(editor, text, painted, expr.ExprStart, expr.ExprEnd);
+                    }
+
+                    editor.Select(expr.BraceClose, 1);
+                    editor.SelectionColor = FStringBraceColor;
+                }
+            }
+        }
+
+        private struct FStringExpression
+        {
+            public int BraceOpen;
+            public int BraceClose;
+            public int ExprStart;
+            public int ExprEnd;
+        }
+
+        private List<FStringExpression> FindFStringExpressions(string text, int start, int end)
+        {
+            var results = new List<FStringExpression>();
+            int i = start;
+            while (i < end)
+            {
+                if (text[i] == '{')
+                {
+                    if (i + 1 < end && text[i + 1] == '{')
+                    {
+                        i += 2;
+                        continue;
+                    }
+
+                    int braceOpen = i;
+                    int depth = 1;
+                    int exprStart = i + 1;
+                    i++;
+
+                    while (i < end && depth > 0)
+                    {
+                        char c = text[i];
+                        if (c == '{') depth++;
+                        else if (c == '}') { depth--; if (depth == 0) break; }
+                        else if (c == '\'' || c == '"')
+                        {
+                            char q = c;
+                            i++;
+                            while (i < end && text[i] != q)
+                            {
+                                if (text[i] == '\\') i++;
+                                i++;
+                            }
+                        }
+                        i++;
+                    }
+
+                    if (depth == 0)
+                    {
+                        int exprEnd = i;
+                        int searchEnd = exprEnd;
+                        int colonDepth = 0;
+                        for (int j = exprStart; j < searchEnd; j++)
+                        {
+                            char c = text[j];
+                            if (c == '(' || c == '[' || c == '{') colonDepth++;
+                            else if (c == ')' || c == ']' || c == '}') colonDepth--;
+                            else if (c == ':' && colonDepth == 0)
+                            {
+                                exprEnd = j;
+                                break;
+                            }
+                            else if (c == '!' && colonDepth == 0 && j + 1 < searchEnd && (text[j + 1] == 'r' || text[j + 1] == 's' || text[j + 1] == 'a'))
+                            {
+                                exprEnd = j;
+                                break;
+                            }
+                        }
+
+                        results.Add(new FStringExpression
+                        {
+                            BraceOpen = braceOpen,
+                            BraceClose = i,
+                            ExprStart = exprStart,
+                            ExprEnd = exprEnd
+                        });
+                        i++;
+                    }
+                }
+                else if (text[i] == '}' && i + 1 < end && text[i + 1] == '}')
+                {
+                    i += 2;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            return results;
+        }
+
+        private void HighlightExpressionTokens(RichTextBox editor, string text, bool[] painted, int exprStart, int exprEnd)
+        {
+            string exprText = text.Substring(exprStart, exprEnd - exprStart);
+
+            var numberMatches = NumberRegex.Matches(exprText);
+            foreach (Match nm in numberMatches)
+            {
+                int absIdx = exprStart + nm.Index;
+                editor.Select(absIdx, nm.Length);
+                editor.SelectionColor = NumberColor;
+            }
+
+            var wordMatches = WordRegex.Matches(exprText);
+            foreach (Match wm in wordMatches)
+            {
+                string word = wm.Value;
+                Color? color = null;
+
+                if (word == "self")
+                    color = SelfColor;
+                else if (Keywords.Contains(word))
+                    color = KeywordColor;
+                else if (Builtins.Contains(word))
+                    color = BuiltinColor;
+
+                if (color.HasValue)
+                {
+                    int absIdx = exprStart + wm.Index;
+                    editor.Select(absIdx, wm.Length);
+                    editor.SelectionColor = color.Value;
+                }
+            }
+        }
+
         private void ApplyPatternColor(RichTextBox editor, string text, bool[] painted, Regex pattern, Color color)
         {
             var matches = pattern.Matches(text);
@@ -167,6 +363,13 @@ namespace DataScienceWorkbench
             int end = Math.Min(start + length, painted.Length);
             for (int i = start; i < end; i++)
                 painted[i] = true;
+        }
+
+        private void UnmarkPainted(bool[] painted, int start, int length)
+        {
+            int end = Math.Min(start + length, painted.Length);
+            for (int i = start; i < end; i++)
+                painted[i] = false;
         }
     }
 
