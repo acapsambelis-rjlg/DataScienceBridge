@@ -128,7 +128,7 @@ namespace DataScienceWorkbench
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pythonEditor.Font = new System.Drawing.Font("Consolas", 10F);
             this.pythonEditor.HideSelection = false;
-            this.pythonEditor.Location = new System.Drawing.Point(60, 25);
+            this.pythonEditor.Location = new System.Drawing.Point(60, 24);
             this.pythonEditor.Name = "pythonEditor";
             this.pythonEditor.Size = new System.Drawing.Size(732, 355);
             this.pythonEditor.TabIndex = 0;
@@ -138,7 +138,7 @@ namespace DataScienceWorkbench
             // lineNumberPanel
             // 
             this.lineNumberPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lineNumberPanel.Location = new System.Drawing.Point(0, 25);
+            this.lineNumberPanel.Location = new System.Drawing.Point(0, 24);
             this.lineNumberPanel.Name = "lineNumberPanel";
             this.lineNumberPanel.Size = new System.Drawing.Size(60, 355);
             this.lineNumberPanel.TabIndex = 1;
@@ -147,6 +147,7 @@ namespace DataScienceWorkbench
             // 
             this.editorMenuBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.insertSnippetBtn});
+            this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
             this.editorMenuBar.Location = new System.Drawing.Point(0, 0);
             this.editorMenuBar.Name = "editorMenuBar";
             this.editorMenuBar.Size = new System.Drawing.Size(792, 24);
