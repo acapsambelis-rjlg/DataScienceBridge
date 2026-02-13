@@ -37,6 +37,7 @@ namespace DataScienceWorkbench
             this.pkgRightPanel = new System.Windows.Forms.Panel();
             this.packageListBox = new System.Windows.Forms.ListBox();
             this.pkgListLabel = new System.Windows.Forms.Label();
+            this.pkgSearchBox = new System.Windows.Forms.TextBox();
             this.pkgLeftPanel = new System.Windows.Forms.Panel();
             this.refreshBtn = new System.Windows.Forms.Button();
             this.installGroup = new System.Windows.Forms.GroupBox();
@@ -304,7 +305,6 @@ namespace DataScienceWorkbench
             // 
             // pkgSearchBox
             // 
-            this.pkgSearchBox = new System.Windows.Forms.TextBox();
             this.pkgSearchBox.Dock = System.Windows.Forms.DockStyle.Top;
             this.pkgSearchBox.Font = new System.Drawing.Font("Consolas", 9F);
             this.pkgSearchBox.Location = new System.Drawing.Point(10, 32);
