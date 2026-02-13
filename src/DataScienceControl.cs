@@ -97,11 +97,9 @@ namespace DataScienceWorkbench
 
             pythonEditor.Font = monoFont10;
             outputBox.Font = monoFont9;
-            dataTreeView.Font = monoFont9;
             packageListBox.Font = monoFont9;
             lineNumberPanel.UpdateFont(monoFont9);
 
-            treeLabel.Font = uiFontBold;
             outputLabel.Font = uiFontBold;
             pkgListLabel.Font = uiFontBold;
         }
@@ -118,7 +116,6 @@ namespace DataScienceWorkbench
             suppressHighlight = false;
             ResetUndoStack();
             ApplySyntaxHighlighting();
-            PopulateDataTree();
             RegisterAllDatasetsInMemory();
             PopulateReferenceTree();
         }
@@ -851,7 +848,6 @@ namespace DataScienceWorkbench
             this.webEvents = webEvents;
 
             RegisterAllDatasetsInMemory();
-            PopulateDataTree();
             PopulateReferenceTree();
         }
 
@@ -1332,25 +1328,6 @@ namespace DataScienceWorkbench
         {
             RegisterInMemoryData<Customer>("customers", () => customers);
             RegisterInMemoryData<Employee>("employees", () => employees);
-        }
-
-        private void PopulateDataTree()
-        {
-            dataTreeView.Nodes.Clear();
-            var root = dataTreeView.Nodes.Add("Datasets");
-
-            var custNode = root.Nodes.Add("customers (" + customers.Count + " records)");
-            custNode.Nodes.Add("Id, FirstName, LastName, Email");
-            custNode.Nodes.Add("Phone, DateOfBirth, RegistrationDate");
-            custNode.Nodes.Add("Tier, CreditLimit, IsActive");
-            custNode.Nodes.Add("Address fields (Street, City, State...)");
-
-            var empNode = root.Nodes.Add("employees (" + employees.Count + " records)");
-            empNode.Nodes.Add("Id, FirstName, LastName, Department");
-            empNode.Nodes.Add("Title, HireDate, Salary");
-            empNode.Nodes.Add("PerformanceScore, ManagerId, IsRemote");
-
-            root.Expand();
         }
 
         private void PopulateReferenceTree()

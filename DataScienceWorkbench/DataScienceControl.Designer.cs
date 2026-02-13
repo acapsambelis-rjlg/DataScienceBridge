@@ -20,10 +20,6 @@ namespace DataScienceWorkbench
             this.mainTabs = new System.Windows.Forms.TabControl();
             this.editorTab = new System.Windows.Forms.TabPage();
             this.mainSplit = new System.Windows.Forms.SplitContainer();
-            this.topSplit = new System.Windows.Forms.SplitContainer();
-            this.treePanel = new System.Windows.Forms.Panel();
-            this.dataTreeView = new System.Windows.Forms.TreeView();
-            this.treeLabel = new System.Windows.Forms.Label();
             this.editorPanel = new System.Windows.Forms.Panel();
             this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
             this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
@@ -62,11 +58,6 @@ namespace DataScienceWorkbench
             this.mainSplit.Panel1.SuspendLayout();
             this.mainSplit.Panel2.SuspendLayout();
             this.mainSplit.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.topSplit)).BeginInit();
-            this.topSplit.Panel1.SuspendLayout();
-            this.topSplit.Panel2.SuspendLayout();
-            this.topSplit.SuspendLayout();
-            this.treePanel.SuspendLayout();
             this.editorPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
@@ -113,7 +104,7 @@ namespace DataScienceWorkbench
             // 
             // mainSplit.Panel1
             // 
-            this.mainSplit.Panel1.Controls.Add(this.topSplit);
+            this.mainSplit.Panel1.Controls.Add(this.editorPanel);
             // 
             // mainSplit.Panel2
             // 
@@ -123,54 +114,6 @@ namespace DataScienceWorkbench
             this.mainSplit.SplitterWidth = 6;
             this.mainSplit.TabIndex = 0;
             // 
-            // topSplit
-            // 
-            this.topSplit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.topSplit.Location = new System.Drawing.Point(0, 0);
-            this.topSplit.Name = "topSplit";
-            // 
-            // topSplit.Panel1
-            // 
-            this.topSplit.Panel1.Controls.Add(this.treePanel);
-            // 
-            // topSplit.Panel2
-            // 
-            this.topSplit.Panel2.Controls.Add(this.editorPanel);
-            this.topSplit.Size = new System.Drawing.Size(792, 380);
-            this.topSplit.SplitterDistance = 200;
-            this.topSplit.SplitterWidth = 6;
-            this.topSplit.TabIndex = 0;
-            // 
-            // treePanel
-            // 
-            this.treePanel.Controls.Add(this.dataTreeView);
-            this.treePanel.Controls.Add(this.treeLabel);
-            this.treePanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treePanel.Location = new System.Drawing.Point(0, 0);
-            this.treePanel.Name = "treePanel";
-            this.treePanel.Size = new System.Drawing.Size(200, 380);
-            this.treePanel.TabIndex = 0;
-            // 
-            // dataTreeView
-            // 
-            this.dataTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataTreeView.Font = new System.Drawing.Font("Consolas", 9.5F);
-            this.dataTreeView.Location = new System.Drawing.Point(0, 20);
-            this.dataTreeView.Name = "dataTreeView";
-            this.dataTreeView.Size = new System.Drawing.Size(200, 360);
-            this.dataTreeView.TabIndex = 0;
-            // 
-            // treeLabel
-            // 
-            this.treeLabel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.treeLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.treeLabel.Location = new System.Drawing.Point(0, 0);
-            this.treeLabel.Name = "treeLabel";
-            this.treeLabel.Padding = new System.Windows.Forms.Padding(4, 2, 0, 0);
-            this.treeLabel.Size = new System.Drawing.Size(200, 20);
-            this.treeLabel.TabIndex = 1;
-            this.treeLabel.Text = "Available Data";
-            // 
             // editorPanel
             // 
             this.editorPanel.Controls.Add(this.pythonEditor);
@@ -179,7 +122,7 @@ namespace DataScienceWorkbench
             this.editorPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.editorPanel.Location = new System.Drawing.Point(0, 0);
             this.editorPanel.Name = "editorPanel";
-            this.editorPanel.Size = new System.Drawing.Size(586, 380);
+            this.editorPanel.Size = new System.Drawing.Size(792, 380);
             this.editorPanel.TabIndex = 0;
             // 
             // pythonEditor
@@ -192,7 +135,7 @@ namespace DataScienceWorkbench
             this.pythonEditor.HideSelection = false;
             this.pythonEditor.Location = new System.Drawing.Point(60, 25);
             this.pythonEditor.Name = "pythonEditor";
-            this.pythonEditor.Size = new System.Drawing.Size(526, 355);
+            this.pythonEditor.Size = new System.Drawing.Size(732, 355);
             this.pythonEditor.TabIndex = 0;
             this.pythonEditor.Text = "";
             this.pythonEditor.WordWrap = false;
@@ -217,7 +160,7 @@ namespace DataScienceWorkbench
             this.insertSnippetBtn});
             this.toolBar.Location = new System.Drawing.Point(0, 0);
             this.toolBar.Name = "toolBar";
-            this.toolBar.Size = new System.Drawing.Size(586, 25);
+            this.toolBar.Size = new System.Drawing.Size(792, 25);
             this.toolBar.TabIndex = 2;
             // 
             // runBtn
@@ -521,11 +464,6 @@ namespace DataScienceWorkbench
             this.mainSplit.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.mainSplit)).EndInit();
             this.mainSplit.ResumeLayout(false);
-            this.topSplit.Panel1.ResumeLayout(false);
-            this.topSplit.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.topSplit)).EndInit();
-            this.topSplit.ResumeLayout(false);
-            this.treePanel.ResumeLayout(false);
             this.editorPanel.ResumeLayout(false);
             this.editorPanel.PerformLayout();
             this.toolBar.ResumeLayout(false);
@@ -549,10 +487,6 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.TabControl mainTabs;
         private System.Windows.Forms.TabPage editorTab;
         private System.Windows.Forms.SplitContainer mainSplit;
-        private System.Windows.Forms.SplitContainer topSplit;
-        private System.Windows.Forms.Panel treePanel;
-        private System.Windows.Forms.TreeView dataTreeView;
-        private System.Windows.Forms.Label treeLabel;
         private System.Windows.Forms.Panel editorPanel;
         private DataScienceWorkbench.SquiggleRichTextBox pythonEditor;
         private DataScienceWorkbench.LineNumberPanel lineNumberPanel;
