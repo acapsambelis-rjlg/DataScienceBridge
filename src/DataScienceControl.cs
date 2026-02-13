@@ -93,7 +93,6 @@ namespace DataScienceWorkbench
         {
             var monoFont10 = ResolveMonoFont(10f);
             var monoFont9 = ResolveMonoFont(9f);
-            var uiFont = ResolveUIFont(9f);
             var uiFontBold = ResolveUIFont(9f, FontStyle.Bold);
 
             pythonEditor.Font = monoFont10;
@@ -105,7 +104,6 @@ namespace DataScienceWorkbench
             treeLabel.Font = uiFontBold;
             outputLabel.Font = uiFontBold;
             pkgListLabel.Font = uiFontBold;
-            dataGrid.Font = uiFont;
         }
 
         public DataScienceControl()
@@ -123,7 +121,6 @@ namespace DataScienceWorkbench
             PopulateDataTree();
             RegisterAllDatasetsInMemory();
             PopulateReferenceTree();
-            datasetCombo.SelectedIndex = 0;
         }
 
         private void SetupSyntaxHighlighting()
@@ -856,7 +853,6 @@ namespace DataScienceWorkbench
             RegisterAllDatasetsInMemory();
             PopulateDataTree();
             PopulateReferenceTree();
-            OnDatasetChanged(null, null);
         }
 
         public void RegisterInMemoryData(string name, System.Collections.IEnumerable values, string columnName = "value")
@@ -1837,26 +1833,10 @@ namespace DataScienceWorkbench
 
         private void mainTabs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (mainTabs.SelectedIndex == 3 && !packagesLoaded)
+            if (mainTabs.SelectedIndex == 2 && !packagesLoaded)
             {
                 packagesLoaded = true;
                 OnRefreshPackages(null, null);
-            }
-        }
-
-        private void OnDatasetChanged(object sender, EventArgs e)
-        {
-            dataGrid.DataSource = null;
-            switch (datasetCombo.SelectedIndex)
-            {
-                case 0:
-                    dataGrid.DataSource = customers.Select(c => new { c.Id, c.FullName, c.Email, c.Phone, Age = c.Age, c.Tier, c.CreditLimit, c.IsActive, City = c.Address.City, State = c.Address.State, OrderCount = c.Orders.Count }).ToList();
-                    recordCountLabel.Text = customers.Count + " records";
-                    break;
-                case 1:
-                    dataGrid.DataSource = employees.Select(em => new { em.Id, em.FullName, em.Department, em.Title, HireDate = em.HireDate.ToString("yyyy-MM-dd"), em.Salary, em.PerformanceScore, em.IsRemote, em.Office, em.YearsEmployed }).ToList();
-                    recordCountLabel.Text = employees.Count + " records";
-                    break;
             }
         }
 

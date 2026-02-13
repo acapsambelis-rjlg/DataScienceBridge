@@ -38,12 +38,6 @@ namespace DataScienceWorkbench
             this.outputPanel = new System.Windows.Forms.Panel();
             this.outputBox = new System.Windows.Forms.RichTextBox();
             this.outputLabel = new System.Windows.Forms.Label();
-            this.dataTab = new System.Windows.Forms.TabPage();
-            this.dataGrid = new System.Windows.Forms.DataGridView();
-            this.dataTopPanel = new System.Windows.Forms.Panel();
-            this.recordCountLabel = new System.Windows.Forms.Label();
-            this.datasetCombo = new System.Windows.Forms.ComboBox();
-            this.datasetLabel = new System.Windows.Forms.Label();
             this.referenceTab = new System.Windows.Forms.TabPage();
             this.refSplit = new System.Windows.Forms.SplitContainer();
             this.refTreeView = new System.Windows.Forms.TreeView();
@@ -76,9 +70,6 @@ namespace DataScienceWorkbench
             this.editorPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
-            this.dataTab.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).BeginInit();
-            this.dataTopPanel.SuspendLayout();
             this.referenceTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.refSplit)).BeginInit();
             this.refSplit.Panel1.SuspendLayout();
@@ -93,7 +84,6 @@ namespace DataScienceWorkbench
             // mainTabs
             // 
             this.mainTabs.Controls.Add(this.editorTab);
-            this.mainTabs.Controls.Add(this.dataTab);
             this.mainTabs.Controls.Add(this.referenceTab);
             this.mainTabs.Controls.Add(this.packagesTab);
             this.mainTabs.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -129,7 +119,7 @@ namespace DataScienceWorkbench
             // 
             this.mainSplit.Panel2.Controls.Add(this.outputPanel);
             this.mainSplit.Size = new System.Drawing.Size(792, 574);
-            this.mainSplit.SplitterDistance = 450;
+            this.mainSplit.SplitterDistance = 380;
             this.mainSplit.SplitterWidth = 6;
             this.mainSplit.TabIndex = 0;
             // 
@@ -146,7 +136,7 @@ namespace DataScienceWorkbench
             // topSplit.Panel2
             // 
             this.topSplit.Panel2.Controls.Add(this.editorPanel);
-            this.topSplit.Size = new System.Drawing.Size(792, 450);
+            this.topSplit.Size = new System.Drawing.Size(792, 380);
             this.topSplit.SplitterDistance = 200;
             this.topSplit.SplitterWidth = 6;
             this.topSplit.TabIndex = 0;
@@ -158,16 +148,16 @@ namespace DataScienceWorkbench
             this.treePanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treePanel.Location = new System.Drawing.Point(0, 0);
             this.treePanel.Name = "treePanel";
-            this.treePanel.Size = new System.Drawing.Size(200, 450);
+            this.treePanel.Size = new System.Drawing.Size(200, 380);
             this.treePanel.TabIndex = 0;
             // 
             // dataTreeView
             // 
             this.dataTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataTreeView.Font = new System.Drawing.Font("Consolas", 9F);
-            this.dataTreeView.Location = new System.Drawing.Point(0, 22);
+            this.dataTreeView.Font = new System.Drawing.Font("Consolas", 9.5F);
+            this.dataTreeView.Location = new System.Drawing.Point(0, 20);
             this.dataTreeView.Name = "dataTreeView";
-            this.dataTreeView.Size = new System.Drawing.Size(200, 428);
+            this.dataTreeView.Size = new System.Drawing.Size(200, 360);
             this.dataTreeView.TabIndex = 0;
             // 
             // treeLabel
@@ -176,10 +166,10 @@ namespace DataScienceWorkbench
             this.treeLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.treeLabel.Location = new System.Drawing.Point(0, 0);
             this.treeLabel.Name = "treeLabel";
-            this.treeLabel.Padding = new System.Windows.Forms.Padding(4, 4, 0, 0);
-            this.treeLabel.Size = new System.Drawing.Size(200, 22);
+            this.treeLabel.Padding = new System.Windows.Forms.Padding(4, 2, 0, 0);
+            this.treeLabel.Size = new System.Drawing.Size(200, 20);
             this.treeLabel.TabIndex = 1;
-            this.treeLabel.Text = "Available Data:";
+            this.treeLabel.Text = "Available Data";
             // 
             // editorPanel
             // 
@@ -189,32 +179,34 @@ namespace DataScienceWorkbench
             this.editorPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.editorPanel.Location = new System.Drawing.Point(0, 0);
             this.editorPanel.Name = "editorPanel";
-            this.editorPanel.Size = new System.Drawing.Size(586, 450);
+            this.editorPanel.Size = new System.Drawing.Size(586, 380);
             this.editorPanel.TabIndex = 0;
             // 
             // pythonEditor
             // 
             this.pythonEditor.AcceptsTab = true;
-            this.pythonEditor.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.pythonEditor.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.pythonEditor.DetectUrls = false;
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pythonEditor.Font = new System.Drawing.Font("Consolas", 10F);
-            this.pythonEditor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.pythonEditor.HideSelection = false;
             this.pythonEditor.Location = new System.Drawing.Point(60, 25);
             this.pythonEditor.Name = "pythonEditor";
-            this.pythonEditor.Size = new System.Drawing.Size(541, 425);
+            this.pythonEditor.Size = new System.Drawing.Size(526, 355);
             this.pythonEditor.TabIndex = 0;
             this.pythonEditor.Text = "";
             this.pythonEditor.WordWrap = false;
+            this.pythonEditor.TextChanged += new System.EventHandler(this.OnEditorTextChanged);
+            this.pythonEditor.KeyDown += new System.Windows.Forms.KeyEventHandler(this.OnEditorKeyDown);
+            this.pythonEditor.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnEditorMouseDown);
             // 
             // lineNumberPanel
             // 
             this.lineNumberPanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.lineNumberPanel.Location = new System.Drawing.Point(0, 25);
             this.lineNumberPanel.Name = "lineNumberPanel";
-            this.lineNumberPanel.Size = new System.Drawing.Size(60, 425);
-            this.lineNumberPanel.TabIndex = 2;
+            this.lineNumberPanel.Size = new System.Drawing.Size(60, 355);
+            this.lineNumberPanel.TabIndex = 1;
             // 
             // toolBar
             // 
@@ -229,14 +221,13 @@ namespace DataScienceWorkbench
             this.toolBar.Location = new System.Drawing.Point(0, 0);
             this.toolBar.Name = "toolBar";
             this.toolBar.Size = new System.Drawing.Size(586, 25);
-            this.toolBar.TabIndex = 1;
+            this.toolBar.TabIndex = 2;
             // 
             // runBtn
             // 
-            this.runBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.runBtn.Name = "runBtn";
-            this.runBtn.Size = new System.Drawing.Size(54, 22);
-            this.runBtn.Text = "Run (F5)";
+            this.runBtn.Size = new System.Drawing.Size(59, 22);
+            this.runBtn.Text = "▶ Run";
             this.runBtn.Click += new System.EventHandler(this.OnRunScript);
             // 
             // toolSep1
@@ -246,9 +237,8 @@ namespace DataScienceWorkbench
             // 
             // checkSyntaxBtn
             // 
-            this.checkSyntaxBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.checkSyntaxBtn.Name = "checkSyntaxBtn";
-            this.checkSyntaxBtn.Size = new System.Drawing.Size(82, 22);
+            this.checkSyntaxBtn.Size = new System.Drawing.Size(86, 22);
             this.checkSyntaxBtn.Text = "Check Syntax";
             this.checkSyntaxBtn.Click += new System.EventHandler(this.OnCheckSyntax);
             // 
@@ -259,9 +249,8 @@ namespace DataScienceWorkbench
             // 
             // clearBtn
             // 
-            this.clearBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.clearBtn.Name = "clearBtn";
-            this.clearBtn.Size = new System.Drawing.Size(76, 22);
+            this.clearBtn.Size = new System.Drawing.Size(78, 22);
             this.clearBtn.Text = "Clear Output";
             this.clearBtn.Click += new System.EventHandler(this.OnClearOutput);
             // 
@@ -272,9 +261,8 @@ namespace DataScienceWorkbench
             // 
             // insertSnippetBtn
             // 
-            this.insertSnippetBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.insertSnippetBtn.Name = "insertSnippetBtn";
-            this.insertSnippetBtn.Size = new System.Drawing.Size(92, 22);
+            this.insertSnippetBtn.Size = new System.Drawing.Size(95, 22);
             this.insertSnippetBtn.Text = "Insert Snippet";
             // 
             // outputPanel
@@ -284,19 +272,20 @@ namespace DataScienceWorkbench
             this.outputPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.outputPanel.Location = new System.Drawing.Point(0, 0);
             this.outputPanel.Name = "outputPanel";
-            this.outputPanel.Size = new System.Drawing.Size(792, 118);
+            this.outputPanel.Size = new System.Drawing.Size(792, 188);
             this.outputPanel.TabIndex = 0;
             // 
             // outputBox
             // 
-            this.outputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
+            this.outputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.outputBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.outputBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.outputBox.Font = new System.Drawing.Font("Consolas", 9F);
-            this.outputBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.outputBox.Font = new System.Drawing.Font("Consolas", 9.5F);
+            this.outputBox.ForeColor = System.Drawing.Color.White;
             this.outputBox.Location = new System.Drawing.Point(0, 22);
             this.outputBox.Name = "outputBox";
             this.outputBox.ReadOnly = true;
-            this.outputBox.Size = new System.Drawing.Size(792, 96);
+            this.outputBox.Size = new System.Drawing.Size(792, 166);
             this.outputBox.TabIndex = 0;
             this.outputBox.Text = "";
             this.outputBox.WordWrap = false;
@@ -312,80 +301,13 @@ namespace DataScienceWorkbench
             this.outputLabel.TabIndex = 1;
             this.outputLabel.Text = "Output:";
             // 
-            // dataTab
-            // 
-            this.dataTab.Controls.Add(this.dataGrid);
-            this.dataTab.Controls.Add(this.dataTopPanel);
-            this.dataTab.Location = new System.Drawing.Point(4, 22);
-            this.dataTab.Name = "dataTab";
-            this.dataTab.Size = new System.Drawing.Size(792, 574);
-            this.dataTab.TabIndex = 1;
-            this.dataTab.Text = "Data Browser";
-            this.dataTab.UseVisualStyleBackColor = true;
-            // 
-            // dataGrid
-            // 
-            this.dataGrid.AllowUserToAddRows = false;
-            this.dataGrid.AllowUserToDeleteRows = false;
-            this.dataGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dataGrid.BackgroundColor = System.Drawing.Color.White;
-            this.dataGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGrid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGrid.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.dataGrid.Location = new System.Drawing.Point(0, 40);
-            this.dataGrid.Name = "dataGrid";
-            this.dataGrid.ReadOnly = true;
-            this.dataGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGrid.Size = new System.Drawing.Size(792, 534);
-            this.dataGrid.TabIndex = 0;
-            // 
-            // dataTopPanel
-            // 
-            this.dataTopPanel.Controls.Add(this.recordCountLabel);
-            this.dataTopPanel.Controls.Add(this.datasetCombo);
-            this.dataTopPanel.Controls.Add(this.datasetLabel);
-            this.dataTopPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.dataTopPanel.Location = new System.Drawing.Point(0, 0);
-            this.dataTopPanel.Name = "dataTopPanel";
-            this.dataTopPanel.Size = new System.Drawing.Size(792, 40);
-            this.dataTopPanel.TabIndex = 1;
-            // 
-            // recordCountLabel
-            // 
-            this.recordCountLabel.AutoSize = true;
-            this.recordCountLabel.Location = new System.Drawing.Point(290, 10);
-            this.recordCountLabel.Name = "recordCountLabel";
-            this.recordCountLabel.Size = new System.Drawing.Size(0, 13);
-            this.recordCountLabel.TabIndex = 2;
-            // 
-            // datasetCombo
-            // 
-            this.datasetCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.datasetCombo.Items.AddRange(new object[] {
-            "Customers",
-            "Employees"});
-            this.datasetCombo.Location = new System.Drawing.Point(70, 7);
-            this.datasetCombo.Name = "datasetCombo";
-            this.datasetCombo.Size = new System.Drawing.Size(200, 21);
-            this.datasetCombo.TabIndex = 1;
-            this.datasetCombo.SelectedIndexChanged += new System.EventHandler(this.OnDatasetChanged);
-            // 
-            // datasetLabel
-            // 
-            this.datasetLabel.AutoSize = true;
-            this.datasetLabel.Location = new System.Drawing.Point(10, 10);
-            this.datasetLabel.Name = "datasetLabel";
-            this.datasetLabel.Size = new System.Drawing.Size(46, 13);
-            this.datasetLabel.TabIndex = 0;
-            this.datasetLabel.Text = "Dataset:";
-            // 
             // referenceTab
             // 
             this.referenceTab.Controls.Add(this.refSplit);
             this.referenceTab.Location = new System.Drawing.Point(4, 22);
             this.referenceTab.Name = "referenceTab";
             this.referenceTab.Size = new System.Drawing.Size(792, 574);
-            this.referenceTab.TabIndex = 3;
+            this.referenceTab.TabIndex = 1;
             this.referenceTab.Text = "Data Reference";
             this.referenceTab.UseVisualStyleBackColor = true;
             // 
@@ -438,7 +360,7 @@ namespace DataScienceWorkbench
             this.packagesTab.Location = new System.Drawing.Point(4, 22);
             this.packagesTab.Name = "packagesTab";
             this.packagesTab.Size = new System.Drawing.Size(792, 574);
-            this.packagesTab.TabIndex = 4;
+            this.packagesTab.TabIndex = 2;
             this.packagesTab.Text = "Package Manager";
             this.packagesTab.UseVisualStyleBackColor = true;
             // 
@@ -612,10 +534,6 @@ namespace DataScienceWorkbench
             this.toolBar.ResumeLayout(false);
             this.toolBar.PerformLayout();
             this.outputPanel.ResumeLayout(false);
-            this.dataTab.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGrid)).EndInit();
-            this.dataTopPanel.ResumeLayout(false);
-            this.dataTopPanel.PerformLayout();
             this.referenceTab.ResumeLayout(false);
             this.refSplit.Panel1.ResumeLayout(false);
             this.refSplit.Panel2.ResumeLayout(false);
@@ -652,12 +570,6 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.Panel outputPanel;
         private System.Windows.Forms.RichTextBox outputBox;
         private System.Windows.Forms.Label outputLabel;
-        private System.Windows.Forms.TabPage dataTab;
-        private System.Windows.Forms.DataGridView dataGrid;
-        private System.Windows.Forms.Panel dataTopPanel;
-        private System.Windows.Forms.Label recordCountLabel;
-        private System.Windows.Forms.ComboBox datasetCombo;
-        private System.Windows.Forms.Label datasetLabel;
         private System.Windows.Forms.TabPage referenceTab;
         private System.Windows.Forms.SplitContainer refSplit;
         private System.Windows.Forms.TreeView refTreeView;

@@ -63,7 +63,7 @@ Keep them in sync when making changes.
 ## Key Features
 - **2 exposed datasets**: Customers (150), Employees (100) — other data (products, orders, sensors, stocks, web events) remains in memory but is not exposed to the Python editor
 - **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, context-aware autocomplete (dataset columns, class members, DataFrame methods), bracket matching, current line highlight, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, and bookmarks
-- **Data Browser** tab with DataGridView for browsing all datasets
+- **Data Reference** tab with TreeView showing all datasets, columns, types, registered classes, and context variables with detail panel and example Python code
 - **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)
 - **In-memory data bridge**: All .NET data streamed to Python via stdin as pre-loaded variables (e.g., `products.Cost.mean()`)
 
@@ -87,6 +87,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Replaced Data Browser tab with Data Reference tab: removed DataGridView/dataset combo (Data Browser), promoted Data Reference content (tree view + detail panel) to tab index 1, removed redundant separate Data Reference tab. App now has 3 tabs: Python Editor, Data Reference, Package Manager. Package Manager lazy-load index updated from 3 to 2.
 - 2026-02-13: Added plt.show() support: monkey-patches matplotlib's show() to save figures and display them in a PlotViewerForm window with navigation (prev/next) and Save As functionality; all snippets updated to use plt.show() instead of plt.savefig(); PythonResult now includes PlotPaths list
 - 2026-02-13: Added Python Class Registration (RegisterPythonClass/UnregisterPythonClass) and Context Hub (SetContext/RemoveContext/ClearContext) systems: host app can register Python classes and send named variables (str, float, int, bool, list, dict) into the Python environment; both appear in Data Reference tree with detail panels; names recognized by autocomplete and symbol analyzer; includes input validation and Python string escaping; demo in MainForm with MathHelper class and sample context vars
 - 2026-02-13: Added context-aware dot-completion autocomplete: dataset variables show column names + DataFrame methods, self. shows class methods/attributes, ClassName. shows class members, instance variables infer type from constructor calls. Enhanced symbol analyzer: dataset names (products, customers, etc.) and self/cls no longer produce false squiggles; added global/nonlocal/lambda support and except line skipping
