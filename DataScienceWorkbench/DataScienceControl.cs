@@ -34,6 +34,8 @@ namespace DataScienceWorkbench
         private bool suppressAutoComplete;
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
         private Dictionary<string, Func<string>> inMemoryDataSources = new Dictionary<string, Func<string>>();
+        private Dictionary<string, string> registeredPythonClasses = new Dictionary<string, string>();
+        private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
         private HashSet<int> bookmarks = new HashSet<int>();
         private Dictionary<int, bool> foldedRegions = new Dictionary<int, bool>();
         private List<FoldRegion> foldRegions = new List<FoldRegion>();
@@ -947,6 +949,190 @@ namespace DataScienceWorkbench
             PopulateReferenceTree();
         }
 
+        public void RegisterPythonClass(string className, string pythonCode)
+        {
+            if (!IsValidPythonIdentifier(className))
+                throw new ArgumentException("Invalid Python class name: " + className);
+            registeredPythonClasses[className] = pythonCode;
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void UnregisterPythonClass(string className)
+        {
+            registeredPythonClasses.Remove(className);
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, string value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = EscapePythonString(value), TypeDescription = "str" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, double value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value.ToString("G"), TypeDescription = "float" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, int value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value.ToString(), TypeDescription = "int" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, bool value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value ? "True" : "False", TypeDescription = "bool" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, string[] values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var v in values)
+                parts.Add(EscapePythonString(v));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "[" + string.Join(", ", parts) + "]", TypeDescription = "list" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, double[] values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var v in values)
+                parts.Add(v.ToString("G"));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "[" + string.Join(", ", parts) + "]", TypeDescription = "list" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, Dictionary<string, string> values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var kvp in values)
+                parts.Add(EscapePythonString(kvp.Key) + ": " + EscapePythonString(kvp.Value));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "{" + string.Join(", ", parts) + "}", TypeDescription = "dict" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, Dictionary<string, double> values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var kvp in values)
+                parts.Add(EscapePythonString(kvp.Key) + ": " + kvp.Value.ToString("G"));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "{" + string.Join(", ", parts) + "}", TypeDescription = "dict" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void RemoveContext(string key)
+        {
+            contextVariables.Remove(key);
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void ClearContext()
+        {
+            contextVariables.Clear();
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        private static string EscapePythonString(string s)
+        {
+            if (s == null) return "None";
+            var sb = new System.Text.StringBuilder(s.Length + 10);
+            sb.Append('"');
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '"': sb.Append("\\\""); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    case '\0': sb.Append("\\0"); break;
+                    default:
+                        if (c < ' ')
+                            sb.Append("\\x" + ((int)c).ToString("x2"));
+                        else
+                            sb.Append(c);
+                        break;
+                }
+            }
+            sb.Append('"');
+            return sb.ToString();
+        }
+
+        private static bool IsValidPythonIdentifier(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            if (!char.IsLetter(name[0]) && name[0] != '_') return false;
+            for (int i = 1; i < name.Length; i++)
+            {
+                if (!char.IsLetterOrDigit(name[i]) && name[i] != '_') return false;
+            }
+            return true;
+        }
+
+        private string BuildPreamble()
+        {
+            var sb = new System.Text.StringBuilder();
+
+            foreach (var kvp in registeredPythonClasses)
+            {
+                sb.AppendLine(kvp.Value);
+                sb.AppendLine();
+            }
+
+            foreach (var kvp in contextVariables)
+            {
+                sb.AppendLine(kvp.Key + " = " + kvp.Value.PythonLiteral);
+            }
+
+            if (sb.Length > 0)
+                sb.AppendLine();
+
+            return sb.ToString();
+        }
+
+        private void UpdateDynamicSymbols()
+        {
+            var names = new List<string>();
+            names.AddRange(registeredPythonClasses.Keys);
+            names.AddRange(contextVariables.Keys);
+            symbolAnalyzer.SetDynamicKnownSymbols(names);
+            autoComplete.SetDynamicSymbols(names);
+        }
+
         private Dictionary<string, string> SerializeInMemoryData()
         {
             var result = new Dictionary<string, string>();
@@ -1271,6 +1457,34 @@ namespace DataScienceWorkbench
                 memNode.Expand();
             }
 
+            if (registeredPythonClasses.Count > 0)
+            {
+                var classNode = refTreeView.Nodes.Add("Registered Classes  (" + registeredPythonClasses.Count + ")");
+                classNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                classNode.Tag = "regclasses";
+                foreach (var name in registeredPythonClasses.Keys)
+                {
+                    var child = classNode.Nodes.Add(name);
+                    child.Tag = "regclass_" + name;
+                    child.ForeColor = Color.FromArgb(0, 100, 160);
+                }
+                classNode.Expand();
+            }
+
+            if (contextVariables.Count > 0)
+            {
+                var ctxNode = refTreeView.Nodes.Add("Context Hub  (" + contextVariables.Count + ")");
+                ctxNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                ctxNode.Tag = "contexthub";
+                foreach (var kvp in contextVariables)
+                {
+                    var child = ctxNode.Nodes.Add(kvp.Key + "  :  " + kvp.Value.TypeDescription);
+                    child.Tag = "ctx_" + kvp.Key;
+                    child.ForeColor = Color.FromArgb(128, 0, 128);
+                }
+                ctxNode.Expand();
+            }
+
             if (refTreeView.Nodes.Count > 0)
                 refTreeView.SelectedNode = refTreeView.Nodes[0];
         }
@@ -1405,6 +1619,18 @@ namespace DataScienceWorkbench
                 return;
             }
 
+            if (tag == "regclasses" || tag.StartsWith("regclass_"))
+            {
+                ShowRegisteredClassDetail(tag);
+                return;
+            }
+
+            if (tag == "contexthub" || tag.StartsWith("ctx_"))
+            {
+                ShowContextDetail(tag);
+                return;
+            }
+
             ShowDatasetDetail(tag);
         }
 
@@ -1490,6 +1716,106 @@ namespace DataScienceWorkbench
                 AppendRefText("# Access this data source:\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText("print(" + name + ".head())\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("print(" + name + ".describe())\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            refDetailBox.SelectionStart = 0;
+            refDetailBox.ScrollToCaret();
+        }
+
+        private void ShowRegisteredClassDetail(string tag)
+        {
+            refDetailBox.Clear();
+
+            if (tag == "regclasses")
+            {
+                AppendRefText("Registered Python Classes\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("Classes registered from the host application via\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("RegisterPythonClass(). Available in every script run.\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+                foreach (var name in registeredPythonClasses.Keys)
+                    AppendRefText("  " + name + "\n", Color.FromArgb(0, 100, 160), false, 10);
+
+                AppendRefText("\n", Color.Black, false, 10);
+                AppendRefText("Usage\n", Color.FromArgb(0, 100, 0), true, 10);
+                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                AppendRefText("# Classes are injected before your script runs.\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("# Use them directly:\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("obj = ClassName()\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("result = ClassName.static_method()\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else
+            {
+                string name = tag.Substring("regclass_".Length);
+                AppendRefText(name + "  (Registered Class)\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("Injected by the host application before script execution.\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+                if (registeredPythonClasses.ContainsKey(name))
+                {
+                    AppendRefText("Source Code\n", Color.FromArgb(0, 100, 0), true, 10);
+                    AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                    AppendRefText(registeredPythonClasses[name] + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
+            }
+
+            refDetailBox.SelectionStart = 0;
+            refDetailBox.ScrollToCaret();
+        }
+
+        private void ShowContextDetail(string tag)
+        {
+            refDetailBox.Clear();
+
+            if (tag == "contexthub")
+            {
+                AppendRefText("Context Hub\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("Variables sent from the host application via SetContext().\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Available as top-level Python variables in every script.\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+                int maxLen = 0;
+                foreach (var kvp in contextVariables)
+                    if (kvp.Key.Length > maxLen) maxLen = kvp.Key.Length;
+
+                foreach (var kvp in contextVariables)
+                {
+                    AppendRefText("  " + kvp.Key.PadRight(maxLen + 2), Color.FromArgb(128, 0, 128), false, 10);
+                    AppendRefText(kvp.Value.TypeDescription + "  =  ", Color.FromArgb(100, 100, 100), false, 10);
+                    string preview = kvp.Value.PythonLiteral;
+                    if (preview.Length > 60) preview = preview.Substring(0, 57) + "...";
+                    AppendRefText(preview + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
+
+                AppendRefText("\n", Color.Black, false, 10);
+                AppendRefText("Usage\n", Color.FromArgb(0, 100, 0), true, 10);
+                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                AppendRefText("# Variables are injected before your script runs.\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("# Use them directly by name:\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("print(variable_name)\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else
+            {
+                string key = tag.Substring("ctx_".Length);
+                if (contextVariables.ContainsKey(key))
+                {
+                    var cv = contextVariables[key];
+                    AppendRefText(key + "  (Context Variable)\n\n", Color.FromArgb(0, 0, 180), true, 12);
+
+                    AppendRefText("Type:   ", Color.FromArgb(100, 100, 100), false, 10);
+                    AppendRefText(cv.TypeDescription + "\n", Color.FromArgb(0, 0, 0), false, 10);
+
+                    AppendRefText("Value:  ", Color.FromArgb(100, 100, 100), false, 10);
+                    AppendRefText(cv.PythonLiteral + "\n\n", Color.FromArgb(0, 0, 0), false, 10);
+
+                    AppendRefText("Sent from the host application via SetContext().\n", Color.FromArgb(60, 60, 60), false, 10);
+                    AppendRefText("Available as a top-level Python variable.\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+                    AppendRefText("Example\n", Color.FromArgb(0, 100, 0), true, 10);
+                    AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                    AppendRefText("print(" + key + ")\n", Color.FromArgb(60, 60, 60), false, 10);
+                    if (cv.TypeDescription == "list")
+                        AppendRefText("for item in " + key + ":\n    print(item)\n", Color.FromArgb(60, 60, 60), false, 10);
+                    else if (cv.TypeDescription == "dict")
+                        AppendRefText("for k, v in " + key + ".items():\n    print(k, v)\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
             }
 
             refDetailBox.SelectionStart = 0;
@@ -1627,7 +1953,8 @@ namespace DataScienceWorkbench
             if (inMemoryDataSources.Count > 0)
                 memData = SerializeInMemoryData();
 
-            var result = pythonRunner.Execute(script, memData);
+            string preamble = BuildPreamble();
+            var result = pythonRunner.Execute(script, memData, preamble);
 
             if (!string.IsNullOrEmpty(result.Output))
                 AppendOutput(result.Output, Color.FromArgb(0, 0, 0));
@@ -2146,5 +2473,12 @@ print(f'  Min:    {products.Price.min():.2f}')
 print(f'  Max:    {products.Price.max():.2f}')
 ";
         }
+    }
+
+    public class ContextVariable
+    {
+        public string Name { get; set; }
+        public string PythonLiteral { get; set; }
+        public string TypeDescription { get; set; }
     }
 }

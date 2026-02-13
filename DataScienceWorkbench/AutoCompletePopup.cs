@@ -34,6 +34,12 @@ namespace DataScienceWorkbench
         private bool isShowing;
 
         private static readonly List<string> AllItems = new List<string>();
+        private List<string> dynamicSymbols = new List<string>();
+
+        public void SetDynamicSymbols(IEnumerable<string> symbols)
+        {
+            dynamicSymbols = new List<string>(symbols);
+        }
 
         private static readonly List<string> DataFrameMethods = new List<string> {
             "head()", "tail()", "info()", "describe()", "shape",
@@ -260,8 +266,9 @@ namespace DataScienceWorkbench
             else
             {
                 if (prefix.Length < 2) { Hide(); return; }
-                matches = AllItems
+                matches = AllItems.Concat(dynamicSymbols)
                     .Where(item => item.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .Distinct()
                     .Take(15)
                     .ToList();
             }

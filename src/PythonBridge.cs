@@ -73,14 +73,16 @@ namespace DataScienceWorkbench
 
         public string GetPythonPath() { return pythonPath; }
 
-        public PythonResult Execute(string script, Dictionary<string, string> inMemoryData)
+        public PythonResult Execute(string script, Dictionary<string, string> inMemoryData, string preamble = null)
         {
             bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
+            bool hasPreamble = !string.IsNullOrEmpty(preamble);
 
             string fullScript;
+            var sb = new StringBuilder();
+
             if (hasMemData)
             {
-                var sb = new StringBuilder();
                 sb.AppendLine("import sys, io, pandas as pd");
                 sb.AppendLine("class _DotNetDataset:");
                 sb.AppendLine("    def __init__(self, df):");
@@ -112,6 +114,15 @@ namespace DataScienceWorkbench
                 sb.AppendLine("        globals()[_name] = _DotNetDataset(pd.read_csv(io.StringIO(''.join(_lines))))");
                 sb.AppendLine("del _DotNetDataset");
                 sb.AppendLine();
+            }
+
+            if (hasPreamble)
+            {
+                sb.AppendLine(preamble);
+            }
+
+            if (hasMemData || hasPreamble)
+            {
                 sb.AppendLine(script);
                 fullScript = sb.ToString();
             }

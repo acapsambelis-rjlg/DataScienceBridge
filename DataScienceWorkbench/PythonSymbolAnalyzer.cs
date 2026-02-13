@@ -14,6 +14,13 @@ namespace DataScienceWorkbench
 
     public class PythonSymbolAnalyzer
     {
+        private HashSet<string> dynamicKnownSymbols = new HashSet<string>();
+
+        public void SetDynamicKnownSymbols(IEnumerable<string> symbols)
+        {
+            dynamicKnownSymbols = new HashSet<string>(symbols);
+        }
+
         private static readonly HashSet<string> Builtins = new HashSet<string> {
             "abs", "all", "any", "ascii", "bin", "bool", "breakpoint", "bytearray",
             "bytes", "callable", "chr", "classmethod", "compile", "complex",
@@ -316,6 +323,7 @@ namespace DataScienceWorkbench
                 if (Keywords.Contains(name)) continue;
                 if (Builtins.Contains(name)) continue;
                 if (CommonModules.Contains(name)) continue;
+                if (dynamicKnownSymbols.Contains(name)) continue;
                 if (MagicNames.Contains(name)) continue;
                 if (defined.Contains(name)) continue;
                 if (name.StartsWith("__") && name.EndsWith("__")) continue;

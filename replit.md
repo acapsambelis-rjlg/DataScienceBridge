@@ -45,6 +45,11 @@ Keep them in sync when making changes.
 - **RegisterInMemoryData<T>(name, dataProvider)** - Register a Func<List<T>> for in-memory piping (uses reflection)
 - **RegisterInMemoryData(name, dataTableProvider)** - Register a Func<DataTable> for in-memory piping
 - **UnregisterInMemoryData(name)** - Remove a registered in-memory data source
+- **RegisterPythonClass(className, pythonCode)** - Register a Python class definition injected before every script run
+- **UnregisterPythonClass(className)** - Remove a registered Python class
+- **SetContext(key, value)** - Send a variable to the Python environment (overloads: string, double, int, bool, string[], double[], Dict<string,string>, Dict<string,double>)
+- **RemoveContext(key)** - Remove a context variable
+- **ClearContext()** - Remove all context variables
 - **RunScript()** - Execute the current Python script
 - **ScriptText** - Get/set the Python editor text
 - **OutputText** - Get the output panel text
@@ -81,6 +86,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added Python Class Registration (RegisterPythonClass/UnregisterPythonClass) and Context Hub (SetContext/RemoveContext/ClearContext) systems: host app can register Python classes and send named variables (str, float, int, bool, list, dict) into the Python environment; both appear in Data Reference tree with detail panels; names recognized by autocomplete and symbol analyzer; includes input validation and Python string escaping; demo in MainForm with MathHelper class and sample context vars
 - 2026-02-13: Added context-aware dot-completion autocomplete: dataset variables show column names + DataFrame methods, self. shows class methods/attributes, ClassName. shows class members, instance variables infer type from constructor calls. Enhanced symbol analyzer: dataset names (products, customers, etc.) and self/cls no longer produce false squiggles; added global/nonlocal/lambda support and except line skipping
 - 2026-02-13: Added error tooltips on squiggle hover: hovering over red (syntax error) or yellow (undefined name) squiggles shows a dark-themed tooltip with the error message; tooltips auto-hide when mouse leaves the error region or errors are cleared
 - 2026-02-13: Switched from CSV file bridge to fully in-memory data bridge: all datasets are now top-level Python variables (e.g., `products.Cost.mean()` instead of `dotnet.measurements.values.mean()`). Removed ExportCustomData, ExportAllData, CSV export code, DataExporter class. Updated all snippets, help text, Data Reference tab, and default script.
