@@ -201,7 +201,7 @@ namespace DataScienceWorkbench
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pythonEditor.Font = new System.Drawing.Font("Consolas", 10F);
             this.pythonEditor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.pythonEditor.Location = new System.Drawing.Point(45, 25);
+            this.pythonEditor.Location = new System.Drawing.Point(60, 25);
             this.pythonEditor.Name = "pythonEditor";
             this.pythonEditor.Size = new System.Drawing.Size(541, 425);
             this.pythonEditor.TabIndex = 0;
@@ -213,7 +213,7 @@ namespace DataScienceWorkbench
             this.lineNumberPanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.lineNumberPanel.Location = new System.Drawing.Point(0, 25);
             this.lineNumberPanel.Name = "lineNumberPanel";
-            this.lineNumberPanel.Size = new System.Drawing.Size(45, 425);
+            this.lineNumberPanel.Size = new System.Drawing.Size(60, 425);
             this.lineNumberPanel.TabIndex = 2;
             // 
             // toolBar

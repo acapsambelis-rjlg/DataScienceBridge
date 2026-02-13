@@ -35,6 +35,17 @@ namespace DataScienceWorkbench
         private bool suppressAutoComplete;
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
         private Dictionary<string, Func<string>> inMemoryDataSources = new Dictionary<string, Func<string>>();
+        private HashSet<int> bookmarks = new HashSet<int>();
+        private Dictionary<int, bool> foldedRegions = new Dictionary<int, bool>();
+        private List<FoldRegion> foldRegions = new List<FoldRegion>();
+
+        private class FoldRegion
+        {
+            public int StartLine;
+            public int EndLine;
+            public string HeaderText;
+            public bool Collapsed;
+        }
 
         private static readonly Dictionary<char, char> BracketPairs = new Dictionary<char, char>
         {
@@ -118,6 +129,19 @@ namespace DataScienceWorkbench
         {
             syntaxHighlighter = new PythonSyntaxHighlighter();
             lineNumberPanel.AttachEditor(pythonEditor);
+            lineNumberPanel.BookmarkToggled += (s, line) =>
+            {
+                if (bookmarks.Contains(line))
+                    bookmarks.Remove(line);
+                else
+                    bookmarks.Add(line);
+                lineNumberPanel.SetBookmarks(bookmarks);
+                RaiseStatus(bookmarks.Contains(line) ? "Bookmark set on line " + (line + 1) : "Bookmark removed from line " + (line + 1));
+            };
+            lineNumberPanel.FoldToggled += (s, line) =>
+            {
+                ToggleFold(line);
+            };
             autoComplete = new AutoCompletePopup(pythonEditor);
 
             highlightTimer = new Timer();
@@ -210,6 +234,48 @@ namespace DataScienceWorkbench
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                     HandleAutoIndent();
+                }
+                else if (e.KeyCode == Keys.Tab && pythonEditor.SelectionLength > 0)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    BlockIndent(!e.Shift);
+                }
+                else if (e.KeyCode == Keys.Tab && e.Shift)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    BlockIndent(false);
+                }
+                else if (e.Control && e.KeyCode == Keys.D)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    DuplicateLine();
+                }
+                else if (e.Alt && (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down))
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    MoveLine(e.KeyCode == Keys.Up);
+                }
+                else if (e.Control && e.KeyCode == Keys.B)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    ToggleBookmarkAtCursor();
+                }
+                else if (e.KeyCode == Keys.F2 && !e.Shift)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    GoToNextBookmark();
+                }
+                else if (e.KeyCode == Keys.F2 && e.Shift)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    GoToPreviousBookmark();
                 }
             };
 
@@ -372,6 +438,259 @@ namespace DataScienceWorkbench
             ApplySyntaxHighlighting();
         }
 
+        private void BlockIndent(bool indent)
+        {
+            string text = pythonEditor.Text;
+            int selStart = pythonEditor.SelectionStart;
+            int selEnd = selStart + pythonEditor.SelectionLength;
+            int firstLine = pythonEditor.GetLineFromCharIndex(selStart);
+            int lastLine = pythonEditor.GetLineFromCharIndex(selEnd > selStart ? selEnd - 1 : selEnd);
+            if (lastLine < firstLine) lastLine = firstLine;
+
+            suppressHighlight = true;
+            var lines = new List<string>(pythonEditor.Lines);
+            int totalDelta = 0;
+            int firstLineDelta = 0;
+
+            for (int i = firstLine; i <= lastLine && i < lines.Count; i++)
+            {
+                string line = lines[i];
+                if (indent)
+                {
+                    lines[i] = "    " + line;
+                    if (i == firstLine) firstLineDelta = 4;
+                    totalDelta += 4;
+                }
+                else
+                {
+                    int removed = 0;
+                    while (removed < 4 && removed < line.Length && line[removed] == ' ')
+                        removed++;
+                    if (removed > 0)
+                    {
+                        lines[i] = line.Substring(removed);
+                        if (i == firstLine) firstLineDelta = -removed;
+                        totalDelta -= removed;
+                    }
+                }
+            }
+
+            pythonEditor.Text = string.Join("\n", lines);
+
+            int newSelStart = Math.Max(0, selStart + firstLineDelta);
+            int newSelEnd = Math.Max(newSelStart, selEnd + totalDelta);
+            pythonEditor.SelectionStart = newSelStart;
+            pythonEditor.SelectionLength = newSelEnd - newSelStart;
+
+            suppressHighlight = false;
+            textDirty = true;
+            highlightTimer.Stop();
+            highlightTimer.Start();
+            PushUndo(pythonEditor.Text, pythonEditor.SelectionStart);
+        }
+
+        private void DuplicateLine()
+        {
+            int pos = pythonEditor.SelectionStart;
+            int lineIndex = pythonEditor.GetLineFromCharIndex(pos);
+            if (lineIndex >= pythonEditor.Lines.Length) return;
+
+            string line = pythonEditor.Lines[lineIndex];
+            int lineStart = pythonEditor.GetFirstCharIndexFromLine(lineIndex);
+            int colOffset = pos - lineStart;
+            int lineEnd = lineStart + line.Length;
+
+            suppressHighlight = true;
+            string insertText = "\n" + line;
+            pythonEditor.SelectionStart = lineEnd;
+            pythonEditor.SelectionLength = 0;
+            pythonEditor.SelectedText = insertText;
+
+            int newLineStart = pythonEditor.GetFirstCharIndexFromLine(lineIndex + 1);
+            pythonEditor.SelectionStart = newLineStart + Math.Min(colOffset, line.Length);
+            pythonEditor.SelectionLength = 0;
+            suppressHighlight = false;
+
+            textDirty = true;
+            highlightTimer.Stop();
+            highlightTimer.Start();
+            PushUndo(pythonEditor.Text, pythonEditor.SelectionStart);
+        }
+
+        private void MoveLine(bool up)
+        {
+            int pos = pythonEditor.SelectionStart;
+            int lineIndex = pythonEditor.GetLineFromCharIndex(pos);
+            var lines = new List<string>(pythonEditor.Lines);
+
+            if (up && lineIndex <= 0) return;
+            if (!up && lineIndex >= lines.Count - 1) return;
+
+            int swapWith = up ? lineIndex - 1 : lineIndex + 1;
+            string temp = lines[lineIndex];
+            lines[lineIndex] = lines[swapWith];
+            lines[swapWith] = temp;
+
+            int colOffset = pos - pythonEditor.GetFirstCharIndexFromLine(lineIndex);
+            string destLine = lines[swapWith];
+
+            suppressHighlight = true;
+            pythonEditor.Text = string.Join("\n", lines);
+
+            int newLineStart = pythonEditor.GetFirstCharIndexFromLine(swapWith);
+            int clampedCol = Math.Min(colOffset, destLine.Length);
+            pythonEditor.SelectionStart = Math.Min(newLineStart + clampedCol, pythonEditor.Text.Length);
+            pythonEditor.SelectionLength = 0;
+            suppressHighlight = false;
+
+            textDirty = true;
+            highlightTimer.Stop();
+            highlightTimer.Start();
+            PushUndo(pythonEditor.Text, pythonEditor.SelectionStart);
+        }
+
+        private void ToggleBookmarkAtCursor()
+        {
+            int line = pythonEditor.GetLineFromCharIndex(pythonEditor.SelectionStart);
+            if (bookmarks.Contains(line))
+                bookmarks.Remove(line);
+            else
+                bookmarks.Add(line);
+            lineNumberPanel.SetBookmarks(bookmarks);
+            RaiseStatus(bookmarks.Contains(line) ? "Bookmark set on line " + (line + 1) : "Bookmark removed from line " + (line + 1));
+        }
+
+        private void GoToNextBookmark()
+        {
+            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
+            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.SelectionStart);
+            var sorted = bookmarks.OrderBy(b => b).ToList();
+            int next = sorted.FirstOrDefault(b => b > currentLine);
+            if (next == 0 && !bookmarks.Contains(0))
+                next = sorted.FirstOrDefault(b => b != currentLine);
+            if (next == 0 && sorted.Count > 0) next = sorted[0];
+            GoToLine(next);
+        }
+
+        private void GoToPreviousBookmark()
+        {
+            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
+            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.SelectionStart);
+            var sorted = bookmarks.OrderByDescending(b => b).ToList();
+            int prev = sorted.FirstOrDefault(b => b < currentLine);
+            if (prev == 0 && !bookmarks.Contains(0))
+                prev = sorted.FirstOrDefault(b => b != currentLine);
+            if (prev == 0 && sorted.Count > 0) prev = sorted[0];
+            GoToLine(prev);
+        }
+
+        private void GoToLine(int lineIndex)
+        {
+            if (lineIndex < 0 || lineIndex >= pythonEditor.Lines.Length) return;
+            int charIdx = pythonEditor.GetFirstCharIndexFromLine(lineIndex);
+            pythonEditor.SelectionStart = charIdx;
+            pythonEditor.SelectionLength = 0;
+            pythonEditor.ScrollToCaret();
+            RaiseStatus("Ln " + (lineIndex + 1));
+        }
+
+        public HashSet<int> GetBookmarks() { return bookmarks; }
+
+        private void ComputeFoldRegions()
+        {
+            foldRegions.Clear();
+            var lines = pythonEditor.Lines;
+            if (lines.Length == 0) return;
+
+            var stack = new Stack<Tuple<int, int, string>>();
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                string trimmed = line.TrimStart();
+                if (trimmed.Length == 0) continue;
+
+                int indent = line.Length - trimmed.Length;
+
+                while (stack.Count > 0 && stack.Peek().Item2 >= indent)
+                {
+                    var popped = stack.Pop();
+                    int endLine = i - 1;
+                    while (endLine > popped.Item1 && lines[endLine].Trim().Length == 0)
+                        endLine--;
+                    if (endLine > popped.Item1)
+                    {
+                        bool wasFolded = foldedRegions.ContainsKey(popped.Item1) && foldedRegions[popped.Item1];
+                        foldRegions.Add(new FoldRegion
+                        {
+                            StartLine = popped.Item1,
+                            EndLine = endLine,
+                            HeaderText = popped.Item3,
+                            Collapsed = wasFolded
+                        });
+                    }
+                }
+
+                if (trimmed.StartsWith("def ") || trimmed.StartsWith("class ") ||
+                    trimmed.StartsWith("for ") || trimmed.StartsWith("while ") ||
+                    trimmed.StartsWith("if ") || trimmed.StartsWith("elif ") ||
+                    trimmed.StartsWith("else:") || trimmed.StartsWith("try:") ||
+                    trimmed.StartsWith("except") || trimmed.StartsWith("finally:") ||
+                    trimmed.StartsWith("with "))
+                {
+                    if (trimmed.EndsWith(":"))
+                    {
+                        stack.Push(Tuple.Create(i, indent, trimmed));
+                    }
+                }
+            }
+
+            while (stack.Count > 0)
+            {
+                var popped = stack.Pop();
+                int endLine = lines.Length - 1;
+                while (endLine > popped.Item1 && lines[endLine].Trim().Length == 0)
+                    endLine--;
+                if (endLine > popped.Item1)
+                {
+                    bool wasFolded = foldedRegions.ContainsKey(popped.Item1) && foldedRegions[popped.Item1];
+                    foldRegions.Add(new FoldRegion
+                    {
+                        StartLine = popped.Item1,
+                        EndLine = endLine,
+                        HeaderText = popped.Item3,
+                        Collapsed = wasFolded
+                    });
+                }
+            }
+
+            foldRegions.Sort((a, b) => a.StartLine.CompareTo(b.StartLine));
+        }
+
+        public void ToggleFold(int lineNumber)
+        {
+            ComputeFoldRegions();
+            var region = foldRegions.FirstOrDefault(r => r.StartLine == lineNumber);
+            if (region == null) return;
+
+            region.Collapsed = !region.Collapsed;
+            foldedRegions[lineNumber] = region.Collapsed;
+
+            ApplyFolding();
+        }
+
+        private void ApplyFolding()
+        {
+            ComputeFoldRegions();
+            lineNumberPanel.SetFoldRegions(foldRegions.Select(r => new LineNumberPanel.FoldInfo
+            {
+                StartLine = r.StartLine,
+                EndLine = r.EndLine,
+                Collapsed = r.Collapsed
+            }).ToList());
+            lineNumberPanel.Invalidate();
+        }
+
         private void UpdateCursorPositionStatus()
         {
             int pos = pythonEditor.SelectionStart;
@@ -460,6 +779,7 @@ namespace DataScienceWorkbench
             suppressHighlight = false;
             suppressAutoComplete = false;
             RunSymbolAnalysis();
+            ApplyFolding();
         }
 
         private void RunSymbolAnalysis()
@@ -764,6 +1084,34 @@ namespace DataScienceWorkbench
             var findItem = new ToolStripMenuItem("Find && Replace...", null, (s, e) => ShowFindReplace());
             findItem.ShortcutKeys = Keys.Control | Keys.H;
             editMenu.DropDownItems.Add(findItem);
+
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            var dupLineItem = new ToolStripMenuItem("Duplicate Line", null, (s, e) => { if (pythonEditor.Focused) DuplicateLine(); });
+            dupLineItem.ShortcutKeyDisplayString = "Ctrl+D";
+            editMenu.DropDownItems.Add(dupLineItem);
+
+            var moveUpItem = new ToolStripMenuItem("Move Line Up", null, (s, e) => { if (pythonEditor.Focused) MoveLine(true); });
+            moveUpItem.ShortcutKeyDisplayString = "Alt+Up";
+            editMenu.DropDownItems.Add(moveUpItem);
+
+            var moveDownItem = new ToolStripMenuItem("Move Line Down", null, (s, e) => { if (pythonEditor.Focused) MoveLine(false); });
+            moveDownItem.ShortcutKeyDisplayString = "Alt+Down";
+            editMenu.DropDownItems.Add(moveDownItem);
+
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            var toggleBookmarkItem = new ToolStripMenuItem("Toggle Bookmark", null, (s, e) => { if (pythonEditor.Focused) ToggleBookmarkAtCursor(); });
+            toggleBookmarkItem.ShortcutKeyDisplayString = "Ctrl+B";
+            editMenu.DropDownItems.Add(toggleBookmarkItem);
+
+            var nextBookmarkItem = new ToolStripMenuItem("Next Bookmark", null, (s, e) => GoToNextBookmark());
+            nextBookmarkItem.ShortcutKeyDisplayString = "F2";
+            editMenu.DropDownItems.Add(nextBookmarkItem);
+
+            var prevBookmarkItem = new ToolStripMenuItem("Previous Bookmark", null, (s, e) => GoToPreviousBookmark());
+            prevBookmarkItem.ShortcutKeyDisplayString = "Shift+F2";
+            editMenu.DropDownItems.Add(prevBookmarkItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
             editMenu.DropDownItems.Add("Clear Output", null, (s, e) => outputBox.Clear());
