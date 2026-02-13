@@ -84,8 +84,7 @@ namespace DataScienceWorkbench
             "operator", "contextlib",
             "data_dir",
             "self", "cls",
-            "products", "customers", "orders", "order_items",
-            "employees", "sensor_readings", "stock_prices", "web_events"
+            "customers", "employees"
         };
 
         private static readonly HashSet<string> MagicNames = new HashSet<string> {
@@ -275,6 +274,17 @@ namespace DataScienceWorkbench
                     {
                         if (am.Index > 0 && mline[am.Index - 1] == '.') continue;
                         defined.Add(name);
+                    }
+                }
+
+                var tupleAssign = Regex.Match(mline, @"^(\s*)((?:[a-zA-Z_]\w*\s*,\s*)+[a-zA-Z_]\w*)\s*=\s*");
+                if (tupleAssign.Success)
+                {
+                    string targets = tupleAssign.Groups[2].Value;
+                    foreach (Match tm in Regex.Matches(targets, @"\b([a-zA-Z_]\w*)\b"))
+                    {
+                        if (!Keywords.Contains(tm.Groups[1].Value))
+                            defined.Add(tm.Groups[1].Value);
                     }
                 }
 
