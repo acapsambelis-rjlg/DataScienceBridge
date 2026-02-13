@@ -1315,44 +1315,8 @@ namespace DataScienceWorkbench
 
         private void RegisterAllDatasetsInMemory()
         {
-            RegisterInMemoryData<Product>("products", () => products);
             RegisterInMemoryData<Customer>("customers", () => customers);
             RegisterInMemoryData<Employee>("employees", () => employees);
-            RegisterInMemoryData<SensorReading>("sensor_readings", () => sensorReadings);
-            RegisterInMemoryData<StockPrice>("stock_prices", () => stockPrices);
-            RegisterInMemoryData<WebEvent>("web_events", () => webEvents);
-
-            inMemoryDataSources["orders"] = () =>
-            {
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine("Id,CustomerId,OrderDate,ShipDate,Status,ShipMethod,ShippingCost,PaymentMethod,Subtotal,Total,ItemCount");
-                foreach (var o in orders)
-                {
-                    sb.AppendLine(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}",
-                        o.Id, o.CustomerId, o.OrderDate.ToString("yyyy-MM-dd HH:mm:ss"),
-                        o.ShipDate.HasValue ? o.ShipDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
-                        o.Status, o.ShipMethod, o.ShippingCost, o.PaymentMethod,
-                        Math.Round(o.Subtotal, 2), Math.Round(o.Total, 2), o.ItemCount));
-                }
-                return sb.ToString();
-            };
-
-            inMemoryDataSources["order_items"] = () =>
-            {
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine("OrderId,ProductId,ProductName,Quantity,UnitPrice,Discount,LineTotal");
-                foreach (var o in orders)
-                {
-                    foreach (var item in o.Items)
-                    {
-                        string prodName = item.ProductName.Contains(",") ? "\"" + item.ProductName + "\"" : item.ProductName;
-                        sb.AppendLine(string.Format("{0},{1},{2},{3},{4},{5},{6}",
-                            o.Id, item.ProductId, prodName, item.Quantity,
-                            item.UnitPrice, item.Discount, Math.Round(item.LineTotal, 2)));
-                    }
-                }
-                return sb.ToString();
-            };
         }
 
         private void PopulateDataTree()
@@ -1360,44 +1324,16 @@ namespace DataScienceWorkbench
             dataTreeView.Nodes.Clear();
             var root = dataTreeView.Nodes.Add("Datasets");
 
-            var prodNode = root.Nodes.Add("products (" + products.Count + " records)");
-            prodNode.Nodes.Add("Id, Name, Category, SubCategory");
-            prodNode.Nodes.Add("SKU, Price, Cost, Margin");
-            prodNode.Nodes.Add("StockQuantity, ReorderLevel, Weight");
-            prodNode.Nodes.Add("Supplier, Rating, ReviewCount");
-
             var custNode = root.Nodes.Add("customers (" + customers.Count + " records)");
             custNode.Nodes.Add("Id, FirstName, LastName, Email");
             custNode.Nodes.Add("Phone, DateOfBirth, RegistrationDate");
             custNode.Nodes.Add("Tier, CreditLimit, IsActive");
             custNode.Nodes.Add("Address fields (Street, City, State...)");
 
-            var orderNode = root.Nodes.Add("orders (" + orders.Count + " records)");
-            orderNode.Nodes.Add("Id, CustomerId, OrderDate, ShipDate");
-            orderNode.Nodes.Add("Status, ShipMethod, ShippingCost");
-            orderNode.Nodes.Add("PaymentMethod, Subtotal, Total");
-
-            var itemsNode = root.Nodes.Add("order_items (line items)");
-            itemsNode.Nodes.Add("OrderId, ProductId, ProductName");
-            itemsNode.Nodes.Add("Quantity, UnitPrice, Discount, LineTotal");
-
             var empNode = root.Nodes.Add("employees (" + employees.Count + " records)");
             empNode.Nodes.Add("Id, FirstName, LastName, Department");
             empNode.Nodes.Add("Title, HireDate, Salary");
             empNode.Nodes.Add("PerformanceScore, ManagerId, IsRemote");
-
-            var sensorNode = root.Nodes.Add("sensor_readings (" + sensorReadings.Count + " records)");
-            sensorNode.Nodes.Add("SensorId, SensorType, Location");
-            sensorNode.Nodes.Add("Timestamp, Value, Unit, Status");
-
-            var stockNode = root.Nodes.Add("stock_prices (" + stockPrices.Count + " records)");
-            stockNode.Nodes.Add("Symbol, CompanyName, Date");
-            stockNode.Nodes.Add("Open, High, Low, Close, Volume");
-
-            var webNode = root.Nodes.Add("web_events (" + webEvents.Count + " records)");
-            webNode.Nodes.Add("SessionId, UserId, Timestamp");
-            webNode.Nodes.Add("EventType, Page, Referrer");
-            webNode.Nodes.Add("Browser, Device, Country, Duration");
 
             root.Expand();
         }
@@ -1408,14 +1344,8 @@ namespace DataScienceWorkbench
 
             var datasets = new[]
             {
-                new { Name = "products", Class = "Product", Count = products.Count, Tag = "products" },
                 new { Name = "customers", Class = "Customer", Count = customers.Count, Tag = "customers" },
-                new { Name = "orders", Class = "Order", Count = orders.Count, Tag = "orders" },
-                new { Name = "order_items", Class = "OrderItem", Count = orders.Sum(o => o.Items != null ? o.Items.Count : 0), Tag = "order_items" },
                 new { Name = "employees", Class = "Employee", Count = employees.Count, Tag = "employees" },
-                new { Name = "sensor_readings", Class = "SensorReading", Count = sensorReadings.Count, Tag = "sensor_readings" },
-                new { Name = "stock_prices", Class = "StockPrice", Count = stockPrices.Count, Tag = "stock_prices" },
-                new { Name = "web_events", Class = "WebEvent", Count = webEvents.Count, Tag = "web_events" },
             };
 
             foreach (var ds in datasets)
@@ -1436,9 +1366,7 @@ namespace DataScienceWorkbench
             var customSources = new List<string>();
             foreach (var name in inMemoryDataSources.Keys)
             {
-                bool isBuiltin = name == "products" || name == "customers" || name == "orders" ||
-                                 name == "order_items" || name == "employees" || name == "sensor_readings" ||
-                                 name == "stock_prices" || name == "web_events";
+                bool isBuiltin = name == "customers" || name == "employees";
                 if (!isBuiltin)
                     customSources.Add(name);
             }
@@ -1691,9 +1619,7 @@ namespace DataScienceWorkbench
 
                 foreach (var name in inMemoryDataSources.Keys)
                 {
-                    bool isBuiltin = name == "products" || name == "customers" || name == "orders" ||
-                                     name == "order_items" || name == "employees" || name == "sensor_readings" ||
-                                     name == "stock_prices" || name == "web_events";
+                    bool isBuiltin = name == "customers" || name == "employees";
                     if (!isBuiltin)
                         AppendRefText("  " + name + "\n", Color.FromArgb(128, 0, 128), false, 10);
                 }
@@ -1905,32 +1831,12 @@ namespace DataScienceWorkbench
             switch (datasetCombo.SelectedIndex)
             {
                 case 0:
-                    dataGrid.DataSource = products.Select(p => new { p.Id, p.Name, p.Category, p.SubCategory, p.SKU, p.Price, p.Cost, p.Margin, p.StockQuantity, p.Supplier, p.Rating, p.ReviewCount, p.IsDiscontinued }).ToList();
-                    recordCountLabel.Text = products.Count + " records";
-                    break;
-                case 1:
                     dataGrid.DataSource = customers.Select(c => new { c.Id, c.FullName, c.Email, c.Phone, Age = c.Age, c.Tier, c.CreditLimit, c.IsActive, City = c.Address.City, State = c.Address.State, OrderCount = c.Orders.Count }).ToList();
                     recordCountLabel.Text = customers.Count + " records";
                     break;
-                case 2:
-                    dataGrid.DataSource = orders.Select(o => new { o.Id, o.CustomerId, OrderDate = o.OrderDate.ToString("yyyy-MM-dd"), o.Status, o.ShipMethod, o.ShippingCost, o.PaymentMethod, Subtotal = Math.Round(o.Subtotal, 2), Total = Math.Round(o.Total, 2), o.ItemCount }).ToList();
-                    recordCountLabel.Text = orders.Count + " records";
-                    break;
-                case 3:
+                case 1:
                     dataGrid.DataSource = employees.Select(em => new { em.Id, em.FullName, em.Department, em.Title, HireDate = em.HireDate.ToString("yyyy-MM-dd"), em.Salary, em.PerformanceScore, em.IsRemote, em.Office, em.YearsEmployed }).ToList();
                     recordCountLabel.Text = employees.Count + " records";
-                    break;
-                case 4:
-                    dataGrid.DataSource = sensorReadings.Take(500).Select(sr => new { sr.SensorId, sr.SensorType, sr.Location, Timestamp = sr.Timestamp.ToString("yyyy-MM-dd HH:mm"), sr.Value, sr.Unit, sr.Status, sr.BatteryLevel }).ToList();
-                    recordCountLabel.Text = sensorReadings.Count + " records (showing 500)";
-                    break;
-                case 5:
-                    dataGrid.DataSource = stockPrices.Take(500).Select(sp => new { sp.Symbol, sp.CompanyName, Date = sp.Date.ToString("yyyy-MM-dd"), sp.Open, sp.High, sp.Low, sp.Close, sp.Volume }).ToList();
-                    recordCountLabel.Text = stockPrices.Count + " records (showing 500)";
-                    break;
-                case 6:
-                    dataGrid.DataSource = webEvents.Take(500).Select(we => new { we.SessionId, we.UserId, Timestamp = we.Timestamp.ToString("yyyy-MM-dd HH:mm"), we.EventType, we.Page, we.Referrer, we.Browser, we.Device, we.Country, we.Duration }).ToList();
-                    recordCountLabel.Text = webEvents.Count + " records (showing 500)";
                     break;
             }
         }
@@ -2244,26 +2150,20 @@ namespace DataScienceWorkbench
             string help = @"=== Data Science Workbench - Quick Start ===
 
 AVAILABLE DATASETS (pre-loaded as variables):
-  products         - 200 products with prices, ratings, stock
   customers        - 150 customers with demographics
-  orders           - 500 orders with status, totals
-  order_items      - Individual line items for orders
   employees        - 100 employees with salary, dept
-  sensor_readings  - 1000 IoT sensor readings
-  stock_prices     - 365 days of 10 stock symbols
-  web_events       - 2000 web analytics events
 
 HOW TO USE:
   1. Write Python code in the editor
   2. Press F5 or click Run to execute
-  3. All datasets are pre-loaded as variables
-  4. Access columns directly: products.Price.mean()
-  5. Use .df for full DataFrame: products.df.describe()
+  3. Datasets are pre-loaded as variables
+  4. Access columns directly: customers.CreditLimit.mean()
+  5. Use .df for full DataFrame: customers.df.describe()
   6. Install packages via Package Manager tab
 
 EXAMPLE:
-  print(products.Price.mean())
-  print(products.df.groupby('Category')['Price'].mean())
+  print(customers.CreditLimit.mean())
+  print(employees.df.groupby('Department')['Salary'].mean())
 
 TIPS:
   - Use 'Insert Snippet' for ready-made code
@@ -2304,31 +2204,27 @@ TIPS:
 
         private string GetDefaultScript()
         {
-            return @"# All datasets are pre-loaded as variables
-# Access columns directly: products.Cost.mean()
-# Use .df for full DataFrame: products.df.describe()
+            return @"# Datasets are pre-loaded as variables
+# Access columns directly: customers.CreditLimit.mean()
+# Use .df for full DataFrame: customers.df.describe()
 
 print('=== Data Science Workbench ===')
 print()
 
-# Quick look at products
-print(f'Products: {len(products)} records')
-print(f'Average price: ${products.Price.mean():.2f}')
-print(f'Average cost:  ${products.Cost.mean():.2f}')
+# Quick look at customers
+print(f'Customers: {len(customers)} records')
+print(f'Average credit limit: ${customers.CreditLimit.mean():.2f}')
 print()
-print('=== Product Summary ===')
-print(products.df.describe())
+print('=== Customer Summary ===')
+print(customers.df.describe())
 ";
         }
 
         private string GetLoadDataSnippet()
         {
             return @"
-# All datasets are pre-loaded as variables
-for name, ds in [('products', products), ('customers', customers),
-                  ('orders', orders), ('order_items', order_items),
-                  ('employees', employees), ('sensor_readings', sensor_readings),
-                  ('stock_prices', stock_prices), ('web_events', web_events)]:
+# Datasets are pre-loaded as variables
+for name, ds in [('customers', customers), ('employees', employees)]:
     print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')
 ";
         }
@@ -2337,13 +2233,13 @@ for name, ds in [('products', products), ('customers', customers),
         {
             return @"
 print('=== Descriptive Statistics ===')
-print(products.df.describe())
+print(customers.df.describe())
 print()
 print('=== Data Types ===')
-print(products.df.dtypes)
+print(customers.df.dtypes)
 print()
 print('=== Missing Values ===')
-print(products.df.isnull().sum())
+print(customers.df.isnull().sum())
 ";
         }
 
@@ -2355,10 +2251,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.hist(products.Price, bins=30, edgecolor='black', alpha=0.7)
-ax.set_xlabel('Price ($)')
+ax.hist(employees.Salary, bins=30, edgecolor='black', alpha=0.7)
+ax.set_xlabel('Salary ($)')
 ax.set_ylabel('Count')
-ax.set_title('Product Price Distribution')
+ax.set_title('Employee Salary Distribution')
 plt.tight_layout()
 plt.savefig('histogram.png', dpi=100)
 print('Histogram saved to histogram.png')
@@ -2373,12 +2269,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
-scatter = ax.scatter(products.Price, products.Rating, c=products.ReviewCount,
+scatter = ax.scatter(employees.Salary, employees.PerformanceScore,
                      cmap='viridis', alpha=0.6, edgecolors='black', linewidth=0.5)
-ax.set_xlabel('Price ($)')
-ax.set_ylabel('Rating')
-ax.set_title('Price vs Rating (colored by Review Count)')
-plt.colorbar(scatter, label='Review Count')
+ax.set_xlabel('Salary ($)')
+ax.set_ylabel('Performance Score')
+ax.set_title('Salary vs Performance Score')
 plt.tight_layout()
 plt.savefig('scatter.png', dpi=100)
 print('Scatter plot saved to scatter.png')
@@ -2388,14 +2283,13 @@ print('Scatter plot saved to scatter.png')
         private string GetGroupBySnippet()
         {
             return @"
-print('=== Average Price by Category ===')
-group = products.df.groupby('Category').agg(
+print('=== Average Salary by Department ===')
+group = employees.df.groupby('Department').agg(
     Count=('Id', 'count'),
-    Avg_Price=('Price', 'mean'),
-    Avg_Rating=('Rating', 'mean'),
-    Total_Stock=('StockQuantity', 'sum')
+    Avg_Salary=('Salary', 'mean'),
+    Avg_Performance=('PerformanceScore', 'mean')
 ).round(2)
-print(group.sort_values('Avg_Price', ascending=False))
+print(group.sort_values('Avg_Salary', ascending=False))
 ";
         }
 
@@ -2406,7 +2300,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-numeric_cols = products.df.select_dtypes(include='number')
+numeric_cols = employees.df.select_dtypes(include='number')
 corr = numeric_cols.corr()
 print('=== Correlation Matrix ===')
 print(corr.round(3))
@@ -2418,7 +2312,7 @@ ax.set_yticks(range(len(corr.columns)))
 ax.set_xticklabels(corr.columns, rotation=45, ha='right')
 ax.set_yticklabels(corr.columns)
 plt.colorbar(im)
-ax.set_title('Correlation Matrix')
+ax.set_title('Employee Data Correlation Matrix')
 plt.tight_layout()
 plt.savefig('correlation.png', dpi=100)
 print('Correlation matrix saved to correlation.png')
@@ -2433,17 +2327,15 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-df = stock_prices.df.copy()
-df['Date'] = pd.to_datetime(df['Date'])
+df = customers.df.copy()
+df['RegistrationDate'] = pd.to_datetime(df['RegistrationDate'])
+monthly = df.set_index('RegistrationDate').resample('M').size()
 
 fig, ax = plt.subplots(figsize=(12, 6))
-for symbol in df['Symbol'].unique()[:5]:
-    subset = df[df['Symbol'] == symbol].sort_values('Date')
-    ax.plot(subset['Date'], subset['Close'], label=symbol, linewidth=1)
+ax.plot(monthly.index, monthly.values, linewidth=1.5, marker='o', markersize=3)
 ax.set_xlabel('Date')
-ax.set_ylabel('Close Price ($)')
-ax.set_title('Stock Prices Over Time')
-ax.legend()
+ax.set_ylabel('New Registrations')
+ax.set_title('Customer Registrations Over Time')
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.savefig('timeseries.png', dpi=100)
@@ -2454,23 +2346,23 @@ print('Time series chart saved to timeseries.png')
         private string GetCustomDataSnippet()
         {
             return @"
-# All datasets are pre-loaded as top-level Python variables
+# Datasets are pre-loaded as top-level Python variables
 # Access columns directly as attributes:
-#   products.Cost.mean()
-#   products.Price.tolist()
+#   customers.CreditLimit.mean()
+#   employees.Salary.tolist()
 # Use .df to get the raw pandas DataFrame:
-#   products.df.describe()
+#   customers.df.describe()
 
-print('=== .NET In-Memory Data: Products ===')
-print(f'Count: {len(products)}')
+print('=== .NET In-Memory Data: Employees ===')
+print(f'Count: {len(employees)}')
 print()
-print('Price Statistics:')
-print(f'  Sum:    {products.Price.sum():.2f}')
-print(f'  Mean:   {products.Price.mean():.2f}')
-print(f'  Median: {products.Price.median():.2f}')
-print(f'  Std:    {products.Price.std():.2f}')
-print(f'  Min:    {products.Price.min():.2f}')
-print(f'  Max:    {products.Price.max():.2f}')
+print('Salary Statistics:')
+print(f'  Sum:    {employees.Salary.sum():.2f}')
+print(f'  Mean:   {employees.Salary.mean():.2f}')
+print(f'  Median: {employees.Salary.median():.2f}')
+print(f'  Std:    {employees.Salary.std():.2f}')
+print(f'  Min:    {employees.Salary.min():.2f}')
+print(f'  Max:    {employees.Salary.max():.2f}')
 ";
         }
     }

@@ -60,7 +60,7 @@ Keep them in sync when making changes.
 - **StatusChanged event** - Subscribe to status bar updates
 
 ## Key Features
-- **7 dummy datasets**: Products (200), Customers (150), Orders (500), Employees (100), Sensor Readings (1000), Stock Prices (365 days x 10 symbols), Web Events (2000)
+- **2 exposed datasets**: Customers (150), Employees (100) — other data (products, orders, sensors, stocks, web events) remains in memory but is not exposed to the Python editor
 - **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, context-aware autocomplete (dataset columns, class members, DataFrame methods), bracket matching, current line highlight, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, and bookmarks
 - **Data Browser** tab with DataGridView for browsing all datasets
 - **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)

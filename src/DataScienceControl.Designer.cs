@@ -362,13 +362,8 @@ namespace DataScienceWorkbench
             // 
             this.datasetCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.datasetCombo.Items.AddRange(new object[] {
-            "Products",
             "Customers",
-            "Orders",
-            "Employees",
-            "Sensor Readings",
-            "Stock Prices",
-            "Web Events"});
+            "Employees"});
             this.datasetCombo.Location = new System.Drawing.Point(70, 7);
             this.datasetCombo.Name = "datasetCombo";
             this.datasetCombo.Size = new System.Drawing.Size(200, 21);
