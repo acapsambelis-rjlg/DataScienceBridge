@@ -31,6 +31,10 @@ namespace DataScienceWorkbench
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, string> registeredPythonClasses = new Dictionary<string, string>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
+        private float editorFontSize = 10f;
+        private const float MinFontSize = 6f;
+        private const float MaxFontSize = 28f;
+        private const float DefaultFontSize = 10f;
         private HashSet<int> bookmarks = new HashSet<int>();
         private Dictionary<int, bool> foldedRegions = new Dictionary<int, bool>();
         private List<FoldRegion> foldRegions = new List<FoldRegion>();
@@ -164,6 +168,8 @@ namespace DataScienceWorkbench
                     {
                         autoComplete.OnTextChanged();
                     }
+
+                    pythonEditor.UpdateWordHighlight();
                 }
             };
 
@@ -172,9 +178,20 @@ namespace DataScienceWorkbench
                 if (!suppressHighlight)
                 {
                     pythonEditor.UpdateBracketMatching();
+                    pythonEditor.UpdateWordHighlight();
                     pythonEditor.Invalidate();
                     UpdateCursorPositionStatus();
                     autoComplete.OnSelectionChanged();
+                }
+            };
+
+            pythonEditor.MouseWheel += (s, e) =>
+            {
+                if (Control.ModifierKeys.HasFlag(Keys.Control))
+                {
+                    ((HandledMouseEventArgs)e).Handled = true;
+                    if (e.Delta > 0) ZoomEditor(1f);
+                    else if (e.Delta < 0) ZoomEditor(-1f);
                 }
             };
 
@@ -271,6 +288,24 @@ namespace DataScienceWorkbench
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                     GoToPreviousBookmark();
+                }
+                else if (e.Control && (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add))
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    ZoomEditor(1f);
+                }
+                else if (e.Control && (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract))
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    ZoomEditor(-1f);
+                }
+                else if (e.Control && e.KeyCode == Keys.D0)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    ZoomEditor(0f);
                 }
                 else if (e.Control && e.KeyCode == Keys.F)
                 {
@@ -698,7 +733,39 @@ namespace DataScienceWorkbench
             int line = pythonEditor.GetLineFromCharIndex(pos) + 1;
             int firstChar = pythonEditor.GetFirstCharIndexFromLine(line - 1);
             int col = pos - firstChar + 1;
-            RaiseStatus("Ln " + line + ", Col " + col);
+            int zoomPct = (int)Math.Round(editorFontSize / DefaultFontSize * 100);
+            if (zoomPct == 100)
+                RaiseStatus("Ln " + line + ", Col " + col);
+            else
+                RaiseStatus("Ln " + line + ", Col " + col + "  |  Zoom: " + zoomPct + "%");
+        }
+
+        private void ZoomEditor(float delta)
+        {
+            float newSize;
+            if (delta == 0f)
+                newSize = DefaultFontSize;
+            else
+                newSize = editorFontSize + delta;
+
+            if (newSize < MinFontSize) newSize = MinFontSize;
+            if (newSize > MaxFontSize) newSize = MaxFontSize;
+            if (Math.Abs(newSize - editorFontSize) < 0.01f) return;
+
+            editorFontSize = newSize;
+
+            int savedPos = pythonEditor.SelectionStart;
+            int savedLen = pythonEditor.SelectionLength;
+
+            var newFont = ResolveMonoFont(editorFontSize);
+            pythonEditor.Font = newFont;
+            lineNumberPanel.UpdateFont(ResolveMonoFont(Math.Max(editorFontSize - 1f, MinFontSize)));
+
+            pythonEditor.SelectionStart = savedPos;
+            pythonEditor.SelectionLength = savedLen;
+            pythonEditor.ScrollToCaret();
+
+            UpdateCursorPositionStatus();
         }
 
         private void ResetUndoStack()

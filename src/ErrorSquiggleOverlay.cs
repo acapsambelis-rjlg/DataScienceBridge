@@ -15,12 +15,16 @@ namespace DataScienceWorkbench
         private static readonly Color CurrentLineColor = Color.FromArgb(25, 0, 0, 0);
         private static readonly Color BracketHighlightColor = Color.FromArgb(60, 0, 120, 215);
         private static readonly Color WarningSquiggleColor = Color.FromArgb(220, 180, 50);
+        private static readonly Color WordHighlightColor = Color.FromArgb(40, 255, 165, 0);
+        private static readonly Color WordHighlightBorderColor = Color.FromArgb(100, 200, 140, 30);
         private int matchedBracketPos1 = -1;
         private int matchedBracketPos2 = -1;
         private List<SymbolError> symbolErrors = new List<SymbolError>();
         private ToolTip errorToolTip;
         private string lastTooltipText = "";
         private int lastTooltipCharIndex = -1;
+        private string highlightedWord = "";
+        private List<int> highlightedWordPositions = new List<int>();
 
         private static readonly Dictionary<char, char> OpenBrackets = new Dictionary<char, char>
         {
@@ -113,6 +117,67 @@ namespace DataScienceWorkbench
 
         public List<SymbolError> SymbolErrors { get { return symbolErrors; } }
 
+        public void UpdateWordHighlight()
+        {
+            string text = this.Text;
+            int selStart = this.SelectionStart;
+            int selLen = this.SelectionLength;
+
+            string word = "";
+            if (selLen > 0 && selLen < 100)
+            {
+                word = this.SelectedText.Trim();
+                if (word.Length > 0 && word.Length == selLen)
+                {
+                    bool isIdentifier = true;
+                    for (int i = 0; i < word.Length; i++)
+                    {
+                        char c = word[i];
+                        if (!(char.IsLetterOrDigit(c) || c == '_'))
+                        { isIdentifier = false; break; }
+                    }
+                    if (char.IsDigit(word[0])) isIdentifier = false;
+                    if (!isIdentifier) word = "";
+                }
+                else word = "";
+            }
+            else if (selLen == 0 && text.Length > 0)
+            {
+                int start = selStart;
+                while (start > 0 && (char.IsLetterOrDigit(text[start - 1]) || text[start - 1] == '_'))
+                    start--;
+                int end = selStart;
+                while (end < text.Length && (char.IsLetterOrDigit(text[end]) || text[end] == '_'))
+                    end++;
+                if (end > start && end - start >= 2)
+                {
+                    word = text.Substring(start, end - start);
+                    if (char.IsDigit(word[0])) word = "";
+                }
+            }
+
+            if (word == highlightedWord) return;
+            highlightedWord = word;
+            highlightedWordPositions.Clear();
+
+            if (word.Length >= 2)
+            {
+                int idx = 0;
+                while (true)
+                {
+                    int found = text.IndexOf(word, idx, StringComparison.Ordinal);
+                    if (found < 0) break;
+                    bool leftOk = found == 0 || !(char.IsLetterOrDigit(text[found - 1]) || text[found - 1] == '_');
+                    int afterEnd = found + word.Length;
+                    bool rightOk = afterEnd >= text.Length || !(char.IsLetterOrDigit(text[afterEnd]) || text[afterEnd] == '_');
+                    if (leftOk && rightOk)
+                        highlightedWordPositions.Add(found);
+                    idx = found + 1;
+                }
+            }
+            this.Invalidate();
+        }
+
         public void UpdateBracketMatching()
         {
             int oldPos1 = matchedBracketPos1;
@@ -196,6 +261,7 @@ namespace DataScienceWorkbench
                 using (var g = this.CreateGraphics())
                 {
                     g.SetClip(this.ClientRectangle);
+                    DrawWordHighlights(g);
                     DrawCurrentLineHighlight(g);
                     DrawBracketHighlights(g);
                     if (errorLineNumber >= 1)
@@ -224,6 +290,42 @@ namespace DataScienceWorkbench
             using (var brush = new SolidBrush(CurrentLineColor))
             {
                 g.FillRectangle(brush, lineRect);
+            }
+        }
+
+        private void DrawWordHighlights(Graphics g)
+        {
+            if (highlightedWordPositions.Count < 2 || string.IsNullOrEmpty(highlightedWord)) return;
+
+            string text = this.Text;
+            int wordLen = highlightedWord.Length;
+
+            using (var brush = new SolidBrush(WordHighlightColor))
+            using (var pen = new Pen(WordHighlightBorderColor))
+            {
+                foreach (int pos in highlightedWordPositions)
+                {
+                    if (pos + wordLen > text.Length) continue;
+
+                    Point startPt = this.GetPositionFromCharIndex(pos);
+                    if (startPt.Y < -this.Font.Height || startPt.Y > this.ClientSize.Height) continue;
+
+                    int endCharIdx = pos + wordLen - 1;
+                    Point endPt = this.GetPositionFromCharIndex(endCharIdx);
+                    if (startPt.Y != endPt.Y) continue;
+
+                    int charWidth;
+                    if (endCharIdx + 1 < text.Length && text[endCharIdx] != '\n')
+                    {
+                        Point nextPt = this.GetPositionFromCharIndex(endCharIdx + 1);
+                        charWidth = (nextPt.Y == endPt.Y && nextPt.X > endPt.X) ? nextPt.X - endPt.X : 8;
+                    }
+                    else charWidth = 8;
+
+                    var rect = new Rectangle(startPt.X, startPt.Y, endPt.X + charWidth - startPt.X, this.Font.Height);
+                    g.FillRectangle(brush, rect);
+                    g.DrawRectangle(pen, rect);
+                }
             }
         }
 

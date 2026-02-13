@@ -62,7 +62,7 @@ Keep them in sync when making changes.
 
 ## Key Features
 - **2 demo datasets**: Customers (150), Employees (100) — demo data for development; host app replaces via LoadData()
-- **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, context-aware autocomplete (dataset columns, class members, DataFrame methods), bracket matching, current line highlight, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, and bookmarks
+- **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, context-aware autocomplete (dataset columns, class members, DataFrame methods), bracket matching, current line highlight, word/symbol occurrence highlighting, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, bookmarks, zoom (Ctrl+Scroll/Ctrl+Plus/Minus), and cursor position indicator (Ln/Col in status bar)
 - **Data Reference** tab with TreeView showing all datasets, columns, types, registered classes, and context variables with detail panel and example Python code
 - **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)
 - **In-memory data bridge**: All .NET data streamed to Python via stdin as pre-loaded variables (e.g., `customers.CreditLimit.mean()`)
