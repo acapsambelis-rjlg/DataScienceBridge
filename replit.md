@@ -30,6 +30,7 @@ DataScienceWorkbench/
   LineNumberPanel.cs                - Line number gutter control
   PythonBridge.cs                   - Python bridge + syntax checker
   PythonSymbolAnalyzer.cs           - Undefined name detection (symbol cache)
+  PlotViewerForm.cs                 - Plot image viewer window (prev/next/save)
   PythonSyntaxHighlighter.cs        - Syntax highlighting engine
 src/
   (same .cs files including .Designer.cs) - Used by Mono build on Linux/Replit
@@ -86,6 +87,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added plt.show() support: monkey-patches matplotlib's show() to save figures and display them in a PlotViewerForm window with navigation (prev/next) and Save As functionality; all snippets updated to use plt.show() instead of plt.savefig(); PythonResult now includes PlotPaths list
 - 2026-02-13: Added Python Class Registration (RegisterPythonClass/UnregisterPythonClass) and Context Hub (SetContext/RemoveContext/ClearContext) systems: host app can register Python classes and send named variables (str, float, int, bool, list, dict) into the Python environment; both appear in Data Reference tree with detail panels; names recognized by autocomplete and symbol analyzer; includes input validation and Python string escaping; demo in MainForm with MathHelper class and sample context vars
 - 2026-02-13: Added context-aware dot-completion autocomplete: dataset variables show column names + DataFrame methods, self. shows class methods/attributes, ClassName. shows class members, instance variables infer type from constructor calls. Enhanced symbol analyzer: dataset names (products, customers, etc.) and self/cls no longer produce false squiggles; added global/nonlocal/lambda support and except line skipping
 - 2026-02-13: Added error tooltips on squiggle hover: hovering over red (syntax error) or yellow (undefined name) squiggles shows a dark-themed tooltip with the error message; tooltips auto-hide when mouse leaves the error region or errors are cleared

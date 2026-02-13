@@ -149,6 +149,10 @@ namespace DataScienceWorkbench
 
                 psi.EnvironmentVariables["MPLBACKEND"] = "Agg";
 
+                string displayVar = Environment.GetEnvironmentVariable("DISPLAY");
+                if (!string.IsNullOrEmpty(displayVar))
+                    psi.EnvironmentVariables["DISPLAY"] = displayVar;
+
                 var proc = Process.Start(psi);
 
                 if (hasMemData)
@@ -170,12 +174,33 @@ namespace DataScienceWorkbench
                 string stderr = proc.StandardError.ReadToEnd();
                 proc.WaitForExit(60000);
 
+                var plotPaths = new List<string>();
+                var filteredOutput = new StringBuilder();
+                foreach (var line in stdout.Split('\n'))
+                {
+                    if (line.StartsWith("__PLOT__:"))
+                    {
+                        string path = line.Substring(9).Trim();
+                        if (File.Exists(path))
+                            plotPaths.Add(path);
+                    }
+                    else
+                    {
+                        filteredOutput.AppendLine(line);
+                    }
+                }
+
+                string cleanOutput = filteredOutput.ToString();
+                while (cleanOutput.EndsWith("\r\n\r\n"))
+                    cleanOutput = cleanOutput.Substring(0, cleanOutput.Length - 2);
+
                 return new PythonResult
                 {
                     ExitCode = proc.ExitCode,
-                    Output = stdout,
+                    Output = cleanOutput,
                     Error = stderr,
-                    Success = proc.ExitCode == 0
+                    Success = proc.ExitCode == 0,
+                    PlotPaths = plotPaths
                 };
             }
             finally
@@ -310,5 +335,6 @@ namespace DataScienceWorkbench
         public string Output { get; set; }
         public string Error { get; set; }
         public bool Success { get; set; }
+        public List<string> PlotPaths { get; set; } = new List<string>();
     }
 }

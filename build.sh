@@ -19,6 +19,7 @@ mcs $REFS \
     src/LineNumberPanel.cs \
     src/DataScienceControl.Designer.cs \
     src/DataScienceControl.cs \
+    src/PlotViewerForm.cs \
     src/MainForm.Designer.cs \
     src/MainForm.cs \
     src/Program.cs

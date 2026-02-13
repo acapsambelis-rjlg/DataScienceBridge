@@ -54,6 +54,9 @@
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="AutoCompletePopup.cs" />
+    <Compile Include="PlotViewerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="JsonHelper.cs" />
     <Compile Include="LineNumberPanel.cs">
       <SubType>Component</SubType>

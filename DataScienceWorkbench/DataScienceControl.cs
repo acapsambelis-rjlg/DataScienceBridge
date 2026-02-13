@@ -1107,6 +1107,25 @@ namespace DataScienceWorkbench
         {
             var sb = new System.Text.StringBuilder();
 
+            sb.AppendLine("import os as _os, tempfile as _tempfile, atexit as _atexit");
+            sb.AppendLine("_plot_counter = [0]");
+            sb.AppendLine("_plot_dir = _tempfile.mkdtemp(prefix='dsw_plots_')");
+            sb.AppendLine("def _patched_show(*args, **kwargs):");
+            sb.AppendLine("    import matplotlib.pyplot as _plt");
+            sb.AppendLine("    figs = [_plt.figure(i) for i in _plt.get_fignums()]");
+            sb.AppendLine("    for fig in figs:");
+            sb.AppendLine("        _plot_counter[0] += 1");
+            sb.AppendLine("        path = _os.path.join(_plot_dir, f'plot_{_plot_counter[0]}.png')");
+            sb.AppendLine("        fig.savefig(path, dpi=150, bbox_inches='tight')");
+            sb.AppendLine("        print(f'__PLOT__:{path}')");
+            sb.AppendLine("    _plt.close('all')");
+            sb.AppendLine("try:");
+            sb.AppendLine("    import matplotlib.pyplot as _plt");
+            sb.AppendLine("    _plt.show = _patched_show");
+            sb.AppendLine("except ImportError:");
+            sb.AppendLine("    pass");
+            sb.AppendLine();
+
             foreach (var kvp in registeredPythonClasses)
             {
                 sb.AppendLine(kvp.Value);
@@ -1873,6 +1892,13 @@ namespace DataScienceWorkbench
                     AppendOutput("ERROR:\n" + result.Error, Color.FromArgb(200, 0, 0));
             }
 
+            if (result.PlotPaths != null && result.PlotPaths.Count > 0)
+            {
+                AppendOutput("Generated " + result.PlotPaths.Count + " plot(s).\n", Color.FromArgb(0, 128, 0));
+                var viewer = new PlotViewerForm(result.PlotPaths);
+                viewer.Show();
+            }
+
             AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.FromArgb(0, 100, 180));
             RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
         }
@@ -2246,8 +2272,6 @@ print(customers.df.isnull().sum())
         private string GetHistogramSnippet()
         {
             return @"
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -2256,27 +2280,23 @@ ax.set_xlabel('Salary ($)')
 ax.set_ylabel('Count')
 ax.set_title('Employee Salary Distribution')
 plt.tight_layout()
-plt.savefig('histogram.png', dpi=100)
-print('Histogram saved to histogram.png')
+plt.show()
 ";
         }
 
         private string GetScatterSnippet()
         {
             return @"
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
-scatter = ax.scatter(employees.Salary, employees.PerformanceScore,
-                     cmap='viridis', alpha=0.6, edgecolors='black', linewidth=0.5)
+ax.scatter(employees.Salary, employees.PerformanceScore,
+           alpha=0.6, edgecolors='black', linewidth=0.5)
 ax.set_xlabel('Salary ($)')
 ax.set_ylabel('Performance Score')
 ax.set_title('Salary vs Performance Score')
 plt.tight_layout()
-plt.savefig('scatter.png', dpi=100)
-print('Scatter plot saved to scatter.png')
+plt.show()
 ";
         }
 
@@ -2296,8 +2316,6 @@ print(group.sort_values('Avg_Salary', ascending=False))
         private string GetCorrelationSnippet()
         {
             return @"
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 numeric_cols = employees.df.select_dtypes(include='number')
@@ -2314,8 +2332,7 @@ ax.set_yticklabels(corr.columns)
 plt.colorbar(im)
 ax.set_title('Employee Data Correlation Matrix')
 plt.tight_layout()
-plt.savefig('correlation.png', dpi=100)
-print('Correlation matrix saved to correlation.png')
+plt.show()
 ";
         }
 
@@ -2323,8 +2340,6 @@ print('Correlation matrix saved to correlation.png')
         {
             return @"
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 df = customers.df.copy()
@@ -2338,8 +2353,7 @@ ax.set_ylabel('New Registrations')
 ax.set_title('Customer Registrations Over Time')
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig('timeseries.png', dpi=100)
-print('Time series chart saved to timeseries.png')
+plt.show()
 ";
         }
 
