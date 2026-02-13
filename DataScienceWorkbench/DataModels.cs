@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace DataScienceWorkbench
@@ -68,21 +69,44 @@ namespace DataScienceWorkbench
 
     public class Customer
     {
-        [UserVisible] public int Id { get; set; }
-        [UserVisible] public string FirstName { get; set; }
-        [UserVisible] public string LastName { get; set; }
-        [UserVisible] public string Email { get; set; }
-        [UserVisible] public string Phone { get; set; }
-        [UserVisible] public DateTime DateOfBirth { get; set; }
-        [UserVisible] public DateTime RegistrationDate { get; set; }
-        [UserVisible] public string Tier { get; set; }
-        [UserVisible] public double CreditLimit { get; set; }
-        [UserVisible] public bool IsActive { get; set; }
+        [UserVisible, Description("Unique customer identifier")]
+        public int Id { get; set; }
+
+        [UserVisible, Description("Customer's first name")]
+        public string FirstName { get; set; }
+
+        [UserVisible, Description("Customer's last name")]
+        public string LastName { get; set; }
+
+        [UserVisible, Description("Customer's email address")]
+        public string Email { get; set; }
+
+        [UserVisible, Description("Customer's phone number")]
+        public string Phone { get; set; }
+
+        [UserVisible, Description("Customer's date of birth")]
+        public DateTime DateOfBirth { get; set; }
+
+        [UserVisible, Description("Date the customer registered")]
+        public DateTime RegistrationDate { get; set; }
+
+        [UserVisible, Description("Loyalty tier: Bronze, Silver, Gold, or Platinum")]
+        public string Tier { get; set; }
+
+        [UserVisible, Description("Maximum credit limit in dollars")]
+        public double CreditLimit { get; set; }
+
+        [UserVisible, Description("Whether the customer account is currently active")]
+        public bool IsActive { get; set; }
+
         public Address Address { get; set; }
         public List<Order> Orders { get; set; }
 
-        [UserVisible] public string FullName { get { return FirstName + " " + LastName; } }
-        [UserVisible] public int Age { get { return (int)((DateTime.Now - DateOfBirth).TotalDays / 365.25); } }
+        [UserVisible, Description("Computed full name (FirstName + LastName)")]
+        public string FullName { get { return FirstName + " " + LastName; } }
+
+        [UserVisible, Description("Computed age in years based on DateOfBirth")]
+        public int Age { get { return (int)((DateTime.Now - DateOfBirth).TotalDays / 365.25); } }
     }
 
     public class Product
@@ -137,20 +161,44 @@ namespace DataScienceWorkbench
 
     public class Employee
     {
-        [UserVisible] public int Id { get; set; }
-        [UserVisible] public string FirstName { get; set; }
-        [UserVisible] public string LastName { get; set; }
-        [UserVisible] public string Department { get; set; }
-        [UserVisible] public string Title { get; set; }
-        [UserVisible] public DateTime HireDate { get; set; }
-        [UserVisible] public double Salary { get; set; }
-        [UserVisible] public double PerformanceScore { get; set; }
-        [UserVisible] public int ManagerId { get; set; }
-        [UserVisible] public bool IsRemote { get; set; }
-        [UserVisible] public string Office { get; set; }
+        [UserVisible, Description("Unique employee identifier")]
+        public int Id { get; set; }
 
-        [UserVisible] public string FullName { get { return FirstName + " " + LastName; } }
-        [UserVisible] public int YearsEmployed { get { return (int)((DateTime.Now - HireDate).TotalDays / 365.25); } }
+        [UserVisible, Description("Employee's first name")]
+        public string FirstName { get; set; }
+
+        [UserVisible, Description("Employee's last name")]
+        public string LastName { get; set; }
+
+        [UserVisible, Description("Department name (e.g. Engineering, Sales, HR)")]
+        public string Department { get; set; }
+
+        [UserVisible, Description("Job title within the department")]
+        public string Title { get; set; }
+
+        [UserVisible, Description("Date the employee was hired")]
+        public DateTime HireDate { get; set; }
+
+        [UserVisible, Description("Annual salary in dollars")]
+        public double Salary { get; set; }
+
+        [UserVisible, Description("Performance review score from 0.0 to 5.0")]
+        public double PerformanceScore { get; set; }
+
+        [UserVisible, Description("Id of the employee's direct manager (0 if none)")]
+        public int ManagerId { get; set; }
+
+        [UserVisible, Description("Whether the employee works remotely")]
+        public bool IsRemote { get; set; }
+
+        [UserVisible, Description("Office location name")]
+        public string Office { get; set; }
+
+        [UserVisible, Description("Computed full name (FirstName + LastName)")]
+        public string FullName { get { return FirstName + " " + LastName; } }
+
+        [UserVisible, Description("Computed years of employment based on HireDate")]
+        public int YearsEmployed { get { return (int)((DateTime.Now - HireDate).TotalDays / 365.25); } }
     }
 
     public class SensorReading

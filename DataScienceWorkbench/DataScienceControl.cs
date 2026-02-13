@@ -1335,7 +1335,7 @@ namespace DataScienceWorkbench
                 foreach (var col in columns)
                 {
                     var child = node.Nodes.Add(col.Item1 + "  :  " + col.Item2);
-                    child.Tag = name;
+                    child.Tag = new string[] { "field", name, col.Item1 };
                     child.ForeColor = Color.FromArgb(80, 80, 80);
                 }
             }
@@ -1394,6 +1394,14 @@ namespace DataScienceWorkbench
         private void OnRefTreeSelect(object sender, TreeViewEventArgs e)
         {
             if (e.Node == null || e.Node.Tag == null) return;
+
+            var tagArr = e.Node.Tag as string[];
+            if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "field")
+            {
+                ShowFieldDetail(tagArr[1], tagArr[2]);
+                return;
+            }
+
             string tag = e.Node.Tag.ToString();
 
             if (tag == "regclasses" || tag.StartsWith("regclass_"))
@@ -1409,6 +1417,76 @@ namespace DataScienceWorkbench
             }
 
             ShowDatasetDetail(tag);
+        }
+
+        private void ShowFieldDetail(string datasetName, string fieldName)
+        {
+            Type type;
+            if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
+
+            var prop = type.GetProperty(fieldName);
+            if (prop == null) return;
+
+            string typeName = UserVisibleHelper.GetPythonTypeName(prop.PropertyType);
+            bool isComputed = prop.GetSetMethod() == null;
+
+            refDetailBox.Clear();
+
+            AppendRefText(fieldName, Color.FromArgb(0, 0, 180), true, 12);
+            AppendRefText("  :  " + typeName + (isComputed ? " (computed)" : "") + "\n\n", Color.FromArgb(100, 100, 100), false, 12);
+
+            AppendRefText("Description\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            var descAttrs = prop.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), true);
+            if (descAttrs.Length > 0)
+            {
+                string desc = ((System.ComponentModel.DescriptionAttribute)descAttrs[0]).Description;
+                AppendRefText(desc + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else
+            {
+                AppendRefText("No description available.\n\n", Color.FromArgb(150, 150, 150), false, 10);
+            }
+
+            AppendRefText("Dataset\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            string className = GetClassNameForTag(datasetName);
+            AppendRefText("  " + className + "." + fieldName + "  (variable: " + datasetName + ")\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+
+            if (typeName == "string")
+            {
+                AppendRefText("# Value counts\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".value_counts()\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("# Unique values\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".unique()\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else if (typeName == "bool")
+            {
+                AppendRefText("# Count true values\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".sum()\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("# Filter to true rows\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "[" + datasetName + "." + fieldName + "]\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else if (typeName == "datetime")
+            {
+                AppendRefText("# Date range\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".min(), " + datasetName + "." + fieldName + ".max()\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("# Extract year\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".dt.year\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else
+            {
+                AppendRefText("# Basic statistics\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".describe()\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("# Mean value\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".mean()\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            refDetailBox.SelectionStart = 0;
+            refDetailBox.ScrollToCaret();
         }
 
         private void ShowDatasetDetail(string tag)
