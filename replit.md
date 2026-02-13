@@ -47,6 +47,7 @@ Keep them in sync when making changes.
 - **RegisterInMemoryData(name, dataTableProvider)** - Register a Func<DataTable> for in-memory piping
 - **UnregisterInMemoryData(name)** - Remove a registered in-memory data source
 - **RegisterPythonClass(className, pythonCode)** - Register a Python class definition injected before every script run
+- **RegisterPythonClass(className, pythonCode, description, example, notes)** - Register with custom reference info (description, example code, notes shown in Data Reference tab)
 - **UnregisterPythonClass(className)** - Remove a registered Python class
 - **SetContext(key, value)** - Send a variable to the Python environment (overloads: string, double, int, bool, string[], double[], Dict<string,string>, Dict<string,double>)
 - **RemoveContext(key)** - Remove a context variable
