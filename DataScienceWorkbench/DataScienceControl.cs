@@ -199,9 +199,12 @@ namespace DataScienceWorkbench
                     e.SuppressKeyPress = true;
                     PerformRedo();
                 }
-                else if (e.KeyCode == Keys.Escape && autoComplete.IsShowing)
+                else if (e.KeyCode == Keys.Escape)
                 {
-                    autoComplete.Hide();
+                    if (autoComplete.IsShowing)
+                        autoComplete.Hide();
+                    if (findReplacePanel != null && findReplacePanel.Visible)
+                        HideFindReplace();
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                 }
@@ -1933,124 +1936,152 @@ namespace DataScienceWorkbench
         }
 
 
-        private Form findReplaceForm;
+        private Panel findReplacePanel;
+        private TextBox frFindBox;
+        private TextBox frReplaceBox;
+        private CheckBox frMatchCase;
+        private int frSearchStart;
 
         private void ShowFindReplace()
         {
-            if (findReplaceForm != null && !findReplaceForm.IsDisposed)
+            if (findReplacePanel != null && findReplacePanel.Visible)
             {
-                findReplaceForm.Activate();
+                frFindBox.Focus();
+                frFindBox.SelectAll();
                 return;
             }
 
-            findReplaceForm = new Form
+            if (findReplacePanel == null)
             {
-                Text = "Find & Replace",
-                Size = new Size(420, 200),
-                MinimumSize = new Size(400, 200),
-                MaximizeBox = false,
-                FormBorderStyle = FormBorderStyle.SizableToolWindow,
-                StartPosition = FormStartPosition.CenterParent,
-                TopMost = true
-            };
-
-            var findLabel = new Label { Text = "Find:", Location = new Point(12, 18), Size = new Size(60, 20) };
-            var findBox = new TextBox { Location = new Point(80, 15), Size = new Size(220, 22), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            var replaceLabel = new Label { Text = "Replace:", Location = new Point(12, 48), Size = new Size(60, 20) };
-            var replaceBox = new TextBox { Location = new Point(80, 45), Size = new Size(220, 22), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            var matchCaseCheck = new CheckBox { Text = "Match case", Location = new Point(80, 75), Size = new Size(120, 20) };
-
-            var findNextBtn = new Button { Text = "Find Next", Location = new Point(310, 14), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
-            var replaceBtn = new Button { Text = "Replace", Location = new Point(310, 44), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
-            var replaceAllBtn = new Button { Text = "Replace All", Location = new Point(310, 74), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
-            var closeBtn = new Button { Text = "Close", Location = new Point(310, 114), Size = new Size(85, 25), Anchor = AnchorStyles.Top | AnchorStyles.Right };
-
-            int searchStart = 0;
-
-            findNextBtn.Click += (s, ev) =>
-            {
-                string find = findBox.Text;
-                if (string.IsNullOrEmpty(find)) return;
-
-                var comparison = matchCaseCheck.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-                int idx = pythonEditor.Text.IndexOf(find, searchStart, comparison);
-                if (idx < 0)
+                findReplacePanel = new Panel
                 {
-                    idx = pythonEditor.Text.IndexOf(find, 0, comparison);
-                    if (idx < 0)
-                    {
-                        RaiseStatus("Not found: " + find);
-                        return;
-                    }
-                }
-                pythonEditor.Select(idx, find.Length);
-                pythonEditor.ScrollToCaret();
-                pythonEditor.Focus();
-                searchStart = idx + find.Length;
-                RaiseStatus("Found at position " + idx);
-            };
+                    Size = new Size(370, 90),
+                    BackColor = Color.FromArgb(245, 245, 245),
+                    BorderStyle = BorderStyle.FixedSingle,
+                    Visible = false
+                };
 
-            replaceBtn.Click += (s, ev) =>
-            {
-                if (pythonEditor.SelectionLength > 0)
+                var findLabel = new Label { Text = "Find:", Location = new Point(6, 8), Size = new Size(38, 18), Font = new Font("Segoe UI", 8.5F) };
+                frFindBox = new TextBox { Location = new Point(54, 5), Size = new Size(180, 22), Font = new Font("Segoe UI", 9F) };
+                var replaceLabel = new Label { Text = "Replace:", Location = new Point(6, 34), Size = new Size(48, 18), Font = new Font("Segoe UI", 8.5F) };
+                frReplaceBox = new TextBox { Location = new Point(54, 31), Size = new Size(180, 22), Font = new Font("Segoe UI", 9F) };
+                frMatchCase = new CheckBox { Text = "Match case", Location = new Point(54, 57), Size = new Size(100, 20), Font = new Font("Segoe UI", 8F) };
+
+                var findNextBtn = new Button { Text = "Next", Location = new Point(240, 4), Size = new Size(55, 24), Font = new Font("Segoe UI", 8F), FlatStyle = FlatStyle.Flat };
+                var replaceBtn = new Button { Text = "Replace", Location = new Point(240, 30), Size = new Size(55, 24), Font = new Font("Segoe UI", 8F), FlatStyle = FlatStyle.Flat };
+                var replaceAllBtn = new Button { Text = "All", Location = new Point(298, 30), Size = new Size(38, 24), Font = new Font("Segoe UI", 8F), FlatStyle = FlatStyle.Flat };
+                var closeBtn = new Button { Text = "\u2715", Location = new Point(340, 4), Size = new Size(24, 24), Font = new Font("Segoe UI", 9F), FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(100, 100, 100) };
+                closeBtn.FlatAppearance.BorderSize = 0;
+
+                findNextBtn.Click += (s, ev) => FindNext();
+                replaceBtn.Click += (s, ev) => ReplaceNext();
+                replaceAllBtn.Click += (s, ev) => ReplaceAll();
+                closeBtn.Click += (s, ev) => HideFindReplace();
+
+                Action<object, KeyEventArgs> handleKeys = (s, ev) =>
                 {
-                    pythonEditor.SelectedText = replaceBox.Text;
-                }
-                findNextBtn.PerformClick();
-            };
-
-            replaceAllBtn.Click += (s, ev) =>
-            {
-                string find = findBox.Text;
-                string replace = replaceBox.Text;
-                if (string.IsNullOrEmpty(find)) return;
-
-                var comparison = matchCaseCheck.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-                int count = 0;
-                int idx = 0;
-                string text = pythonEditor.Text;
-                var sb = new System.Text.StringBuilder();
-                while (true)
+                    if (ev.KeyCode == Keys.Enter) { FindNext(); ev.Handled = true; ev.SuppressKeyPress = true; }
+                    if (ev.KeyCode == Keys.Escape) { HideFindReplace(); ev.Handled = true; ev.SuppressKeyPress = true; }
+                };
+                frFindBox.KeyDown += new KeyEventHandler(handleKeys);
+                frReplaceBox.KeyDown += (s, ev) =>
                 {
-                    int found = text.IndexOf(find, idx, comparison);
-                    if (found < 0)
-                    {
-                        sb.Append(text.Substring(idx));
-                        break;
-                    }
-                    sb.Append(text.Substring(idx, found - idx));
-                    sb.Append(replace);
-                    idx = found + find.Length;
-                    count++;
-                }
-                if (count > 0)
-                {
-                    pythonEditor.Text = sb.ToString();
-                }
-                RaiseStatus("Replaced " + count + " occurrence(s).");
-            };
+                    if (ev.KeyCode == Keys.Enter) { ReplaceNext(); ev.Handled = true; ev.SuppressKeyPress = true; }
+                    if (ev.KeyCode == Keys.Escape) { HideFindReplace(); ev.Handled = true; ev.SuppressKeyPress = true; }
+                };
 
-            closeBtn.Click += (s, ev) => findReplaceForm.Close();
+                findReplacePanel.Controls.AddRange(new Control[] { findLabel, frFindBox, replaceLabel, frReplaceBox, frMatchCase, findNextBtn, replaceBtn, replaceAllBtn, closeBtn });
+                editorPanel.Controls.Add(findReplacePanel);
+                findReplacePanel.BringToFront();
+            }
 
-            findBox.KeyDown += (s, ev) =>
-            {
-                if (ev.KeyCode == Keys.Enter) { findNextBtn.PerformClick(); ev.Handled = true; ev.SuppressKeyPress = true; }
-                if (ev.KeyCode == Keys.Escape) { findReplaceForm.Close(); ev.Handled = true; }
-            };
-
-            replaceBox.KeyDown += (s, ev) =>
-            {
-                if (ev.KeyCode == Keys.Enter) { replaceBtn.PerformClick(); ev.Handled = true; ev.SuppressKeyPress = true; }
-                if (ev.KeyCode == Keys.Escape) { findReplaceForm.Close(); ev.Handled = true; }
-            };
-
-            findReplaceForm.Controls.AddRange(new Control[] { findLabel, findBox, replaceLabel, replaceBox, matchCaseCheck, findNextBtn, replaceBtn, replaceAllBtn, closeBtn });
+            PositionFindReplacePanel();
+            editorPanel.Resize += (s, ev) => { if (findReplacePanel.Visible) PositionFindReplacePanel(); };
 
             if (pythonEditor.SelectionLength > 0)
-                findBox.Text = pythonEditor.SelectedText;
+                frFindBox.Text = pythonEditor.SelectedText;
 
-            findReplaceForm.Show(this.FindForm());
-            findBox.Focus();
+            frSearchStart = 0;
+            findReplacePanel.Visible = true;
+            frFindBox.Focus();
+            frFindBox.SelectAll();
+        }
+
+        private void PositionFindReplacePanel()
+        {
+            int x = editorPanel.Width - findReplacePanel.Width - 20;
+            if (x < 0) x = 0;
+            int y = toolBar.Height + 2;
+            findReplacePanel.Location = new Point(x, y);
+        }
+
+        private void HideFindReplace()
+        {
+            if (findReplacePanel != null)
+                findReplacePanel.Visible = false;
+            pythonEditor.Focus();
+        }
+
+        private void FindNext()
+        {
+            string find = frFindBox.Text;
+            if (string.IsNullOrEmpty(find)) return;
+
+            var comparison = frMatchCase.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            int idx = pythonEditor.Text.IndexOf(find, frSearchStart, comparison);
+            if (idx < 0)
+            {
+                idx = pythonEditor.Text.IndexOf(find, 0, comparison);
+                if (idx < 0)
+                {
+                    RaiseStatus("Not found: " + find);
+                    return;
+                }
+            }
+            pythonEditor.Select(idx, find.Length);
+            pythonEditor.ScrollToCaret();
+            frSearchStart = idx + find.Length;
+            RaiseStatus("Found at position " + idx);
+        }
+
+        private void ReplaceNext()
+        {
+            if (pythonEditor.SelectionLength > 0)
+            {
+                pythonEditor.SelectedText = frReplaceBox.Text;
+            }
+            FindNext();
+        }
+
+        private void ReplaceAll()
+        {
+            string find = frFindBox.Text;
+            string replace = frReplaceBox.Text;
+            if (string.IsNullOrEmpty(find)) return;
+
+            var comparison = frMatchCase.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            int count = 0;
+            int idx = 0;
+            string text = pythonEditor.Text;
+            var sb = new System.Text.StringBuilder();
+            while (true)
+            {
+                int found = text.IndexOf(find, idx, comparison);
+                if (found < 0)
+                {
+                    sb.Append(text.Substring(idx));
+                    break;
+                }
+                sb.Append(text.Substring(idx, found - idx));
+                sb.Append(replace);
+                idx = found + find.Length;
+                count++;
+            }
+            if (count > 0)
+            {
+                pythonEditor.Text = sb.ToString();
+            }
+            RaiseStatus("Replaced " + count + " occurrence(s).");
         }
 
         private void OnOpenScript(object sender, EventArgs e)
