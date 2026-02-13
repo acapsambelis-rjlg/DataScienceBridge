@@ -824,9 +824,9 @@ namespace DataScienceWorkbench
                     int errorLine = ParseErrorLine(result.Error);
                     if (errorLine > 0)
                     {
-                        pythonEditor.SetErrorLine(errorLine);
                         var errorMsg = result.Error.Trim();
                         var firstLine = errorMsg.Split('\n')[0];
+                        pythonEditor.SetErrorLine(errorLine, firstLine);
                         RaiseStatus("Line " + errorLine + ": " + firstLine);
                     }
                 }
@@ -1674,7 +1674,9 @@ namespace DataScienceWorkbench
                 int errorLine = ParseErrorLine(result.Error);
                 if (errorLine > 0)
                 {
-                    pythonEditor.SetErrorLine(errorLine);
+                    var errorMsg = result.Error.Trim();
+                    var firstLine = errorMsg.Split('\n')[0];
+                    pythonEditor.SetErrorLine(errorLine, firstLine);
                 }
                 RaiseStatus("Syntax error on line " + errorLine);
             }

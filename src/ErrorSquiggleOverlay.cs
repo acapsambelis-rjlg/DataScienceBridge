@@ -9,6 +9,7 @@ namespace DataScienceWorkbench
     public class SquiggleRichTextBox : RichTextBox
     {
         private int errorLineNumber = -1;
+        private string errorMessage = "";
         private const int WM_PAINT = 0x000F;
 
         private static readonly Color CurrentLineColor = Color.FromArgb(25, 0, 0, 0);
@@ -17,6 +18,9 @@ namespace DataScienceWorkbench
         private int matchedBracketPos1 = -1;
         private int matchedBracketPos2 = -1;
         private List<SymbolError> symbolErrors = new List<SymbolError>();
+        private ToolTip errorToolTip;
+        private string lastTooltipText = "";
+        private int lastTooltipCharIndex = -1;
 
         private static readonly Dictionary<char, char> OpenBrackets = new Dictionary<char, char>
         {
@@ -27,25 +31,74 @@ namespace DataScienceWorkbench
             { ')', '(' }, { ']', '[' }, { '}', '{' }
         };
 
-        public void SetErrorLine(int lineNumber)
+        public SquiggleRichTextBox()
         {
-            if (errorLineNumber == lineNumber) return;
+            errorToolTip = new ToolTip();
+            errorToolTip.InitialDelay = 300;
+            errorToolTip.ReshowDelay = 100;
+            errorToolTip.AutoPopDelay = 15000;
+            errorToolTip.UseFading = true;
+            errorToolTip.UseAnimation = true;
+            errorToolTip.BackColor = Color.FromArgb(45, 45, 48);
+            errorToolTip.ForeColor = Color.FromArgb(240, 240, 240);
+            errorToolTip.OwnerDraw = true;
+            errorToolTip.Draw += ErrorToolTip_Draw;
+            errorToolTip.Popup += ErrorToolTip_Popup;
+        }
+
+        private void ErrorToolTip_Popup(object sender, PopupEventArgs e)
+        {
+            string text = lastTooltipText;
+            if (string.IsNullOrEmpty(text)) return;
+            using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                var size = TextRenderer.MeasureText(g, text, new Font("Segoe UI", 9f), new Size(600, 0), TextFormatFlags.Left | TextFormatFlags.WordBreak);
+                e.ToolTipSize = new Size(size.Width + 16, size.Height + 10);
+            }
+        }
+
+        private void ErrorToolTip_Draw(object sender, DrawToolTipEventArgs e)
+        {
+            using (var bgBrush = new SolidBrush(Color.FromArgb(45, 45, 48)))
+            {
+                e.Graphics.FillRectangle(bgBrush, e.Bounds);
+            }
+            using (var borderPen = new Pen(Color.FromArgb(80, 80, 85)))
+            {
+                e.Graphics.DrawRectangle(borderPen, new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1, e.Bounds.Height - 1));
+            }
+            using (var textBrush = new SolidBrush(Color.FromArgb(240, 240, 240)))
+            using (var font = new Font("Segoe UI", 9f))
+            {
+                var textRect = new Rectangle(e.Bounds.X + 8, e.Bounds.Y + 5, e.Bounds.Width - 16, e.Bounds.Height - 10);
+                e.Graphics.DrawString(e.ToolTipText, font, textBrush, textRect);
+            }
+        }
+
+        public void SetErrorLine(int lineNumber, string message = "")
+        {
+            errorMessage = message ?? "";
+            if (errorLineNumber == lineNumber && !string.IsNullOrEmpty(errorMessage)) { this.Invalidate(); return; }
             errorLineNumber = lineNumber;
             this.Invalidate();
         }
 
         public void ClearError()
         {
-            if (errorLineNumber == -1) return;
+            if (errorLineNumber == -1 && string.IsNullOrEmpty(errorMessage)) return;
             errorLineNumber = -1;
+            errorMessage = "";
+            HideTooltip();
             this.Invalidate();
         }
 
         public int ErrorLine { get { return errorLineNumber; } }
+        public string ErrorMessage { get { return errorMessage; } }
 
         public void SetSymbolErrors(List<SymbolError> errors)
         {
             symbolErrors = errors ?? new List<SymbolError>();
+            HideTooltip();
             this.Invalidate();
         }
 
@@ -53,6 +106,7 @@ namespace DataScienceWorkbench
         {
             if (symbolErrors.Count == 0) return;
             symbolErrors.Clear();
+            HideTooltip();
             this.Invalidate();
         }
 
@@ -316,6 +370,86 @@ namespace DataScienceWorkbench
                     g.DrawLines(pen, points.ToArray());
                 }
             }
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            int charIndex = this.GetCharIndexFromPosition(e.Location);
+            if (charIndex < 0 || charIndex >= this.Text.Length)
+            {
+                HideTooltip();
+                return;
+            }
+
+            string tooltip = GetErrorAtPosition(charIndex);
+            if (!string.IsNullOrEmpty(tooltip))
+            {
+                if (tooltip != lastTooltipText || charIndex != lastTooltipCharIndex)
+                {
+                    lastTooltipText = tooltip;
+                    lastTooltipCharIndex = charIndex;
+                    errorToolTip.Hide(this);
+                    Point pos = e.Location;
+                    pos.Y -= 40;
+                    if (pos.Y < 0) pos.Y = e.Location.Y + 20;
+                    errorToolTip.Show(tooltip, this, pos);
+                }
+            }
+            else
+            {
+                HideTooltip();
+            }
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            HideTooltip();
+        }
+
+        private void HideTooltip()
+        {
+            if (!string.IsNullOrEmpty(lastTooltipText))
+            {
+                lastTooltipText = "";
+                lastTooltipCharIndex = -1;
+                errorToolTip.Hide(this);
+            }
+        }
+
+        private string GetErrorAtPosition(int charIndex)
+        {
+            foreach (var err in symbolErrors)
+            {
+                if (charIndex >= err.StartIndex && charIndex < err.StartIndex + err.Length)
+                    return err.Message;
+            }
+
+            if (errorLineNumber >= 1 && errorLineNumber <= this.Lines.Length)
+            {
+                int lineIdx = errorLineNumber - 1;
+                int lineStart = this.GetFirstCharIndexFromLine(lineIdx);
+                int lineLen = this.Lines[lineIdx].Length;
+                if (charIndex >= lineStart && charIndex < lineStart + lineLen)
+                {
+                    if (!string.IsNullOrEmpty(errorMessage))
+                        return errorMessage;
+                    return "Syntax error on line " + errorLineNumber;
+                }
+            }
+
+            return null;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && errorToolTip != null)
+            {
+                errorToolTip.Dispose();
+                errorToolTip = null;
+            }
+            base.Dispose(disposing);
         }
     }
 }

@@ -9,6 +9,7 @@ namespace DataScienceWorkbench
         public int StartIndex { get; set; }
         public int Length { get; set; }
         public string Name { get; set; }
+        public string Message { get { return "Undefined name '" + Name + "'"; } }
     }
 
     public class PythonSymbolAnalyzer
