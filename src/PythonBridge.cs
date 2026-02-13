@@ -255,6 +255,15 @@ namespace DataScienceWorkbench
                 || Environment.OSVersion.Platform == PlatformID.WinCE;
         }
 
+        private void ConfigurePipEnvironment(ProcessStartInfo psi)
+        {
+            if (venvReady)
+            {
+                psi.EnvironmentVariables["PIP_USER"] = "0";
+                psi.EnvironmentVariables["VIRTUAL_ENV"] = venvPath;
+            }
+        }
+
         private string FindPython()
         {
             bool isWindows = IsWindows();
@@ -594,6 +603,7 @@ namespace DataScienceWorkbench
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
+                ConfigurePipEnvironment(psi);
 
                 var proc = Process.Start(psi);
                 string stdout = proc.StandardOutput.ReadToEnd();
@@ -642,6 +652,7 @@ namespace DataScienceWorkbench
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
+                ConfigurePipEnvironment(psi);
 
                 var proc = Process.Start(psi);
                 string stdout = proc.StandardOutput.ReadToEnd();
@@ -758,6 +769,7 @@ namespace DataScienceWorkbench
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
+                ConfigurePipEnvironment(psi);
 
                 var proc = Process.Start(psi);
                 string stdout = proc.StandardOutput.ReadToEnd();
