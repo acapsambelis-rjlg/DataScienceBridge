@@ -20,8 +20,6 @@ namespace DataScienceWorkbench
             InitializeComponent();
             SetupMenuAndEvents();
 
-            dataScienceControl.ExportCustomData("measurements", SampleMeasurements, "value");
-
             dataScienceControl.RegisterInMemoryData("measurements", SampleMeasurements, "value");
         }
 

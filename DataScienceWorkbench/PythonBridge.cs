@@ -6,49 +6,6 @@ using System.Text;
 
 namespace DataScienceWorkbench
 {
-    public class DataExporter
-    {
-        public static string ExportToJson<T>(List<T> data, string name)
-        {
-            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            string path = Path.Combine(dir, name + ".json");
-            string json = SimpleJson.Serialize(data);
-            File.WriteAllText(path, json);
-            return path;
-        }
-
-        public static string ExportToCsv<T>(List<T> data, string name)
-        {
-            string dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            string path = Path.Combine(dir, name + ".csv");
-            var props = typeof(T).GetProperties();
-            var sb = new StringBuilder();
-
-            sb.AppendLine(string.Join(",", Array.ConvertAll(props, p => p.Name)));
-            foreach (var item in data)
-            {
-                var values = new List<string>();
-                foreach (var prop in props)
-                {
-                    var val = prop.GetValue(item);
-                    string s = val != null ? val.ToString() : "";
-                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
-                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
-                    values.Add(s);
-                }
-                sb.AppendLine(string.Join(",", values));
-            }
-            File.WriteAllText(path, sb.ToString());
-            return path;
-        }
-    }
-
     public class PythonRunner
     {
         private string pythonPath;
@@ -116,12 +73,7 @@ namespace DataScienceWorkbench
 
         public string GetPythonPath() { return pythonPath; }
 
-        public PythonResult Execute(string script, string workingDir = null)
-        {
-            return Execute(script, workingDir, null);
-        }
-
-        public PythonResult Execute(string script, string workingDir, Dictionary<string, string> inMemoryData)
+        public PythonResult Execute(string script, Dictionary<string, string> inMemoryData)
         {
             bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
 
@@ -147,9 +99,6 @@ namespace DataScienceWorkbench
                 sb.AppendLine("    @property");
                 sb.AppendLine("    def df(self):");
                 sb.AppendLine("        return object.__getattribute__(self, '_df')");
-                sb.AppendLine("class _DotNetData:");
-                sb.AppendLine("    pass");
-                sb.AppendLine("dotnet = _DotNetData()");
                 sb.AppendLine("while True:");
                 sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
                 sb.AppendLine("    if _hdr == '__DONE__': break");
@@ -160,8 +109,8 @@ namespace DataScienceWorkbench
                 sb.AppendLine("        _lines = []");
                 sb.AppendLine("        for _ in range(_nlines):");
                 sb.AppendLine("            _lines.append(sys.stdin.readline())");
-                sb.AppendLine("        setattr(dotnet, _name, _DotNetDataset(pd.read_csv(io.StringIO(''.join(_lines)))))");
-                sb.AppendLine("del _DotNetData, _DotNetDataset");
+                sb.AppendLine("        globals()[_name] = _DotNetDataset(pd.read_csv(io.StringIO(''.join(_lines))))");
+                sb.AppendLine("del _DotNetDataset");
                 sb.AppendLine();
                 sb.AppendLine(script);
                 fullScript = sb.ToString();
@@ -186,9 +135,6 @@ namespace DataScienceWorkbench
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
-
-                if (!string.IsNullOrEmpty(workingDir))
-                    psi.WorkingDirectory = workingDir;
 
                 psi.EnvironmentVariables["MPLBACKEND"] = "Agg";
 

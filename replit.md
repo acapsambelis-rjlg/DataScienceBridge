@@ -41,9 +41,6 @@ Keep them in sync when making changes.
 
 ## DataScienceControl Public API
 - **LoadData(...)** - Replace dummy data with custom datasets
-- **ExportCustomData(name, values, columnName)** - Export any IEnumerable (e.g., List<int>) to CSV for Python access
-- **ExportCustomData(name, DataTable)** - Export a DataTable to CSV for Python access
-- **ExportCustomData<T>(name, List<T>)** - Export a typed list of objects to CSV for Python access
 - **RegisterInMemoryData(name, values, columnName)** - Register IEnumerable for in-memory piping to Python (no file I/O)
 - **RegisterInMemoryData<T>(name, dataProvider)** - Register a Func<List<T>> for in-memory piping (uses reflection)
 - **RegisterInMemoryData(name, dataTableProvider)** - Register a Func<DataTable> for in-memory piping
@@ -62,7 +59,7 @@ Keep them in sync when making changes.
 - **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, autocomplete, bracket matching, current line highlight, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, and bookmarks
 - **Data Browser** tab with DataGridView for browsing all datasets
 - **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)
-- **CSV data bridge**: All .NET data exported as CSV for Python pandas consumption
+- **In-memory data bridge**: All .NET data streamed to Python via stdin as pre-loaded variables (e.g., `products.Cost.mean()`)
 
 ## Build & Run
 
@@ -84,9 +81,9 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Switched from CSV file bridge to fully in-memory data bridge: all datasets are now top-level Python variables (e.g., `products.Cost.mean()` instead of `dotnet.measurements.values.mean()`). Removed ExportCustomData, ExportAllData, CSV export code, DataExporter class. Updated all snippets, help text, Data Reference tab, and default script.
 - 2026-02-13: Added Tab/Shift+Tab block indent/unindent, Ctrl+D line duplicate, Alt+Up/Down line move, code folding indicators in gutter, bookmarks (Ctrl+B toggle, F2/Shift+F2 navigate, click gutter), widened line number panel to 60px
 - 2026-02-13: Added Data Reference tab with TreeView showing all datasets, columns, types (including computed properties), and detail panel with example Python code
-- 2026-02-10: Added ExportCustomData API (3 overloads: IEnumerable, DataTable, List<T>) with demo of static List<int> from MainForm, plus "Read .NET Custom Data" snippet
 - 2026-02-10: Added Python symbol analyzer for undefined name detection (yellow squiggly lines), tracks definitions (assignments, def, class, for, import, with, except) and flags undefined references
 - 2026-02-10: Added autocomplete popup (Python keywords, builtins, pandas/numpy/matplotlib methods), bracket auto-closing with matching highlight, current line highlighting, and auto-indentation after colon
 - 2026-02-10: Added custom undo/redo system (survives syntax highlighting), full Edit menu with keyboard shortcuts, Find & Replace dialog

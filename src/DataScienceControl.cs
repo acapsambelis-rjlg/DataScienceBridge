@@ -19,7 +19,6 @@ namespace DataScienceWorkbench
         private List<StockPrice> stockPrices;
         private List<WebEvent> webEvents;
 
-        private string dataExportDir;
         private bool packagesLoaded;
         private PythonSyntaxHighlighter syntaxHighlighter;
         private Timer highlightTimer;
@@ -120,9 +119,9 @@ namespace DataScienceWorkbench
             ResetUndoStack();
             ApplySyntaxHighlighting();
             PopulateDataTree();
+            RegisterAllDatasetsInMemory();
             PopulateReferenceTree();
             datasetCombo.SelectedIndex = 0;
-            ExportAllData();
         }
 
         private void SetupSyntaxHighlighting()
@@ -852,59 +851,10 @@ namespace DataScienceWorkbench
             this.stockPrices = stockPrices;
             this.webEvents = webEvents;
 
-            ExportAllData();
+            RegisterAllDatasetsInMemory();
             PopulateDataTree();
+            PopulateReferenceTree();
             OnDatasetChanged(null, null);
-        }
-
-        public void ExportCustomData(string name, System.Collections.IEnumerable values, string columnName = "value")
-        {
-            if (string.IsNullOrEmpty(dataExportDir))
-            {
-                dataExportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
-                if (!Directory.Exists(dataExportDir))
-                    Directory.CreateDirectory(dataExportDir);
-            }
-            string path = Path.Combine(dataExportDir, name + ".csv");
-            var lines = new List<string>();
-            lines.Add(columnName);
-            foreach (var item in values)
-                lines.Add(item != null ? item.ToString() : "");
-            File.WriteAllLines(path, lines);
-        }
-
-        public void ExportCustomData(string name, System.Data.DataTable table)
-        {
-            if (string.IsNullOrEmpty(dataExportDir))
-            {
-                dataExportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
-                if (!Directory.Exists(dataExportDir))
-                    Directory.CreateDirectory(dataExportDir);
-            }
-            string path = Path.Combine(dataExportDir, name + ".csv");
-            var lines = new List<string>();
-            var headers = new List<string>();
-            foreach (System.Data.DataColumn col in table.Columns)
-                headers.Add(col.ColumnName);
-            lines.Add(string.Join(",", headers));
-            foreach (System.Data.DataRow row in table.Rows)
-            {
-                var vals = new List<string>();
-                foreach (var item in row.ItemArray)
-                {
-                    string s = item != null ? item.ToString() : "";
-                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
-                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
-                    vals.Add(s);
-                }
-                lines.Add(string.Join(",", vals));
-            }
-            File.WriteAllLines(path, lines);
-        }
-
-        public void ExportCustomData<T>(string name, List<T> data) where T : class
-        {
-            ExportCsv(data, name);
         }
 
         public void RegisterInMemoryData(string name, System.Collections.IEnumerable values, string columnName = "value")
@@ -1043,7 +993,6 @@ namespace DataScienceWorkbench
             fileMenu.DropDownItems.Add("Open Script...", null, OnOpenScript);
             fileMenu.DropDownItems.Add("Save Script...", null, OnSaveScript);
             fileMenu.DropDownItems.Add(new ToolStripSeparator());
-            fileMenu.DropDownItems.Add("Re-export Data", null, (s, e) => { ExportAllData(); RaiseStatus("Data re-exported successfully."); });
 
             var editMenu = new ToolStripMenuItem("&Edit");
 
@@ -1168,106 +1117,56 @@ namespace DataScienceWorkbench
 
         private void SetupSnippetMenu()
         {
-            insertSnippetBtn.DropDownItems.Add("Load CSV Data", null, (s, e) => InsertSnippet(GetLoadDataSnippet()));
+            insertSnippetBtn.DropDownItems.Add("List Datasets", null, (s, e) => InsertSnippet(GetLoadDataSnippet()));
             insertSnippetBtn.DropDownItems.Add("Basic Statistics", null, (s, e) => InsertSnippet(GetStatsSnippet()));
             insertSnippetBtn.DropDownItems.Add("Plot Histogram", null, (s, e) => InsertSnippet(GetHistogramSnippet()));
             insertSnippetBtn.DropDownItems.Add("Scatter Plot", null, (s, e) => InsertSnippet(GetScatterSnippet()));
             insertSnippetBtn.DropDownItems.Add("Group By Analysis", null, (s, e) => InsertSnippet(GetGroupBySnippet()));
             insertSnippetBtn.DropDownItems.Add("Correlation Matrix", null, (s, e) => InsertSnippet(GetCorrelationSnippet()));
             insertSnippetBtn.DropDownItems.Add("Time Series Plot", null, (s, e) => InsertSnippet(GetTimeSeriesSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Read .NET Custom Data", null, (s, e) => InsertSnippet(GetCustomDataSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Custom Data Access", null, (s, e) => InsertSnippet(GetCustomDataSnippet()));
         }
 
-        private void ExportAllData()
+        private void RegisterAllDatasetsInMemory()
         {
-            dataExportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data_exports");
-            if (!Directory.Exists(dataExportDir))
-                Directory.CreateDirectory(dataExportDir);
+            RegisterInMemoryData<Product>("products", () => products);
+            RegisterInMemoryData<Customer>("customers", () => customers);
+            RegisterInMemoryData<Employee>("employees", () => employees);
+            RegisterInMemoryData<SensorReading>("sensor_readings", () => sensorReadings);
+            RegisterInMemoryData<StockPrice>("stock_prices", () => stockPrices);
+            RegisterInMemoryData<WebEvent>("web_events", () => webEvents);
 
-            try
+            inMemoryDataSources["orders"] = () =>
             {
-                ExportCsv(products, "products");
-                ExportCsv(customers, "customers");
-                ExportCsv(employees, "employees");
-                ExportCsv(sensorReadings, "sensor_readings");
-                ExportCsv(stockPrices, "stock_prices");
-                ExportCsv(webEvents, "web_events");
-                ExportOrdersCsv();
-                ExportOrderItemsCsv();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Warning: Data export failed - " + ex.Message);
-            }
-        }
-
-        private void ExportCsv<T>(List<T> data, string name)
-        {
-            string path = Path.Combine(dataExportDir, name + ".csv");
-            var props = typeof(T).GetProperties();
-            var lines = new List<string>();
-
-            var headerParts = new List<string>();
-            foreach (var p in props)
-            {
-                if (p.GetIndexParameters().Length > 0) continue;
-                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
-                headerParts.Add(p.Name);
-            }
-            lines.Add(string.Join(",", headerParts));
-
-            foreach (var item in data)
-            {
-                var vals = new List<string>();
-                foreach (var p in props)
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("Id,CustomerId,OrderDate,ShipDate,Status,ShipMethod,ShippingCost,PaymentMethod,Subtotal,Total,ItemCount");
+                foreach (var o in orders)
                 {
-                    if (p.GetIndexParameters().Length > 0) continue;
-                    if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                    if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
-                    var val = p.GetValue(item);
-                    string s = val != null ? val.ToString() : "";
-                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
-                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
-                    vals.Add(s);
+                    sb.AppendLine(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}",
+                        o.Id, o.CustomerId, o.OrderDate.ToString("yyyy-MM-dd HH:mm:ss"),
+                        o.ShipDate.HasValue ? o.ShipDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
+                        o.Status, o.ShipMethod, o.ShippingCost, o.PaymentMethod,
+                        Math.Round(o.Subtotal, 2), Math.Round(o.Total, 2), o.ItemCount));
                 }
-                lines.Add(string.Join(",", vals));
-            }
-            File.WriteAllLines(path, lines);
-        }
+                return sb.ToString();
+            };
 
-        private void ExportOrdersCsv()
-        {
-            string path = Path.Combine(dataExportDir, "orders.csv");
-            var lines = new List<string>();
-            lines.Add("Id,CustomerId,OrderDate,ShipDate,Status,ShipMethod,ShippingCost,PaymentMethod,Subtotal,Total,ItemCount");
-            foreach (var o in orders)
+            inMemoryDataSources["order_items"] = () =>
             {
-                lines.Add(string.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}",
-                    o.Id, o.CustomerId, o.OrderDate.ToString("yyyy-MM-dd HH:mm:ss"),
-                    o.ShipDate.HasValue ? o.ShipDate.Value.ToString("yyyy-MM-dd HH:mm:ss") : "",
-                    o.Status, o.ShipMethod, o.ShippingCost, o.PaymentMethod,
-                    Math.Round(o.Subtotal, 2), Math.Round(o.Total, 2), o.ItemCount));
-            }
-            File.WriteAllLines(path, lines);
-        }
-
-        private void ExportOrderItemsCsv()
-        {
-            string path = Path.Combine(dataExportDir, "order_items.csv");
-            var lines = new List<string>();
-            lines.Add("OrderId,ProductId,ProductName,Quantity,UnitPrice,Discount,LineTotal");
-            foreach (var o in orders)
-            {
-                foreach (var item in o.Items)
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("OrderId,ProductId,ProductName,Quantity,UnitPrice,Discount,LineTotal");
+                foreach (var o in orders)
                 {
-                    string prodName = item.ProductName.Contains(",") ? "\"" + item.ProductName + "\"" : item.ProductName;
-                    lines.Add(string.Format("{0},{1},{2},{3},{4},{5},{6}",
-                        o.Id, item.ProductId, prodName, item.Quantity,
-                        item.UnitPrice, item.Discount, Math.Round(item.LineTotal, 2)));
+                    foreach (var item in o.Items)
+                    {
+                        string prodName = item.ProductName.Contains(",") ? "\"" + item.ProductName + "\"" : item.ProductName;
+                        sb.AppendLine(string.Format("{0},{1},{2},{3},{4},{5},{6}",
+                            o.Id, item.ProductId, prodName, item.Quantity,
+                            item.UnitPrice, item.Discount, Math.Round(item.LineTotal, 2)));
+                    }
                 }
-            }
-            File.WriteAllLines(path, lines);
+                return sb.ToString();
+            };
         }
 
         private void PopulateDataTree()
@@ -1348,14 +1247,24 @@ namespace DataScienceWorkbench
                 }
             }
 
-            if (inMemoryDataSources.Count > 0)
+            var customSources = new List<string>();
+            foreach (var name in inMemoryDataSources.Keys)
             {
-                var memNode = refTreeView.Nodes.Add("In-Memory Data Sources");
+                bool isBuiltin = name == "products" || name == "customers" || name == "orders" ||
+                                 name == "order_items" || name == "employees" || name == "sensor_readings" ||
+                                 name == "stock_prices" || name == "web_events";
+                if (!isBuiltin)
+                    customSources.Add(name);
+            }
+
+            if (customSources.Count > 0)
+            {
+                var memNode = refTreeView.Nodes.Add("Custom Data Sources");
                 memNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
                 memNode.Tag = "inmemory";
-                foreach (var name in inMemoryDataSources.Keys)
+                foreach (var name in customSources)
                 {
-                    var child = memNode.Nodes.Add("dotnet." + name);
+                    var child = memNode.Nodes.Add(name);
                     child.Tag = "inmemory_" + name;
                     child.ForeColor = Color.FromArgb(80, 80, 80);
                 }
@@ -1509,14 +1418,14 @@ namespace DataScienceWorkbench
             AppendRefText(className + " Dataset", Color.FromArgb(0, 0, 180), true, 12);
             AppendRefText("\n\n", Color.Black, false, 10);
 
-            AppendRefText("CSV File:  ", Color.FromArgb(100, 100, 100), false, 10);
-            AppendRefText(tag + ".csv\n", Color.FromArgb(0, 0, 0), false, 10);
+            AppendRefText("Variable:  ", Color.FromArgb(100, 100, 100), false, 10);
+            AppendRefText(tag + "\n", Color.FromArgb(0, 0, 0), false, 10);
 
             AppendRefText("Records:   ", Color.FromArgb(100, 100, 100), false, 10);
             AppendRefText(count.ToString("N0") + "\n", Color.FromArgb(0, 0, 0), false, 10);
 
-            AppendRefText("Python:    ", Color.FromArgb(100, 100, 100), false, 10);
-            AppendRefText("pd.read_csv('data_exports/" + tag + ".csv')\n\n", Color.FromArgb(0, 0, 0), false, 10);
+            AppendRefText("Access:    ", Color.FromArgb(100, 100, 100), false, 10);
+            AppendRefText(tag + ".column_name  (e.g. " + tag + ".head())\n\n", Color.FromArgb(0, 0, 0), false, 10);
 
             AppendRefText("Columns (" + columns.Count + ")\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
@@ -1550,35 +1459,37 @@ namespace DataScienceWorkbench
 
             if (tag == "inmemory")
             {
-                AppendRefText("In-Memory Data Sources\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("Custom Data Sources\n\n", Color.FromArgb(0, 0, 180), true, 12);
                 AppendRefText("Data registered via RegisterInMemoryData() from .NET.\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("Accessed in Python via the 'dotnet' object.\n\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("Registered Sources: " + inMemoryDataSources.Count + "\n\n", Color.Black, false, 10);
+                AppendRefText("Accessed directly as Python variables.\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
                 foreach (var name in inMemoryDataSources.Keys)
                 {
-                    AppendRefText("  dotnet." + name + "\n", Color.FromArgb(128, 0, 128), false, 10);
+                    bool isBuiltin = name == "products" || name == "customers" || name == "orders" ||
+                                     name == "order_items" || name == "employees" || name == "sensor_readings" ||
+                                     name == "stock_prices" || name == "web_events";
+                    if (!isBuiltin)
+                        AppendRefText("  " + name + "\n", Color.FromArgb(128, 0, 128), false, 10);
                 }
 
                 AppendRefText("\n", Color.Black, false, 10);
                 AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
                 AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                AppendRefText("# Access in-memory data:\n", Color.FromArgb(0, 128, 0), false, 10);
-                AppendRefText("print(dotnet.dataset_name.head())\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("print(dotnet.dataset_name.column.mean())\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("# Access custom data:\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("print(dataset_name.head())\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(dataset_name.column.mean())\n", Color.FromArgb(60, 60, 60), false, 10);
             }
             else
             {
                 string name = tag.Substring("inmemory_".Length);
-                AppendRefText("dotnet." + name + "\n\n", Color.FromArgb(0, 0, 180), true, 12);
-                AppendRefText("In-memory data source registered from .NET.\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText(name + "\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("Custom data source registered from .NET.\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("Streamed via stdin (no file I/O).\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
                 AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
                 AppendRefText("# Access this data source:\n", Color.FromArgb(0, 128, 0), false, 10);
-                AppendRefText("df = dotnet." + name + "\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("print(df.head())\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("print(df.describe())\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(" + name + ".head())\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(" + name + ".describe())\n", Color.FromArgb(60, 60, 60), false, 10);
             }
 
             refDetailBox.SelectionStart = 0;
@@ -1633,23 +1544,23 @@ namespace DataScienceWorkbench
             switch (tag)
             {
                 case "products":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/products.csv')\n\n# Top 10 most expensive products\nprint(df.nlargest(10, 'Price')[['Name', 'Price', 'Category']])\n\n# Average price by category\nprint(df.groupby('Category')['Price'].mean().sort_values(ascending=False))";
+                    return "# Top 10 most expensive products\nprint(products.df.nlargest(10, 'Price')[['Name', 'Price', 'Category']])\n\n# Average price by category\nprint(products.df.groupby('Category')['Price'].mean().sort_values(ascending=False))\n\n# Direct column access:\nprint(products.Price.mean())";
                 case "customers":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/customers.csv')\n\n# Customer count by tier\nprint(df['Tier'].value_counts())\n\n# Average credit limit by tier\nprint(df.groupby('Tier')['CreditLimit'].mean())";
+                    return "# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
                 case "orders":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/orders.csv')\n\n# Orders by status\nprint(df['Status'].value_counts())\n\n# Revenue by payment method\nprint(df.groupby('PaymentMethod')['Total'].sum().sort_values(ascending=False))";
+                    return "# Orders by status\nprint(orders.Status.value_counts())\n\n# Revenue by payment method\nprint(orders.df.groupby('PaymentMethod')['Total'].sum().sort_values(ascending=False))";
                 case "order_items":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/order_items.csv')\n\n# Best selling products by quantity\nprint(df.groupby('ProductName')['Quantity'].sum().nlargest(10))\n\n# Average discount by product\nprint(df.groupby('ProductName')['Discount'].mean().nlargest(10))";
+                    return "# Best selling products by quantity\nprint(order_items.df.groupby('ProductName')['Quantity'].sum().nlargest(10))\n\n# Average discount by product\nprint(order_items.df.groupby('ProductName')['Discount'].mean().nlargest(10))";
                 case "employees":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/employees.csv')\n\n# Average salary by department\nprint(df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(df['IsRemote'].value_counts())";
+                    return "# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
                 case "sensor_readings":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/sensor_readings.csv')\ndf['Timestamp'] = pd.to_datetime(df['Timestamp'])\n\n# Average value by sensor type\nprint(df.groupby('SensorType')['Value'].mean())\n\n# Readings by status\nprint(df['Status'].value_counts())";
+                    return "# Average value by sensor type\nprint(sensor_readings.df.groupby('SensorType')['Value'].mean())\n\n# Readings by status\nprint(sensor_readings.Status.value_counts())";
                 case "stock_prices":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/stock_prices.csv')\ndf['Date'] = pd.to_datetime(df['Date'])\n\n# Latest closing prices\nlatest = df.sort_values('Date').groupby('Symbol').last()\nprint(latest[['CompanyName', 'Close', 'Volume']])";
+                    return "import pandas as pd\n\n# Latest closing prices\ndf = stock_prices.df.copy()\ndf['Date'] = pd.to_datetime(df['Date'])\nlatest = df.sort_values('Date').groupby('Symbol').last()\nprint(latest[['CompanyName', 'Close', 'Volume']])";
                 case "web_events":
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/web_events.csv')\n\n# Events by type\nprint(df['EventType'].value_counts())\n\n# Average duration by page\nprint(df.groupby('Page')['Duration'].mean().sort_values(ascending=False).head(10))";
+                    return "# Events by type\nprint(web_events.EventType.value_counts())\n\n# Average duration by page\nprint(web_events.df.groupby('Page')['Duration'].mean().sort_values(ascending=False).head(10))";
                 default:
-                    return "import pandas as pd\n\ndf = pd.read_csv('data_exports/" + tag + ".csv')\nprint(df.head())\nprint(df.describe())";
+                    return "print(" + tag + ".head())\nprint(" + tag + ".describe())";
             }
         }
 
@@ -1716,7 +1627,7 @@ namespace DataScienceWorkbench
             if (inMemoryDataSources.Count > 0)
                 memData = SerializeInMemoryData();
 
-            var result = pythonRunner.Execute(script, dataExportDir, memData);
+            var result = pythonRunner.Execute(script, memData);
 
             if (!string.IsNullOrEmpty(result.Output))
                 AppendOutput(result.Output, Color.FromArgb(0, 0, 0));
@@ -2003,40 +1914,34 @@ namespace DataScienceWorkbench
         {
             string help = @"=== Data Science Workbench - Quick Start ===
 
-AVAILABLE DATASETS (as CSV files):
-  products.csv      - 200 products with prices, ratings, stock
-  customers.csv     - 150 customers with demographics
-  orders.csv        - 500 orders with status, totals
-  order_items.csv   - Individual line items for orders
-  employees.csv     - 100 employees with salary, dept
-  sensor_readings.csv - 1000 IoT sensor readings
-  stock_prices.csv  - 365 days of 10 stock symbols
-  web_events.csv    - 2000 web analytics events
-
-CUSTOM .NET DATA (IN-MEMORY):
-  measurements  - Static list of integers piped from .NET memory
-  (Any .NET control can register data via RegisterInMemoryData)
-  In-memory data appears as pre-loaded pandas DataFrames
+AVAILABLE DATASETS (pre-loaded as variables):
+  products         - 200 products with prices, ratings, stock
+  customers        - 150 customers with demographics
+  orders           - 500 orders with status, totals
+  order_items      - Individual line items for orders
+  employees        - 100 employees with salary, dept
+  sensor_readings  - 1000 IoT sensor readings
+  stock_prices     - 365 days of 10 stock symbols
+  web_events       - 2000 web analytics events
 
 HOW TO USE:
   1. Write Python code in the editor
   2. Press F5 or click Run to execute
-  3. CSV files are in the working directory
-  4. Use pandas to load: pd.read_csv('products.csv')
-  5. Install packages via Package Manager tab
+  3. All datasets are pre-loaded as variables
+  4. Access columns directly: products.Price.mean()
+  5. Use .df for full DataFrame: products.df.describe()
+  6. Install packages via Package Manager tab
 
 EXAMPLE:
-  import pandas as pd
-  df = pd.read_csv('products.csv')
-  print(df.describe())
-  print(df.groupby('Category')['Price'].mean())
+  print(products.Price.mean())
+  print(products.df.groupby('Category')['Price'].mean())
 
 TIPS:
   - Use 'Insert Snippet' for ready-made code
   - Matplotlib plots save as PNG files
   - All standard Python libraries available
   - Install any pip package via Package Manager
-  - .NET controls can push data via ExportCustomData()";
+  - .NET controls can push data via RegisterInMemoryData()";
 
             MessageBox.Show(help, "Quick Start Guide", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -2070,80 +1975,58 @@ TIPS:
 
         private string GetDefaultScript()
         {
-            return @"import pandas as pd
-import os
+            return @"# All datasets are pre-loaded as variables
+# Access columns directly: products.Cost.mean()
+# Use .df for full DataFrame: products.df.describe()
 
 print('=== Data Science Workbench ===')
-print('Working directory:', os.getcwd())
-print()
-
-# List available data files
-csv_files = [f for f in os.listdir('.') if f.endswith('.csv')]
-print('Available datasets:')
-for f in csv_files:
-    df = pd.read_csv(f)
-    print(f'  {f}: {len(df)} rows, {len(df.columns)} columns')
 print()
 
 # Quick look at products
-products = pd.read_csv('products.csv')
+print(f'Products: {len(products)} records')
+print(f'Average price: ${products.Price.mean():.2f}')
+print(f'Average cost:  ${products.Cost.mean():.2f}')
+print()
 print('=== Product Summary ===')
-print(products.describe())
+print(products.df.describe())
 ";
         }
 
         private string GetLoadDataSnippet()
         {
             return @"
-import pandas as pd
-
-# Load all datasets
-products = pd.read_csv('products.csv')
-customers = pd.read_csv('customers.csv')
-orders = pd.read_csv('orders.csv')
-order_items = pd.read_csv('order_items.csv')
-employees = pd.read_csv('employees.csv')
-sensor_readings = pd.read_csv('sensor_readings.csv')
-stock_prices = pd.read_csv('stock_prices.csv')
-web_events = pd.read_csv('web_events.csv')
-
-print('All datasets loaded successfully!')
-for name, df in [('products', products), ('customers', customers),
+# All datasets are pre-loaded as variables
+for name, ds in [('products', products), ('customers', customers),
                   ('orders', orders), ('order_items', order_items),
                   ('employees', employees), ('sensor_readings', sensor_readings),
                   ('stock_prices', stock_prices), ('web_events', web_events)]:
-    print(f'  {name}: {df.shape[0]} rows x {df.shape[1]} columns')
+    print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')
 ";
         }
 
         private string GetStatsSnippet()
         {
             return @"
-import pandas as pd
-
-df = pd.read_csv('products.csv')
 print('=== Descriptive Statistics ===')
-print(df.describe())
+print(products.df.describe())
 print()
 print('=== Data Types ===')
-print(df.dtypes)
+print(products.df.dtypes)
 print()
 print('=== Missing Values ===')
-print(df.isnull().sum())
+print(products.df.isnull().sum())
 ";
         }
 
         private string GetHistogramSnippet()
         {
             return @"
-import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('products.csv')
 fig, ax = plt.subplots(figsize=(10, 6))
-ax.hist(df['Price'], bins=30, edgecolor='black', alpha=0.7)
+ax.hist(products.Price, bins=30, edgecolor='black', alpha=0.7)
 ax.set_xlabel('Price ($)')
 ax.set_ylabel('Count')
 ax.set_title('Product Price Distribution')
@@ -2156,14 +2039,12 @@ print('Histogram saved to histogram.png')
         private string GetScatterSnippet()
         {
             return @"
-import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('products.csv')
 fig, ax = plt.subplots(figsize=(10, 6))
-scatter = ax.scatter(df['Price'], df['Rating'], c=df['ReviewCount'],
+scatter = ax.scatter(products.Price, products.Rating, c=products.ReviewCount,
                      cmap='viridis', alpha=0.6, edgecolors='black', linewidth=0.5)
 ax.set_xlabel('Price ($)')
 ax.set_ylabel('Rating')
@@ -2178,11 +2059,8 @@ print('Scatter plot saved to scatter.png')
         private string GetGroupBySnippet()
         {
             return @"
-import pandas as pd
-
-df = pd.read_csv('products.csv')
 print('=== Average Price by Category ===')
-group = df.groupby('Category').agg(
+group = products.df.groupby('Category').agg(
     Count=('Id', 'count'),
     Avg_Price=('Price', 'mean'),
     Avg_Rating=('Rating', 'mean'),
@@ -2195,13 +2073,11 @@ print(group.sort_values('Avg_Price', ascending=False))
         private string GetCorrelationSnippet()
         {
             return @"
-import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('products.csv')
-numeric_cols = df.select_dtypes(include='number')
+numeric_cols = products.df.select_dtypes(include='number')
 corr = numeric_cols.corr()
 print('=== Correlation Matrix ===')
 print(corr.round(3))
@@ -2228,7 +2104,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('stock_prices.csv')
+df = stock_prices.df.copy()
 df['Date'] = pd.to_datetime(df['Date'])
 
 fig, ax = plt.subplots(figsize=(12, 6))
@@ -2249,24 +2125,23 @@ print('Time series chart saved to timeseries.png')
         private string GetCustomDataSnippet()
         {
             return @"
-# 'dotnet' object holds data piped from .NET memory (no file I/O)
-# Access datasets as members, columns as sub-members:
-#   dotnet.measurements.value.mean()
-#   dotnet.measurements.value.tolist()
-# Use .df to get the raw pandas DataFrame if needed:
-#   dotnet.measurements.df.describe()
+# All datasets are pre-loaded as top-level Python variables
+# Access columns directly as attributes:
+#   products.Cost.mean()
+#   products.Price.tolist()
+# Use .df to get the raw pandas DataFrame:
+#   products.df.describe()
 
-print('=== .NET In-Memory Data: Measurements ===')
-print(f'Count: {len(dotnet.measurements)}')
-print(f'Values: {dotnet.measurements.value.tolist()}')
+print('=== .NET In-Memory Data: Products ===')
+print(f'Count: {len(products)}')
 print()
-print('Statistics:')
-print(f'  Sum:    {dotnet.measurements.value.sum()}')
-print(f'  Mean:   {dotnet.measurements.value.mean():.2f}')
-print(f'  Median: {dotnet.measurements.value.median():.1f}')
-print(f'  Std:    {dotnet.measurements.value.std():.2f}')
-print(f'  Min:    {dotnet.measurements.value.min()}')
-print(f'  Max:    {dotnet.measurements.value.max()}')
+print('Price Statistics:')
+print(f'  Sum:    {products.Price.sum():.2f}')
+print(f'  Mean:   {products.Price.mean():.2f}')
+print(f'  Median: {products.Price.median():.2f}')
+print(f'  Std:    {products.Price.std():.2f}')
+print(f'  Min:    {products.Price.min():.2f}')
+print(f'  Max:    {products.Price.max():.2f}')
 ";
         }
     }
