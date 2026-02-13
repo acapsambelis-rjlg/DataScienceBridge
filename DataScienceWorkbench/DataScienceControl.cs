@@ -108,6 +108,7 @@ namespace DataScienceWorkbench
             SetupSyntaxHighlighting();
             RegisterAllDatasetsInMemory();
             PopulateReferenceTree();
+            SetupRefSearch();
             suppressHighlight = true;
             pythonEditor.Text = GetDefaultScript();
             suppressHighlight = false;
@@ -267,6 +268,12 @@ namespace DataScienceWorkbench
                     e.Handled = true;
                     e.SuppressKeyPress = true;
                     GoToPreviousBookmark();
+                }
+                else if (e.Control && e.KeyCode == Keys.F)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    ShowFindReplace();
                 }
             };
 
@@ -1316,6 +1323,154 @@ namespace DataScienceWorkbench
         {
             RegisterInMemoryData<Customer>("customers", () => customers);
             RegisterInMemoryData<Employee>("employees", () => employees);
+        }
+
+        private void SetupRefSearch()
+        {
+            refSearchBox.GotFocus += (s, e) =>
+            {
+                if (refSearchBox.Text == "Search...")
+                {
+                    refSearchBox.Text = "";
+                    refSearchBox.ForeColor = Color.Black;
+                }
+            };
+            refSearchBox.LostFocus += (s, e) =>
+            {
+                if (string.IsNullOrWhiteSpace(refSearchBox.Text))
+                {
+                    refSearchBox.Text = "Search...";
+                    refSearchBox.ForeColor = Color.Gray;
+                }
+            };
+            refSearchBox.TextChanged += (s, e) =>
+            {
+                string filter = refSearchBox.Text;
+                if (filter == "Search...") filter = "";
+                FilterReferenceTree(filter.Trim());
+            };
+        }
+
+        private void FilterReferenceTree(string filter)
+        {
+            if (string.IsNullOrEmpty(filter))
+            {
+                PopulateReferenceTree();
+                return;
+            }
+
+            refTreeView.BeginUpdate();
+            refTreeView.Nodes.Clear();
+
+            foreach (var kvp in inMemoryDataTypes)
+            {
+                string name = kvp.Key;
+                Type type = kvp.Value;
+                int count = GetRecordCountForTag(name);
+                var columns = GetColumnsForDataset(name);
+
+                bool datasetMatches = name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                var matchedColNames = new HashSet<string>(StringComparer.Ordinal);
+                var matchingCols = new List<Tuple<string, string>>();
+
+                foreach (var col in columns)
+                {
+                    if (col.Item1.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        col.Item2.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        matchingCols.Add(col);
+                        matchedColNames.Add(col.Item1);
+                    }
+                }
+
+                var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
+                foreach (var p in visibleProps)
+                {
+                    if (matchedColNames.Contains(p.Name)) continue;
+                    var attr = p.GetCustomAttributes(typeof(UserVisibleAttribute), true);
+                    if (attr.Length > 0)
+                    {
+                        string desc = ((UserVisibleAttribute)attr[0]).Description;
+                        if (!string.IsNullOrEmpty(desc) && desc.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            var colEntry = columns.Find(c => c.Item1 == p.Name);
+                            if (colEntry != null)
+                            {
+                                matchingCols.Add(colEntry);
+                                matchedColNames.Add(p.Name);
+                            }
+                        }
+                    }
+                }
+
+                if (datasetMatches || matchingCols.Count > 0)
+                {
+                    var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
+                    node.Tag = name;
+                    node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+
+                    var colsToShow = datasetMatches ? columns : matchingCols;
+                    foreach (var col in colsToShow)
+                    {
+                        var child = node.Nodes.Add(col.Item1 + "  :  " + col.Item2);
+                        child.Tag = new string[] { "field", name, col.Item1 };
+                        child.ForeColor = Color.FromArgb(80, 80, 80);
+                    }
+                    node.Expand();
+                }
+            }
+
+            if (registeredPythonClasses.Count > 0)
+            {
+                var matchingClasses = new List<string>();
+                bool headerMatches = "Registered Classes".IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                foreach (var name in registeredPythonClasses.Keys)
+                {
+                    if (headerMatches || name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        registeredPythonClasses[name].IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                        matchingClasses.Add(name);
+                }
+                if (matchingClasses.Count > 0)
+                {
+                    var classNode = refTreeView.Nodes.Add("Registered Classes  (" + matchingClasses.Count + ")");
+                    classNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                    classNode.Tag = "regclasses";
+                    foreach (var name in matchingClasses)
+                    {
+                        var child = classNode.Nodes.Add(name);
+                        child.Tag = "regclass_" + name;
+                        child.ForeColor = Color.FromArgb(0, 100, 160);
+                    }
+                    classNode.Expand();
+                }
+            }
+
+            if (contextVariables.Count > 0)
+            {
+                var matchingCtx = new List<KeyValuePair<string, ContextVariable>>();
+                bool headerMatches = "Context Hub".IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                foreach (var kvp in contextVariables)
+                {
+                    if (headerMatches || kvp.Key.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        kvp.Value.TypeDescription.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                        matchingCtx.Add(kvp);
+                }
+                if (matchingCtx.Count > 0)
+                {
+                    var ctxNode = refTreeView.Nodes.Add("Context Hub  (" + matchingCtx.Count + ")");
+                    ctxNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                    ctxNode.Tag = "contexthub";
+                    foreach (var kvp in matchingCtx)
+                    {
+                        var child = ctxNode.Nodes.Add(kvp.Key + "  :  " + kvp.Value.TypeDescription);
+                        child.Tag = "ctx_" + kvp.Key;
+                        child.ForeColor = Color.FromArgb(128, 0, 128);
+                    }
+                    ctxNode.Expand();
+                }
+            }
+
+            refTreeView.EndUpdate();
         }
 
         private void PopulateReferenceTree()

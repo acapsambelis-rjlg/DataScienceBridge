@@ -37,6 +37,7 @@ namespace DataScienceWorkbench
             this.referenceTab = new System.Windows.Forms.TabPage();
             this.refSplit = new System.Windows.Forms.SplitContainer();
             this.refTreeView = new System.Windows.Forms.TreeView();
+            this.refSearchBox = new System.Windows.Forms.TextBox();
             this.refDetailBox = new System.Windows.Forms.RichTextBox();
             this.packagesTab = new System.Windows.Forms.TabPage();
             this.pkgRightPanel = new System.Windows.Forms.Panel();
@@ -260,6 +261,7 @@ namespace DataScienceWorkbench
             // refSplit.Panel1
             // 
             this.refSplit.Panel1.Controls.Add(this.refTreeView);
+            this.refSplit.Panel1.Controls.Add(this.refSearchBox);
             // 
             // refSplit.Panel2
             // 
@@ -269,13 +271,24 @@ namespace DataScienceWorkbench
             this.refSplit.SplitterWidth = 6;
             this.refSplit.TabIndex = 0;
             // 
+            // refSearchBox
+            // 
+            this.refSearchBox.Dock = System.Windows.Forms.DockStyle.Top;
+            this.refSearchBox.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.refSearchBox.ForeColor = System.Drawing.Color.Gray;
+            this.refSearchBox.Location = new System.Drawing.Point(0, 0);
+            this.refSearchBox.Name = "refSearchBox";
+            this.refSearchBox.Size = new System.Drawing.Size(260, 24);
+            this.refSearchBox.TabIndex = 1;
+            this.refSearchBox.Text = "Search...";
+            // 
             // refTreeView
             // 
             this.refTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.refTreeView.Font = new System.Drawing.Font("Consolas", 9.5F);
-            this.refTreeView.Location = new System.Drawing.Point(0, 0);
+            this.refTreeView.Location = new System.Drawing.Point(0, 24);
             this.refTreeView.Name = "refTreeView";
-            this.refTreeView.Size = new System.Drawing.Size(260, 574);
+            this.refTreeView.Size = new System.Drawing.Size(260, 550);
             this.refTreeView.TabIndex = 0;
             this.refTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.OnRefTreeSelect);
             // 
@@ -504,6 +517,7 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.TabPage referenceTab;
         private System.Windows.Forms.SplitContainer refSplit;
         private System.Windows.Forms.TreeView refTreeView;
+        private System.Windows.Forms.TextBox refSearchBox;
         private System.Windows.Forms.RichTextBox refDetailBox;
         private System.Windows.Forms.TabPage packagesTab;
         private System.Windows.Forms.Panel pkgRightPanel;
