@@ -1551,8 +1551,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             {
                 string name = kvp.Key;
                 Type type = kvp.Value;
-                int count = GetRecordCountForTag(name);
-                var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
+                var node = refTreeView.Nodes.Add(name);
                 node.Tag = name;
                 node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
 
