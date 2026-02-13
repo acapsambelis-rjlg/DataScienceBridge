@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace DataScienceWorkbench.PythonWorkbench
+namespace DataScienceWorkbench
 {
     public partial class DataScienceControl : UserControl
     {
@@ -29,7 +29,7 @@ namespace DataScienceWorkbench.PythonWorkbench
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
         private Dictionary<string, Func<string>> inMemoryDataSources = new Dictionary<string, Func<string>>();
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
-        private Dictionary<string, string> registeredPythonClasses = new Dictionary<string, string>();
+        private Dictionary<string, PythonClassInfo> registeredPythonClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
         private float editorFontSize = 10f;
         private const float MinFontSize = 6f;
@@ -108,6 +108,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             InitializeComponent();
             ResolveRuntimeFonts();
             InitializeData();
+            SetupEditorMenuBar();
             SetupSnippetMenu();
             SetupSyntaxHighlighting();
             RegisterAllDatasetsInMemory();
@@ -871,6 +872,8 @@ namespace DataScienceWorkbench.PythonWorkbench
 
         private void RunLiveSyntaxCheck()
         {
+            if (!pythonRunner.PythonAvailable) return;
+
             string script = pythonEditor.Text;
             if (string.IsNullOrWhiteSpace(script))
             {
@@ -936,7 +939,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             inMemoryDataSources[name] = () =>
             {
                 var data = dataProvider();
-                var visibleProps = UserVisibleProperties.GetVisibleProperties(typeof(T));
+                var visibleProps = UserVisibleHelper.GetVisibleProperties(typeof(T));
                 var sb = new System.Text.StringBuilder();
 
                 var headerParts = new List<string>();
@@ -998,9 +1001,20 @@ namespace DataScienceWorkbench.PythonWorkbench
 
         public void RegisterPythonClass(string className, string pythonCode)
         {
+            RegisterPythonClass(className, pythonCode, null, null, null);
+        }
+
+        public void RegisterPythonClass(string className, string pythonCode, string description, string example = null, string notes = null)
+        {
             if (!IsValidPythonIdentifier(className))
                 throw new ArgumentException("Invalid Python class name: " + className);
-            registeredPythonClasses[className] = pythonCode;
+            registeredPythonClasses[className] = new PythonClassInfo
+            {
+                PythonCode = pythonCode,
+                Description = description,
+                Example = example,
+                Notes = notes
+            };
             UpdateDynamicSymbols();
             PopulateReferenceTree();
         }
@@ -1175,7 +1189,7 @@ namespace DataScienceWorkbench.PythonWorkbench
 
             foreach (var kvp in registeredPythonClasses)
             {
-                sb.AppendLine(kvp.Value);
+                sb.AppendLine(kvp.Value.PythonCode);
                 sb.AppendLine();
             }
 
@@ -1204,7 +1218,7 @@ namespace DataScienceWorkbench.PythonWorkbench
                 var colMap = new Dictionary<string, List<string>>();
                 foreach (var kvp in inMemoryDataTypes)
                 {
-                    var visibleProps = UserVisibleProperties.GetVisibleProperties(kvp.Value);
+                    var visibleProps = UserVisibleHelper.GetVisibleProperties(kvp.Value);
                     var colNames = new List<string>();
                     foreach (var p in visibleProps)
                         colNames.Add(p.Name);
@@ -1236,6 +1250,34 @@ namespace DataScienceWorkbench.PythonWorkbench
             OnRunScript(this, EventArgs.Empty);
         }
 
+        public void ResetPythonEnvironment()
+        {
+            AppendOutput("Resetting Python environment...\n", Color.FromArgb(0, 100, 180));
+            Application.DoEvents();
+
+            pythonRunner.SetupProgress += OnPythonSetupProgress;
+            var result = pythonRunner.ResetEnvironment();
+            pythonRunner.SetupProgress -= OnPythonSetupProgress;
+
+            if (result.Success)
+            {
+                AppendOutput(result.Output, Color.FromArgb(0, 128, 0));
+                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
+            }
+            else
+            {
+                AppendOutput("Reset failed: " + result.Error + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Environment reset failed");
+            }
+        }
+
+        private void OnPythonSetupProgress(string message)
+        {
+            AppendOutput(message + "\n", Color.FromArgb(100, 100, 100));
+            RaiseStatus(message);
+            Application.DoEvents();
+        }
+
         public string ScriptText
         {
             get { return pythonEditor.Text; }
@@ -1252,14 +1294,11 @@ namespace DataScienceWorkbench.PythonWorkbench
             outputBox.Clear();
         }
 
-        public MenuStrip CreateMenuStrip()
+        private void SetupEditorMenuBar()
         {
-            var menuBar = new MenuStrip();
-
             var fileMenu = new ToolStripMenuItem("File");
             fileMenu.DropDownItems.Add("Open Script...", null, OnOpenScript);
             fileMenu.DropDownItems.Add("Save Script...", null, OnSaveScript);
-            fileMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var editMenu = new ToolStripMenuItem("&Edit");
 
@@ -1274,15 +1313,15 @@ namespace DataScienceWorkbench.PythonWorkbench
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var cutItem = new ToolStripMenuItem("Cut", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Cut(); });
-            cutItem.ShortcutKeys = Keys.Control | Keys.X;
+            cutItem.ShortcutKeyDisplayString = "Ctrl+X";
             editMenu.DropDownItems.Add(cutItem);
 
             var copyItem = new ToolStripMenuItem("Copy", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Copy(); });
-            copyItem.ShortcutKeys = Keys.Control | Keys.C;
+            copyItem.ShortcutKeyDisplayString = "Ctrl+C";
             editMenu.DropDownItems.Add(copyItem);
 
             var pasteItem = new ToolStripMenuItem("Paste", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Paste(); });
-            pasteItem.ShortcutKeys = Keys.Control | Keys.V;
+            pasteItem.ShortcutKeyDisplayString = "Ctrl+V";
             editMenu.DropDownItems.Add(pasteItem);
 
             var deleteItem = new ToolStripMenuItem("Delete", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.SelectionLength > 0) pythonEditor.SelectedText = ""; });
@@ -1292,13 +1331,13 @@ namespace DataScienceWorkbench.PythonWorkbench
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var selectAllItem = new ToolStripMenuItem("Select All", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.SelectAll(); });
-            selectAllItem.ShortcutKeys = Keys.Control | Keys.A;
+            selectAllItem.ShortcutKeyDisplayString = "Ctrl+A";
             editMenu.DropDownItems.Add(selectAllItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var findItem = new ToolStripMenuItem("Find && Replace...", null, (s, e) => ShowFindReplace());
-            findItem.ShortcutKeys = Keys.Control | Keys.H;
+            findItem.ShortcutKeyDisplayString = "Ctrl+H";
             editMenu.DropDownItems.Add(findItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
@@ -1344,6 +1383,16 @@ namespace DataScienceWorkbench.PythonWorkbench
 
             var runMenu = new ToolStripMenuItem("Run");
             runMenu.DropDownItems.Add("Execute Script (F5)", null, OnRunScript);
+            runMenu.DropDownItems.Add("Check Syntax", null, OnCheckSyntax);
+            runMenu.DropDownItems.Add(new ToolStripSeparator());
+            runMenu.DropDownItems.Add("Reset Python Environment", null, (s, e) =>
+            {
+                var confirm = MessageBox.Show(
+                    "This will delete the virtual environment and recreate it.\nAll installed packages will need to be reinstalled.\n\nContinue?",
+                    "Reset Python Environment", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (confirm == DialogResult.Yes)
+                    ResetPythonEnvironment();
+            });
 
             var helpMenu = new ToolStripMenuItem("Help");
             helpMenu.DropDownItems.Add("Quick Start Guide", null, OnShowHelp);
@@ -1354,8 +1403,15 @@ namespace DataScienceWorkbench.PythonWorkbench
                 "Built with Mono + Python 3",
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information));
 
-            menuBar.Items.AddRange(new ToolStripItem[] { fileMenu, editMenu, runMenu, helpMenu });
-            return menuBar;
+            editorMenuBar.Items.Insert(0, fileMenu);
+            editorMenuBar.Items.Insert(1, editMenu);
+            editorMenuBar.Items.Insert(2, runMenu);
+            editorMenuBar.Items.Add(helpMenu);
+        }
+
+        public MenuStrip CreateMenuStrip()
+        {
+            return editorMenuBar;
         }
 
         public bool HandleKeyDown(Keys keyCode)
@@ -1376,6 +1432,29 @@ namespace DataScienceWorkbench.PythonWorkbench
             employees = dataGen.GenerateEmployees(100);
 
             pythonRunner = new PythonRunner();
+
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("WARNING: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                AppendOutput("The Python editor is available for writing code, but scripts cannot be executed,\n", Color.FromArgb(140, 100, 0));
+                AppendOutput("syntax checking is disabled, and the Package Manager will not function.\n\n", Color.FromArgb(140, 100, 0));
+                RaiseStatus("Python not found");
+            }
+            else
+            {
+                pythonRunner.SetupProgress += OnPythonSetupProgress;
+                pythonRunner.EnsureVenv();
+                pythonRunner.SetupProgress -= OnPythonSetupProgress;
+
+                if (pythonRunner.VenvReady)
+                    RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
+                else
+                {
+                    AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
+                    AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
+                    RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
+                }
+            }
         }
 
         private void SetupSnippetMenu()
@@ -1453,7 +1532,7 @@ namespace DataScienceWorkbench.PythonWorkbench
                     }
                 }
 
-                var visibleProps = UserVisibleProperties.GetVisibleProperties(type);
+                var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
                 foreach (var p in visibleProps)
                 {
                     if (matchedColNames.Contains(p.Name)) continue;
@@ -1496,8 +1575,11 @@ namespace DataScienceWorkbench.PythonWorkbench
                 bool headerMatches = "Registered Classes".IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
                 foreach (var name in registeredPythonClasses.Keys)
                 {
+                    var info = registeredPythonClasses[name];
                     if (headerMatches || name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        registeredPythonClasses[name].IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                        (info.Description != null && info.Description.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        (info.Notes != null && info.Notes.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                        info.PythonCode.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
                         matchingClasses.Add(name);
                 }
                 if (matchingClasses.Count > 0)
@@ -1551,7 +1633,8 @@ namespace DataScienceWorkbench.PythonWorkbench
             {
                 string name = kvp.Key;
                 Type type = kvp.Value;
-                var node = refTreeView.Nodes.Add(name);
+                int count = GetRecordCountForTag(name);
+                var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
                 node.Tag = name;
                 node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
 
@@ -1603,10 +1686,10 @@ namespace DataScienceWorkbench.PythonWorkbench
             if (!inMemoryDataTypes.TryGetValue(tag, out type))
                 return cols;
 
-            var visibleProps = UserVisibleProperties.GetVisibleProperties(type);
+            var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
             foreach (var p in visibleProps)
             {
-                string typeName = UserVisibleProperties.GetPythonTypeName(p.PropertyType);
+                string typeName = UserVisibleHelper.GetPythonTypeName(p.PropertyType);
                 bool isComputed = p.GetSetMethod() == null;
                 if (isComputed)
                     typeName += " (computed)";
@@ -1651,7 +1734,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             var prop = type.GetProperty(fieldName);
             if (prop == null) return;
 
-            string typeName = UserVisibleProperties.GetPythonTypeName(prop.PropertyType);
+            string typeName = UserVisibleHelper.GetPythonTypeName(prop.PropertyType);
             bool isComputed = prop.GetSetMethod() == null;
 
             refDetailBox.Clear();
@@ -1786,8 +1869,13 @@ namespace DataScienceWorkbench.PythonWorkbench
                 AppendRefText("Classes registered from the host application via\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("RegisterPythonClass(). Available in every script run.\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
-                foreach (var name in registeredPythonClasses.Keys)
-                    AppendRefText("  " + name + "\n", Color.FromArgb(0, 100, 160), false, 10);
+                foreach (var kvp in registeredPythonClasses)
+                {
+                    AppendRefText("  " + kvp.Key, Color.FromArgb(0, 100, 160), false, 10);
+                    if (!string.IsNullOrEmpty(kvp.Value.Description))
+                        AppendRefText("  \u2014 " + kvp.Value.Description, Color.FromArgb(130, 130, 130), false, 10);
+                    AppendRefText("\n", Color.Black, false, 10);
+                }
 
                 AppendRefText("\n", Color.Black, false, 10);
                 AppendRefText("Usage\n", Color.FromArgb(0, 100, 0), true, 10);
@@ -1801,13 +1889,43 @@ namespace DataScienceWorkbench.PythonWorkbench
             {
                 string name = tag.Substring("regclass_".Length);
                 AppendRefText(name + "  (Registered Class)\n\n", Color.FromArgb(0, 0, 180), true, 12);
-                AppendRefText("Injected by the host application before script execution.\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
                 if (registeredPythonClasses.ContainsKey(name))
                 {
+                    var info = registeredPythonClasses[name];
+
+                    AppendRefText("Description\n", Color.FromArgb(0, 100, 0), true, 10);
+                    AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                    if (!string.IsNullOrEmpty(info.Description))
+                        AppendRefText(info.Description + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                    else
+                        AppendRefText("Injected by the host application before script execution.\n\n", Color.FromArgb(150, 150, 150), false, 10);
+
+                    if (!string.IsNullOrEmpty(info.Example))
+                    {
+                        AppendRefText("Example\n", Color.FromArgb(0, 100, 0), true, 10);
+                        AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                        foreach (string line in info.Example.Split('\n'))
+                        {
+                            string trimmed = line.TrimStart();
+                            if (trimmed.StartsWith("#"))
+                                AppendRefText(line + "\n", Color.FromArgb(0, 128, 0), false, 10);
+                            else
+                                AppendRefText(line + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                        }
+                        AppendRefText("\n", Color.Black, false, 10);
+                    }
+
+                    if (!string.IsNullOrEmpty(info.Notes))
+                    {
+                        AppendRefText("Notes\n", Color.FromArgb(0, 100, 0), true, 10);
+                        AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                        AppendRefText(info.Notes + "\n\n", Color.FromArgb(100, 100, 100), false, 10);
+                    }
+
                     AppendRefText("Source Code\n", Color.FromArgb(0, 100, 0), true, 10);
                     AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                    AppendRefText(registeredPythonClasses[name] + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                    AppendRefText(info.PythonCode + "\n", Color.FromArgb(60, 60, 60), false, 10);
                 }
             }
 
@@ -1933,6 +2051,13 @@ namespace DataScienceWorkbench.PythonWorkbench
                 return;
             }
 
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot run script: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
+                return;
+            }
+
             RaiseStatus("Running script...");
             AppendOutput("--- Running script at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
 
@@ -1978,6 +2103,13 @@ namespace DataScienceWorkbench.PythonWorkbench
             if (string.IsNullOrWhiteSpace(script))
             {
                 AppendOutput("No script to check.\n", Color.FromArgb(180, 140, 0));
+                return;
+            }
+
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot check syntax: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
                 return;
             }
 
@@ -2093,7 +2225,7 @@ namespace DataScienceWorkbench.PythonWorkbench
         {
             int x = editorPanel.Width - findReplacePanel.Width - 20;
             if (x < 0) x = 0;
-            int y = toolBar.Height + 2;
+            int y = editorMenuBar.Height + 2;
             findReplacePanel.Location = new Point(x, y);
         }
 
@@ -2196,6 +2328,13 @@ namespace DataScienceWorkbench.PythonWorkbench
             string pkg = packageNameBox.Text.Trim();
             if (string.IsNullOrEmpty(pkg)) return;
 
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot install packages: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
+                return;
+            }
+
             RaiseStatus("Installing " + pkg + "...");
             Application.DoEvents();
 
@@ -2222,6 +2361,13 @@ namespace DataScienceWorkbench.PythonWorkbench
 
             var confirm = MessageBox.Show("Uninstall " + pkg + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirm != DialogResult.Yes) return;
+
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot uninstall packages: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
+                return;
+            }
 
             RaiseStatus("Uninstalling " + pkg + "...");
             Application.DoEvents();
@@ -2252,14 +2398,25 @@ namespace DataScienceWorkbench.PythonWorkbench
         private void OnRefreshPackages(object sender, EventArgs e)
         {
             packageListBox.Items.Clear();
-            string list = pythonRunner.ListPackages();
-            if (!string.IsNullOrEmpty(list))
+
+            if (!pythonRunner.PythonAvailable)
             {
-                foreach (var line in list.Split('\n'))
+                packageListBox.Items.Add("(Python not available — cannot list packages)");
+                return;
+            }
+
+            var result = pythonRunner.ListPackages();
+            if (result.Success && !string.IsNullOrEmpty(result.Output))
+            {
+                foreach (var line in result.Output.Split('\n'))
                 {
                     if (!string.IsNullOrWhiteSpace(line))
                         packageListBox.Items.Add(line.Trim());
                 }
+            }
+            else if (!result.Success)
+            {
+                packageListBox.Items.Add("(Failed to list packages: " + result.Error + ")");
             }
         }
 
@@ -2456,5 +2613,13 @@ plt.show()
         public string Name { get; set; }
         public string PythonLiteral { get; set; }
         public string TypeDescription { get; set; }
+    }
+
+    public class PythonClassInfo
+    {
+        public string PythonCode { get; set; }
+        public string Description { get; set; }
+        public string Example { get; set; }
+        public string Notes { get; set; }
     }
 }

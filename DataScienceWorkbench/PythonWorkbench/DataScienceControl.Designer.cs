@@ -1,4 +1,4 @@
-namespace DataScienceWorkbench.PythonWorkbench
+namespace DataScienceWorkbench
 {
     partial class DataScienceControl
     {
@@ -21,16 +21,10 @@ namespace DataScienceWorkbench.PythonWorkbench
             this.editorTab = new System.Windows.Forms.TabPage();
             this.mainSplit = new System.Windows.Forms.SplitContainer();
             this.editorPanel = new System.Windows.Forms.Panel();
-            this.pythonEditor = new SquiggleRichTextBox();
-            this.lineNumberPanel = new LineNumberPanel();
-            this.toolBar = new System.Windows.Forms.ToolStrip();
-            this.runBtn = new System.Windows.Forms.ToolStripButton();
-            this.toolSep1 = new System.Windows.Forms.ToolStripSeparator();
-            this.checkSyntaxBtn = new System.Windows.Forms.ToolStripButton();
-            this.toolSep2 = new System.Windows.Forms.ToolStripSeparator();
-            this.clearBtn = new System.Windows.Forms.ToolStripButton();
-            this.toolSep3 = new System.Windows.Forms.ToolStripSeparator();
-            this.insertSnippetBtn = new System.Windows.Forms.ToolStripDropDownButton();
+            this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
+            this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
+            this.editorMenuBar = new System.Windows.Forms.MenuStrip();
+            this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.outputPanel = new System.Windows.Forms.Panel();
             this.outputBox = new System.Windows.Forms.RichTextBox();
             this.outputLabel = new System.Windows.Forms.Label();
@@ -60,7 +54,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             this.mainSplit.Panel2.SuspendLayout();
             this.mainSplit.SuspendLayout();
             this.editorPanel.SuspendLayout();
-            this.toolBar.SuspendLayout();
+            this.editorMenuBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
             this.referenceTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.refSplit)).BeginInit();
@@ -119,7 +113,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             // 
             this.editorPanel.Controls.Add(this.pythonEditor);
             this.editorPanel.Controls.Add(this.lineNumberPanel);
-            this.editorPanel.Controls.Add(this.toolBar);
+            this.editorPanel.Controls.Add(this.editorMenuBar);
             this.editorPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.editorPanel.Location = new System.Drawing.Point(0, 0);
             this.editorPanel.Name = "editorPanel";
@@ -134,7 +128,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pythonEditor.Font = new System.Drawing.Font("Consolas", 10F);
             this.pythonEditor.HideSelection = false;
-            this.pythonEditor.Location = new System.Drawing.Point(60, 25);
+            this.pythonEditor.Location = new System.Drawing.Point(60, 24);
             this.pythonEditor.Name = "pythonEditor";
             this.pythonEditor.Size = new System.Drawing.Size(732, 355);
             this.pythonEditor.TabIndex = 0;
@@ -144,66 +138,25 @@ namespace DataScienceWorkbench.PythonWorkbench
             // lineNumberPanel
             // 
             this.lineNumberPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lineNumberPanel.Location = new System.Drawing.Point(0, 25);
+            this.lineNumberPanel.Location = new System.Drawing.Point(0, 24);
             this.lineNumberPanel.Name = "lineNumberPanel";
             this.lineNumberPanel.Size = new System.Drawing.Size(60, 355);
             this.lineNumberPanel.TabIndex = 1;
             // 
-            // toolBar
+            // editorMenuBar
             // 
-            this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.runBtn,
-            this.toolSep1,
-            this.checkSyntaxBtn,
-            this.toolSep2,
-            this.clearBtn,
-            this.toolSep3,
+            this.editorMenuBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.insertSnippetBtn});
-            this.toolBar.Location = new System.Drawing.Point(0, 0);
-            this.toolBar.Name = "toolBar";
-            this.toolBar.Size = new System.Drawing.Size(792, 25);
-            this.toolBar.TabIndex = 2;
-            // 
-            // runBtn
-            // 
-            this.runBtn.Name = "runBtn";
-            this.runBtn.Size = new System.Drawing.Size(59, 22);
-            this.runBtn.Text = "▶ Run";
-            this.runBtn.Click += new System.EventHandler(this.OnRunScript);
-            // 
-            // toolSep1
-            // 
-            this.toolSep1.Name = "toolSep1";
-            this.toolSep1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // checkSyntaxBtn
-            // 
-            this.checkSyntaxBtn.Name = "checkSyntaxBtn";
-            this.checkSyntaxBtn.Size = new System.Drawing.Size(86, 22);
-            this.checkSyntaxBtn.Text = "Check Syntax";
-            this.checkSyntaxBtn.Click += new System.EventHandler(this.OnCheckSyntax);
-            // 
-            // toolSep2
-            // 
-            this.toolSep2.Name = "toolSep2";
-            this.toolSep2.Size = new System.Drawing.Size(6, 25);
-            // 
-            // clearBtn
-            // 
-            this.clearBtn.Name = "clearBtn";
-            this.clearBtn.Size = new System.Drawing.Size(78, 22);
-            this.clearBtn.Text = "Clear Output";
-            this.clearBtn.Click += new System.EventHandler(this.OnClearOutput);
-            // 
-            // toolSep3
-            // 
-            this.toolSep3.Name = "toolSep3";
-            this.toolSep3.Size = new System.Drawing.Size(6, 25);
+            this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.editorMenuBar.Location = new System.Drawing.Point(0, 0);
+            this.editorMenuBar.Name = "editorMenuBar";
+            this.editorMenuBar.Size = new System.Drawing.Size(792, 24);
+            this.editorMenuBar.TabIndex = 2;
             // 
             // insertSnippetBtn
             // 
             this.insertSnippetBtn.Name = "insertSnippetBtn";
-            this.insertSnippetBtn.Size = new System.Drawing.Size(95, 22);
+            this.insertSnippetBtn.Size = new System.Drawing.Size(95, 20);
             this.insertSnippetBtn.Text = "Insert Snippet";
             // 
             // outputPanel
@@ -479,8 +432,8 @@ namespace DataScienceWorkbench.PythonWorkbench
             this.mainSplit.ResumeLayout(false);
             this.editorPanel.ResumeLayout(false);
             this.editorPanel.PerformLayout();
-            this.toolBar.ResumeLayout(false);
-            this.toolBar.PerformLayout();
+            this.editorMenuBar.ResumeLayout(false);
+            this.editorMenuBar.PerformLayout();
             this.outputPanel.ResumeLayout(false);
             this.referenceTab.ResumeLayout(false);
             this.refSplit.Panel1.ResumeLayout(false);
@@ -501,16 +454,10 @@ namespace DataScienceWorkbench.PythonWorkbench
         private System.Windows.Forms.TabPage editorTab;
         private System.Windows.Forms.SplitContainer mainSplit;
         private System.Windows.Forms.Panel editorPanel;
-        private SquiggleRichTextBox pythonEditor;
-        private LineNumberPanel lineNumberPanel;
-        private System.Windows.Forms.ToolStrip toolBar;
-        private System.Windows.Forms.ToolStripButton runBtn;
-        private System.Windows.Forms.ToolStripSeparator toolSep1;
-        private System.Windows.Forms.ToolStripButton checkSyntaxBtn;
-        private System.Windows.Forms.ToolStripSeparator toolSep2;
-        private System.Windows.Forms.ToolStripButton clearBtn;
-        private System.Windows.Forms.ToolStripSeparator toolSep3;
-        private System.Windows.Forms.ToolStripDropDownButton insertSnippetBtn;
+        private DataScienceWorkbench.SquiggleRichTextBox pythonEditor;
+        private DataScienceWorkbench.LineNumberPanel lineNumberPanel;
+        private System.Windows.Forms.MenuStrip editorMenuBar;
+        private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
         private System.Windows.Forms.Panel outputPanel;
         private System.Windows.Forms.RichTextBox outputBox;
         private System.Windows.Forms.Label outputLabel;
