@@ -2402,23 +2402,102 @@ namespace DataScienceWorkbench
 
             if (!pythonRunner.PythonAvailable)
             {
-                packageListBox.Items.Add("(Python not available — cannot list packages)");
+                packageListBox.Items.Add(new PackageListItem("(Python not available — cannot list packages)", "", "MSG"));
                 return;
             }
 
-            var result = pythonRunner.ListPackages();
+            var result = pythonRunner.ListPackagesGrouped();
             if (result.Success && !string.IsNullOrEmpty(result.Output))
             {
+                var baseItems = new List<PackageListItem>();
+                var userItems = new List<PackageListItem>();
+                var depItems = new List<PackageListItem>();
+
                 foreach (var line in result.Output.Split('\n'))
                 {
-                    if (!string.IsNullOrWhiteSpace(line))
-                        packageListBox.Items.Add(line.Trim());
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    var parts = line.Split('\t');
+                    if (parts.Length < 3) continue;
+                    var item = new PackageListItem(parts[1], parts[2], parts[0]);
+                    if (parts[0] == "BASE") baseItems.Add(item);
+                    else if (parts[0] == "USER") userItems.Add(item);
+                    else depItems.Add(item);
                 }
+
+                packageListBox.Items.Add(new PackageListItem("Base Packages", "", "HDR"));
+                if (baseItems.Count == 0)
+                    packageListBox.Items.Add(new PackageListItem("(none)", "", "MSG"));
+                else
+                    foreach (var item in baseItems) packageListBox.Items.Add(item);
+
+                if (userItems.Count > 0)
+                {
+                    packageListBox.Items.Add(new PackageListItem("User Installed", "", "HDR"));
+                    foreach (var item in userItems) packageListBox.Items.Add(item);
+                }
+
+                packageListBox.Items.Add(new PackageListItem("Dependencies", "", "HDR"));
+                if (depItems.Count == 0)
+                    packageListBox.Items.Add(new PackageListItem("(none)", "", "MSG"));
+                else
+                    foreach (var item in depItems) packageListBox.Items.Add(item);
             }
             else if (!result.Success)
             {
-                packageListBox.Items.Add("(Failed to list packages: " + result.Error + ")");
+                packageListBox.Items.Add(new PackageListItem("(Failed to list packages: " + result.Error + ")", "", "MSG"));
             }
+        }
+
+        private void packageListBox_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            e.DrawBackground();
+
+            var item = packageListBox.Items[e.Index] as PackageListItem;
+            if (item == null)
+            {
+                e.DrawFocusRectangle();
+                return;
+            }
+
+            var bounds = e.Bounds;
+
+            if (item.Category == "HDR")
+            {
+                using (var bgBrush = new SolidBrush(Color.FromArgb(60, 60, 70)))
+                    e.Graphics.FillRectangle(bgBrush, bounds);
+                using (var font = new Font(packageListBox.Font.FontFamily, packageListBox.Font.Size, FontStyle.Bold))
+                using (var brush = new SolidBrush(Color.FromArgb(200, 220, 255)))
+                    e.Graphics.DrawString(item.Name, font, brush, bounds.X + 6, bounds.Y + 2);
+            }
+            else if (item.Category == "MSG")
+            {
+                using (var brush = new SolidBrush(Color.FromArgb(140, 140, 140)))
+                    e.Graphics.DrawString(item.Name, packageListBox.Font, brush, bounds.X + 16, bounds.Y + 2);
+            }
+            else
+            {
+                bool isDep = item.Category == "DEP";
+                Color nameColor = isDep ? Color.FromArgb(160, 160, 160) : Color.FromArgb(40, 40, 40);
+                Color verColor = Color.FromArgb(120, 120, 120);
+                int indent = isDep ? 16 : 10;
+
+                bool selected = (e.State & DrawItemState.Selected) != 0;
+                if (selected)
+                {
+                    nameColor = Color.White;
+                    verColor = Color.FromArgb(210, 210, 210);
+                }
+
+                using (var brush = new SolidBrush(nameColor))
+                    e.Graphics.DrawString(item.Name, packageListBox.Font, brush, bounds.X + indent, bounds.Y + 2);
+
+                float nameWidth = e.Graphics.MeasureString(item.Name.PadRight(25), packageListBox.Font).Width;
+                using (var brush = new SolidBrush(verColor))
+                    e.Graphics.DrawString(item.Version, packageListBox.Font, brush, bounds.X + indent + nameWidth, bounds.Y + 2);
+            }
+
+            e.DrawFocusRectangle();
         }
 
         private void OnShowHelp(object sender, EventArgs e)
@@ -2622,5 +2701,26 @@ plt.show()
         public string Description { get; set; }
         public string Example { get; set; }
         public string Notes { get; set; }
+    }
+
+    public class PackageListItem
+    {
+        public string Name { get; set; }
+        public string Version { get; set; }
+        public string Category { get; set; }
+
+        public PackageListItem(string name, string version, string category)
+        {
+            Name = name;
+            Version = version;
+            Category = category;
+        }
+
+        public override string ToString()
+        {
+            if (Category == "HDR") return "── " + Name + " ──";
+            if (string.IsNullOrEmpty(Version)) return Name;
+            return Name + "  " + Version;
+        }
     }
 }

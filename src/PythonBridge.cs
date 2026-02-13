@@ -801,6 +801,126 @@ namespace DataScienceWorkbench
                 return CreateProcessErrorResult("list packages", ex);
             }
         }
+
+        public PythonResult ListPackagesGrouped()
+        {
+            if (!pythonAvailable)
+                return CreateUnavailableResult("list packages");
+
+            string scriptFile = GetTempFilePath("_pkglist.py");
+
+            string baseList = string.Join("', '", BasePackageNames);
+
+            string script =
+                "import importlib.metadata as md\n" +
+                "from packaging.requirements import Requirement, InvalidRequirement\n" +
+                "from packaging.utils import canonicalize_name\n" +
+                "\n" +
+                "base_names = {canonicalize_name(b) for b in ['" + baseList + "']}\n" +
+                "infra = {'pip', 'setuptools', 'wheel'}\n" +
+                "\n" +
+                "all_pkgs = {}\n" +
+                "for d in md.distributions():\n" +
+                "    name = d.metadata['Name']\n" +
+                "    ver = d.metadata['Version']\n" +
+                "    all_pkgs[canonicalize_name(name)] = (name, ver)\n" +
+                "\n" +
+                "dep_names = set()\n" +
+                "def collect_deps(pkg_name):\n" +
+                "    cn = canonicalize_name(pkg_name)\n" +
+                "    try:\n" +
+                "        dist = md.distribution(cn)\n" +
+                "    except md.PackageNotFoundError:\n" +
+                "        try:\n" +
+                "            dist = md.distribution(pkg_name)\n" +
+                "        except md.PackageNotFoundError:\n" +
+                "            return\n" +
+                "    reqs = dist.requires\n" +
+                "    if not reqs:\n" +
+                "        return\n" +
+                "    for r_str in reqs:\n" +
+                "        try:\n" +
+                "            req = Requirement(r_str)\n" +
+                "        except InvalidRequirement:\n" +
+                "            continue\n" +
+                "        if req.marker and not req.marker.evaluate():\n" +
+                "            continue\n" +
+                "        dep = canonicalize_name(req.name)\n" +
+                "        if dep not in dep_names and dep in all_pkgs:\n" +
+                "            dep_names.add(dep)\n" +
+                "            collect_deps(dep)\n" +
+                "\n" +
+                "for b in base_names:\n" +
+                "    collect_deps(b)\n" +
+                "\n" +
+                "for key, (name, ver) in sorted(all_pkgs.items()):\n" +
+                "    if key in infra:\n" +
+                "        continue\n" +
+                "    if key in base_names:\n" +
+                "        cat = 'BASE'\n" +
+                "    elif key in dep_names:\n" +
+                "        cat = 'DEP'\n" +
+                "    else:\n" +
+                "        cat = 'USER'\n" +
+                "    print(f'{cat}\\t{name}\\t{ver}')\n";
+
+            File.WriteAllText(scriptFile, script);
+
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = pythonPath,
+                    Arguments = "\"" + scriptFile + "\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                ConfigurePipEnvironment(psi);
+
+                var proc = Process.Start(psi);
+                string stdout = proc.StandardOutput.ReadToEnd();
+                string stderr = proc.StandardError.ReadToEnd();
+                bool exited = proc.WaitForExit(30000);
+
+                if (!exited)
+                {
+                    try { proc.Kill(); } catch { }
+                    return new PythonResult
+                    {
+                        ExitCode = -1,
+                        Output = "",
+                        Error = "Package listing timed out.",
+                        Success = false
+                    };
+                }
+
+                return new PythonResult
+                {
+                    ExitCode = proc.ExitCode,
+                    Output = stdout,
+                    Error = stderr,
+                    Success = proc.ExitCode == 0
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateProcessErrorResult("list packages", ex);
+            }
+            finally
+            {
+                try { File.Delete(scriptFile); } catch { }
+            }
+        }
+
+        private string[] basePackageNames = { "pandas", "numpy", "matplotlib" };
+
+        public string[] BasePackageNames
+        {
+            get { return basePackageNames; }
+            set { basePackageNames = value ?? new string[0]; }
+        }
     }
 
     public class PythonResult

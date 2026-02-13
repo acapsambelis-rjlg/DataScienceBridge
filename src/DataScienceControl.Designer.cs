@@ -286,10 +286,13 @@ namespace DataScienceWorkbench
             this.packageListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.packageListBox.Font = new System.Drawing.Font("Consolas", 9F);
             this.packageListBox.FormattingEnabled = true;
+            this.packageListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.packageListBox.ItemHeight = 20;
             this.packageListBox.Location = new System.Drawing.Point(10, 32);
             this.packageListBox.Name = "packageListBox";
             this.packageListBox.Size = new System.Drawing.Size(422, 532);
             this.packageListBox.TabIndex = 0;
+            this.packageListBox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.packageListBox_DrawItem);
             // 
             // pkgListLabel
             // 
