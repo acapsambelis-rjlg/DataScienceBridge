@@ -133,6 +133,7 @@ namespace DataScienceWorkbench
                 ToggleFold(line);
             };
             autoComplete = new AutoCompletePopup(pythonEditor);
+            UpdateDynamicSymbols();
 
             highlightTimer = new Timer();
             highlightTimer.Interval = 500;
@@ -1119,18 +1120,21 @@ namespace DataScienceWorkbench
             names.AddRange(registeredPythonClasses.Keys);
             names.AddRange(contextVariables.Keys);
             symbolAnalyzer.SetDynamicKnownSymbols(names);
-            autoComplete.SetDynamicSymbols(names);
-
-            var colMap = new Dictionary<string, List<string>>();
-            foreach (var kvp in inMemoryDataTypes)
+            if (autoComplete != null)
             {
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(kvp.Value);
-                var colNames = new List<string>();
-                foreach (var p in visibleProps)
-                    colNames.Add(p.Name);
-                colMap[kvp.Key] = colNames;
+                autoComplete.SetDynamicSymbols(names);
+
+                var colMap = new Dictionary<string, List<string>>();
+                foreach (var kvp in inMemoryDataTypes)
+                {
+                    var visibleProps = UserVisibleHelper.GetVisibleProperties(kvp.Value);
+                    var colNames = new List<string>();
+                    foreach (var p in visibleProps)
+                        colNames.Add(p.Name);
+                    colMap[kvp.Key] = colNames;
+                }
+                autoComplete.SetDatasetColumns(colMap);
             }
-            autoComplete.SetDatasetColumns(colMap);
         }
 
         private Dictionary<string, string> SerializeInMemoryData()

@@ -175,24 +175,27 @@ namespace DataScienceWorkbench
                 proc.WaitForExit(60000);
 
                 var plotPaths = new List<string>();
-                var filteredOutput = new StringBuilder();
-                foreach (var line in stdout.Split('\n'))
+                var outputLines = stdout.Split('\n');
+                var filteredLines = new List<string>();
+                foreach (var line in outputLines)
                 {
-                    if (line.StartsWith("__PLOT__:"))
+                    string trimmed = line.TrimEnd('\r');
+                    if (trimmed.StartsWith("__PLOT__:"))
                     {
-                        string path = line.Substring(9).Trim();
+                        string path = trimmed.Substring(9).Trim();
                         if (File.Exists(path))
                             plotPaths.Add(path);
                     }
                     else
                     {
-                        filteredOutput.AppendLine(line);
+                        filteredLines.Add(trimmed);
                     }
                 }
 
-                string cleanOutput = filteredOutput.ToString();
-                while (cleanOutput.EndsWith("\r\n\r\n"))
-                    cleanOutput = cleanOutput.Substring(0, cleanOutput.Length - 2);
+                string cleanOutput = string.Join("\n", filteredLines);
+                cleanOutput = cleanOutput.TrimEnd('\n', '\r');
+                if (cleanOutput.Length > 0)
+                    cleanOutput += "\n";
 
                 return new PythonResult
                 {
