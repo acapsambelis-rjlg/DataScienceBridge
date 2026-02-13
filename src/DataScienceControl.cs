@@ -1437,10 +1437,12 @@ namespace DataScienceWorkbench
 
             AppendRefText("Description\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            var descAttrs = prop.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), true);
-            if (descAttrs.Length > 0)
+            var uvAttrs = prop.GetCustomAttributes(typeof(UserVisibleAttribute), true);
+            string desc = null;
+            if (uvAttrs.Length > 0)
+                desc = ((UserVisibleAttribute)uvAttrs[0]).Description;
+            if (!string.IsNullOrEmpty(desc))
             {
-                string desc = ((System.ComponentModel.DescriptionAttribute)descAttrs[0]).Description;
                 AppendRefText(desc + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
             }
             else
