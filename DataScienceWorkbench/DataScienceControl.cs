@@ -871,6 +871,8 @@ namespace DataScienceWorkbench
 
         private void RunLiveSyntaxCheck()
         {
+            if (!pythonRunner.PythonAvailable) return;
+
             string script = pythonEditor.Text;
             if (string.IsNullOrWhiteSpace(script))
             {
@@ -1387,6 +1389,18 @@ namespace DataScienceWorkbench
             employees = dataGen.GenerateEmployees(100);
 
             pythonRunner = new PythonRunner();
+
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("WARNING: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                AppendOutput("The Python editor is available for writing code, but scripts cannot be executed,\n", Color.FromArgb(140, 100, 0));
+                AppendOutput("syntax checking is disabled, and the Package Manager will not function.\n\n", Color.FromArgb(140, 100, 0));
+                RaiseStatus("Python not found");
+            }
+            else
+            {
+                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ")");
+            }
         }
 
         private void SetupSnippetMenu()
@@ -1983,6 +1997,13 @@ namespace DataScienceWorkbench
                 return;
             }
 
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot run script: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
+                return;
+            }
+
             RaiseStatus("Running script...");
             AppendOutput("--- Running script at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
 
@@ -2028,6 +2049,13 @@ namespace DataScienceWorkbench
             if (string.IsNullOrWhiteSpace(script))
             {
                 AppendOutput("No script to check.\n", Color.FromArgb(180, 140, 0));
+                return;
+            }
+
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot check syntax: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
                 return;
             }
 
@@ -2246,6 +2274,13 @@ namespace DataScienceWorkbench
             string pkg = packageNameBox.Text.Trim();
             if (string.IsNullOrEmpty(pkg)) return;
 
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot install packages: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
+                return;
+            }
+
             RaiseStatus("Installing " + pkg + "...");
             Application.DoEvents();
 
@@ -2272,6 +2307,13 @@ namespace DataScienceWorkbench
 
             var confirm = MessageBox.Show("Uninstall " + pkg + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirm != DialogResult.Yes) return;
+
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot uninstall packages: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
+                return;
+            }
 
             RaiseStatus("Uninstalling " + pkg + "...");
             Application.DoEvents();
@@ -2302,14 +2344,25 @@ namespace DataScienceWorkbench
         private void OnRefreshPackages(object sender, EventArgs e)
         {
             packageListBox.Items.Clear();
-            string list = pythonRunner.ListPackages();
-            if (!string.IsNullOrEmpty(list))
+
+            if (!pythonRunner.PythonAvailable)
             {
-                foreach (var line in list.Split('\n'))
+                packageListBox.Items.Add("(Python not available — cannot list packages)");
+                return;
+            }
+
+            var result = pythonRunner.ListPackages();
+            if (result.Success && !string.IsNullOrEmpty(result.Output))
+            {
+                foreach (var line in result.Output.Split('\n'))
                 {
                     if (!string.IsNullOrWhiteSpace(line))
                         packageListBox.Items.Add(line.Trim());
                 }
+            }
+            else if (!result.Success)
+            {
+                packageListBox.Items.Add("(Failed to list packages: " + result.Error + ")");
             }
         }
 
