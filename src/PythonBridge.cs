@@ -9,6 +9,14 @@ namespace DataScienceWorkbench
 {
     public class PythonRunner
     {
+        private static string _venvRelativePath = Path.Combine("bin", "python", "venv");
+
+        public static string VenvRelativePath
+        {
+            get { return _venvRelativePath; }
+            set { _venvRelativePath = value; }
+        }
+
         private string systemPythonPath;
         private string pythonPath;
         private bool pythonAvailable;
@@ -31,9 +39,8 @@ namespace DataScienceWorkbench
         public PythonRunner()
         {
             string appDir = AppDomain.CurrentDomain.BaseDirectory;
-            string binPython = Path.Combine(appDir, "bin", "python");
-            venvPath = binPython;
-            tempPath = Path.Combine(binPython, "temp");
+            venvPath = Path.Combine(appDir, _venvRelativePath);
+            tempPath = Path.Combine(Path.GetDirectoryName(venvPath), "temp");
 
             systemPythonPath = FindPython();
             pythonPath = systemPythonPath;
