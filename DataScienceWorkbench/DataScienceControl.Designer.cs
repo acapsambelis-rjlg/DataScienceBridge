@@ -196,9 +196,6 @@ namespace DataScienceWorkbench
             this.pythonEditor.TabIndex = 0;
             this.pythonEditor.Text = "";
             this.pythonEditor.WordWrap = false;
-            this.pythonEditor.TextChanged += new System.EventHandler(this.OnEditorTextChanged);
-            this.pythonEditor.KeyDown += new System.Windows.Forms.KeyEventHandler(this.OnEditorKeyDown);
-            this.pythonEditor.MouseDown += new System.Windows.Forms.MouseEventHandler(this.OnEditorMouseDown);
             // 
             // lineNumberPanel
             // 
