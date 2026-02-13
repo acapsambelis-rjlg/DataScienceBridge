@@ -1,13 +1,29 @@
 # Data Science Workbench
 
 ## Overview
-A Windows Forms application built with Mono (.NET Framework) that provides an integrated Python editor for data science activities. The core functionality lives in a reusable `DataScienceControl` UserControl, making it easy to embed into larger projects. The current form and dummy data serve as a demonstration.
+The Data Science Workbench is a Windows Forms application developed with Mono (.NET Framework) that offers an integrated Python editor tailored for data science tasks. Its primary purpose is to provide a robust, embeddable environment for data analysis and scripting. The core functionality is encapsulated within a reusable `DataScienceControl` UserControl, allowing for easy integration into larger projects. The current application serves as a comprehensive demonstration of its capabilities, featuring dummy data and a fully functional UI.
 
-## Architecture
-- **Runtime**: Mono (C# / .NET Framework 4.7.2 compatible) on Linux via VNC
-- **Python Integration**: subprocess-based execution bridging .NET data to Python via CSV exports
-- **UI Framework**: Windows Forms (System.Windows.Forms via Mono)
-- **Reusable Control**: `DataScienceControl` is a self-contained UserControl that can be dropped into any Form
+## User Preferences
+- The DataScienceControl is designed for eventual integration into a larger project
+- Current form and data are dummy/demo content
+
+## System Architecture
+The application leverages Mono (C# / .NET Framework 4.7.2 compatible) for cross-platform execution on Linux via VNC. Python integration is achieved through subprocess-based execution, facilitating data exchange between .NET and Python environments by streaming data in-memory directly to Python variables. The UI is built using Windows Forms, with the `DataScienceControl` acting as a self-contained, reusable component.
+
+**Key Features:**
+- **Integrated Python Editor:** Features include syntax highlighting, line numbers, real-time syntax checking, code snippets, context-aware autocomplete (for dataset columns, class members, DataFrame methods), bracket matching, current line highlighting, word/symbol occurrence highlighting, auto-indentation, block indent/unindent, line duplication/movement, code folding indicators, bookmarks, zoom functionality, and a cursor position indicator. Error squiggles provide visual feedback for syntax errors and undefined names, with detailed tooltips on hover.
+- **Data Reference Tab:** A TreeView displays all loaded datasets, their columns, data types, registered Python classes, and context variables. A detail panel provides additional information and example Python code snippets. It includes search and filter capabilities.
+- **Package Manager Tab:** Allows users to install and uninstall pip packages within the isolated Python environment.
+- **In-memory Data Bridge:** All .NET data is streamed directly into the Python environment as pre-loaded variables, eliminating file I/O for data transfer.
+- **Virtual Environment Management:** Automatically creates and manages an isolated Python virtual environment in `bin/python/` on first run, pre-installing essential packages like pandas, numpy, and matplotlib. It falls back to the system Python if venv creation fails and includes a mechanism to reset the environment.
+- **Plot Viewer:** Supports `plt.show()` from matplotlib, capturing generated plots and displaying them in an interactive viewer with navigation and saving capabilities.
+- **Python Class Registration and Context Hub:** Provides APIs (`RegisterPythonClass`, `SetContext`) for the host application to inject Python class definitions and named variables (strings, numbers, booleans, lists, dictionaries) into the Python execution environment. These registered elements are visible in the Data Reference tab and are recognized by the autocomplete and symbol analyzer.
+- **Public API (`DataScienceControl`):** Offers methods for loading custom data (`LoadData`), registering in-memory data sources, managing registered Python classes and context variables, executing scripts (`RunScript`), and controlling the editor's content and output. It also provides eventing for status updates and menu strip creation for shortcut key routing.
+
+**UI/UX Decisions:**
+- The application adopts a clear, functional UI with distinct tabs for the Python Editor, Data Reference, and Package Manager.
+- Output panels are designed with a light mode (white background, dark text) for readability.
+- Find & Replace functionality is integrated as an inline panel within the Python editor.
 
 ## Project Structure
 ```
@@ -58,17 +74,9 @@ Keep them in sync when making changes.
 - **OutputText** - Get the output panel text
 - **ClearOutput()** - Clear the output panel
 - **AppendOutput(text, color)** - Add text to the output panel
-- **CreateMenuStrip()** - Get a MenuStrip with File/Edit/Run/Help menus for the host form
+- **CreateMenuStrip()** - Returns the control's built-in MenuStrip (File/Edit/Run/Help menus are embedded in the Python Editor tab); host form can assign to MainMenuStrip for shortcut key routing
 - **HandleKeyDown(keyCode)** - Forward key events (e.g., F5 to run)
 - **StatusChanged event** - Subscribe to status bar updates
-
-## Key Features
-- **2 demo datasets**: Customers (150), Employees (100) — demo data for development; host app replaces via LoadData()
-- **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, context-aware autocomplete (dataset columns, class members, DataFrame methods), bracket matching, current line highlight, word/symbol occurrence highlighting, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, bookmarks, zoom (Ctrl+Scroll/Ctrl+Plus/Minus), and cursor position indicator (Ln/Col in status bar)
-- **Data Reference** tab with TreeView showing all datasets, columns, types, registered classes, and context variables with detail panel and example Python code
-- **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)
-- **In-memory data bridge**: All .NET data streamed to Python via stdin as pre-loaded variables (e.g., `customers.CreditLimit.mean()`)
-- **Virtual environment**: Auto-creates isolated Python venv in `bin/python/` on first run; installs pandas, numpy, matplotlib; temp files stored in `bin/python/temp/`; can be reset via Run menu or `ResetPythonEnvironment()` API; falls back to system Python if venv creation fails
 
 ## Build & Run
 
@@ -81,38 +89,9 @@ bash build.sh    # Compile with Mono (mcs)
 bash run.sh      # Run the application
 ```
 
-## Dependencies
-- System: mono, libgdiplus, X11 libs, gtk2, cairo, pango, fontconfig
-- Python: pandas, numpy, matplotlib (pre-installed)
-
-## User Preferences
-- The DataScienceControl is designed for eventual integration into a larger project
-- Current form and data are dummy/demo content
+## External Dependencies
+- **System:** Mono runtime, libgdiplus, X11 libraries, gtk2, cairo, pango, fontconfig
+- **Python Libraries (Pre-installed in venv):** pandas, numpy, matplotlib
 
 ## Recent Changes
-- 2026-02-13: Added virtual environment support: auto-creates isolated Python venv in bin/python/ on first run with pandas/numpy/matplotlib pre-installed; all temp script files stored in bin/python/temp/; pip install no longer uses --user flag; falls back to system Python if venv creation fails; added ResetPythonEnvironment() public API and Run > Reset Python Environment menu item with confirmation dialog; PythonRunner exposes VenvReady/VenvError/VenvPath properties; status bar shows "(venv)" or "(system)" indicator
-- 2026-02-13: Added comprehensive Python error handling: PythonRunner validates Python availability at startup with PythonAvailable/PythonError/PythonVersion properties; all Process.Start calls wrapped in try/catch; all WaitForExit calls detect timeouts and kill hung processes; DataScienceControl guards all pythonRunner call sites; startup warning shown if Python missing; live syntax check silently skips when unavailable
-- 2026-02-13: Added PythonClassInfo model for registered classes with Description, Example, and Notes metadata; RegisterPythonClass overload with custom reference info; Data Reference detail panel shows structured sections; filter searches description/notes fields
-- 2026-02-13: Added Example property to [UserVisible] attribute: developers can set `[UserVisible("description", Example = "code")]` to override the default type-based example code shown in Data Reference detail panel. Supports `{dataset}` and `{field}` placeholders that resolve at display time. Lines starting with `#` render as comments. Falls back to type-based defaults (string/bool/datetime/numeric) when Example is not set.
-- 2026-02-13: Changed Find & Replace from popup Form to inline panel overlaid on top-right corner of Python editor. Escape key from editor also dismisses the panel.
-- 2026-02-13: Added Ctrl+F shortcut to open Find & Replace dialog from the Python editor. Added search/filter box to Data Reference tab: filters datasets by name, column name/type, and [UserVisible] description text; also filters registered classes and context variables. Uses placeholder text pattern.
-- 2026-02-13: Added field-level detail view in Data Reference tab: clicking a field/column node shows the property's [Description] attribute text, type info, parent dataset, and type-appropriate example Python code. Uses System.ComponentModel.DescriptionAttribute on Customer and Employee properties. Falls back to "No description available" for properties without descriptions. Field node tags use string arrays to avoid underscore-in-name parsing issues.
-- 2026-02-13: Updated output section to light mode: white background, dark text, adjusted all AppendOutput colors for readability on light backgrounds.
-- 2026-02-13: Added [UserVisible] attribute for property-level visibility control: properties marked with [UserVisible] are the only ones serialized to Python, shown in Data Reference, and offered in autocomplete. If no properties are marked, all eligible properties are included (backward compatible). GetColumnsForDataset and GetClassNameForTag now use reflection instead of hardcoded switch statements. AutoCompletePopup dataset columns and PythonSymbolAnalyzer dataset names are now dynamic.
-- 2026-02-13: Cleanup sweep: removed unused dataset fields (products, orders, sensorReadings, stockPrices, webEvents), Custom Data Sources UI section, Custom Data Access snippet, demo MainForm registrations (measurements, MathHelper, context vars), dead cases in GetColumnsForDataset/GetExampleCode/GetClassNameForTag/GetRecordCountForTag, unused dataset entries in AutoCompletePopup. Simplified LoadData API to (customers, employees). Made dataGen local to InitializeData.
-- 2026-02-13: Replaced Data Browser tab with Data Reference tab: removed DataGridView/dataset combo (Data Browser), promoted Data Reference content (tree view + detail panel) to tab index 1, removed redundant separate Data Reference tab. App now has 3 tabs: Python Editor, Data Reference, Package Manager. Package Manager lazy-load index updated from 3 to 2.
-- 2026-02-13: Added plt.show() support: monkey-patches matplotlib's show() to save figures and display them in a PlotViewerForm window with navigation (prev/next) and Save As functionality; all snippets updated to use plt.show() instead of plt.savefig(); PythonResult now includes PlotPaths list
-- 2026-02-13: Added Python Class Registration (RegisterPythonClass/UnregisterPythonClass) and Context Hub (SetContext/RemoveContext/ClearContext) systems: host app can register Python classes and send named variables (str, float, int, bool, list, dict) into the Python environment; both appear in Data Reference tree with detail panels; names recognized by autocomplete and symbol analyzer; includes input validation and Python string escaping; demo in MainForm with MathHelper class and sample context vars
-- 2026-02-13: Added context-aware dot-completion autocomplete: dataset variables show column names + DataFrame methods, self. shows class methods/attributes, ClassName. shows class members, instance variables infer type from constructor calls. Enhanced symbol analyzer: dataset names (products, customers, etc.) and self/cls no longer produce false squiggles; added global/nonlocal/lambda support and except line skipping
-- 2026-02-13: Added error tooltips on squiggle hover: hovering over red (syntax error) or yellow (undefined name) squiggles shows a dark-themed tooltip with the error message; tooltips auto-hide when mouse leaves the error region or errors are cleared
-- 2026-02-13: Switched from CSV file bridge to fully in-memory data bridge: all datasets are now top-level Python variables (e.g., `products.Cost.mean()` instead of `dotnet.measurements.values.mean()`). Removed ExportCustomData, ExportAllData, CSV export code, DataExporter class. Updated all snippets, help text, Data Reference tab, and default script.
-- 2026-02-13: Added Tab/Shift+Tab block indent/unindent, Ctrl+D line duplicate, Alt+Up/Down line move, code folding indicators in gutter, bookmarks (Ctrl+B toggle, F2/Shift+F2 navigate, click gutter), widened line number panel to 60px
-- 2026-02-13: Added Data Reference tab with TreeView showing all datasets, columns, types (including computed properties), and detail panel with example Python code
-- 2026-02-10: Added Python symbol analyzer for undefined name detection (yellow squiggly lines), tracks definitions (assignments, def, class, for, import, with, except) and flags undefined references
-- 2026-02-10: Added autocomplete popup (Python keywords, builtins, pandas/numpy/matplotlib methods), bracket auto-closing with matching highlight, current line highlighting, and auto-indentation after colon
-- 2026-02-10: Added custom undo/redo system (survives syntax highlighting), full Edit menu with keyboard shortcuts, Find & Replace dialog
-- 2026-02-10: Added Python syntax highlighting (keywords, strings, comments, numbers, decorators, builtins), line numbers, and syntax error checking
-- 2026-02-10: Added .Designer.cs and .resx files for both DataScienceControl and MainForm (Visual Studio designer support)
-- 2026-02-10: Added Visual Studio solution and project files targeting .NET Framework 4.7.2
-- 2026-02-10: Extracted all functionality from MainForm into DataScienceControl UserControl with public API for reuse
-- 2026-02-10: Initial project creation with full data model, Python editor, data browser, and package manager
+- 2026-02-13: Moved File/Edit/Run/Help menus from external CreateMenuStrip() into the Python Editor tab's own embedded MenuStrip (editorMenuBar). CreateMenuStrip() now returns this embedded MenuStrip for host form MainMenuStrip assignment (keyboard shortcut routing). Removed toolbar buttons (Run, Check Syntax, Clear Output) in favor of menu items. Insert Snippet remains as a top-level menu item in the editor bar.

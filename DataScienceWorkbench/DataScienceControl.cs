@@ -108,6 +108,7 @@ namespace DataScienceWorkbench
             InitializeComponent();
             ResolveRuntimeFonts();
             InitializeData();
+            SetupEditorMenuBar();
             SetupSnippetMenu();
             SetupSyntaxHighlighting();
             RegisterAllDatasetsInMemory();
@@ -1293,14 +1294,11 @@ namespace DataScienceWorkbench
             outputBox.Clear();
         }
 
-        public MenuStrip CreateMenuStrip()
+        private void SetupEditorMenuBar()
         {
-            var menuBar = new MenuStrip();
-
             var fileMenu = new ToolStripMenuItem("File");
             fileMenu.DropDownItems.Add("Open Script...", null, OnOpenScript);
             fileMenu.DropDownItems.Add("Save Script...", null, OnSaveScript);
-            fileMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var editMenu = new ToolStripMenuItem("&Edit");
 
@@ -1315,15 +1313,15 @@ namespace DataScienceWorkbench
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var cutItem = new ToolStripMenuItem("Cut", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Cut(); });
-            cutItem.ShortcutKeys = Keys.Control | Keys.X;
+            cutItem.ShortcutKeyDisplayString = "Ctrl+X";
             editMenu.DropDownItems.Add(cutItem);
 
             var copyItem = new ToolStripMenuItem("Copy", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Copy(); });
-            copyItem.ShortcutKeys = Keys.Control | Keys.C;
+            copyItem.ShortcutKeyDisplayString = "Ctrl+C";
             editMenu.DropDownItems.Add(copyItem);
 
             var pasteItem = new ToolStripMenuItem("Paste", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Paste(); });
-            pasteItem.ShortcutKeys = Keys.Control | Keys.V;
+            pasteItem.ShortcutKeyDisplayString = "Ctrl+V";
             editMenu.DropDownItems.Add(pasteItem);
 
             var deleteItem = new ToolStripMenuItem("Delete", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.SelectionLength > 0) pythonEditor.SelectedText = ""; });
@@ -1333,13 +1331,13 @@ namespace DataScienceWorkbench
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var selectAllItem = new ToolStripMenuItem("Select All", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.SelectAll(); });
-            selectAllItem.ShortcutKeys = Keys.Control | Keys.A;
+            selectAllItem.ShortcutKeyDisplayString = "Ctrl+A";
             editMenu.DropDownItems.Add(selectAllItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var findItem = new ToolStripMenuItem("Find && Replace...", null, (s, e) => ShowFindReplace());
-            findItem.ShortcutKeys = Keys.Control | Keys.H;
+            findItem.ShortcutKeyDisplayString = "Ctrl+H";
             editMenu.DropDownItems.Add(findItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
@@ -1405,8 +1403,15 @@ namespace DataScienceWorkbench
                 "Built with Mono + Python 3",
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information));
 
-            menuBar.Items.AddRange(new ToolStripItem[] { fileMenu, editMenu, runMenu, helpMenu });
-            return menuBar;
+            editorMenuBar.Items.Insert(0, fileMenu);
+            editorMenuBar.Items.Insert(1, editMenu);
+            editorMenuBar.Items.Insert(2, runMenu);
+            editorMenuBar.Items.Add(helpMenu);
+        }
+
+        public MenuStrip CreateMenuStrip()
+        {
+            return editorMenuBar;
         }
 
         public bool HandleKeyDown(Keys keyCode)
@@ -2220,7 +2225,7 @@ namespace DataScienceWorkbench
         {
             int x = editorPanel.Width - findReplacePanel.Width - 20;
             if (x < 0) x = 0;
-            int y = toolBar.Height + 2;
+            int y = editorMenuBar.Height + 2;
             findReplacePanel.Location = new Point(x, y);
         }
 

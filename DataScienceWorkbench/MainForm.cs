@@ -18,12 +18,7 @@ namespace DataScienceWorkbench
             dataScienceControl.StatusChanged += (s, msg) => SetStatus(msg);
 
             var menuBar = dataScienceControl.CreateMenuStrip();
-            var exitItem = new ToolStripMenuItem("Exit", null, (s, e) => this.Close());
-            var fileMenu = (ToolStripMenuItem)menuBar.Items[0];
-            fileMenu.DropDownItems.Add(new ToolStripSeparator());
-            fileMenu.DropDownItems.Add(exitItem);
             this.MainMenuStrip = menuBar;
-            this.Controls.Add(menuBar);
 
             this.KeyDown += (s, e) =>
             {
