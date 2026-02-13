@@ -87,6 +87,8 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added Example property to [UserVisible] attribute: developers can set `[UserVisible("description", Example = "code")]` to override the default type-based example code shown in Data Reference detail panel. Supports `{dataset}` and `{field}` placeholders that resolve at display time. Lines starting with `#` render as comments. Falls back to type-based defaults (string/bool/datetime/numeric) when Example is not set.
+- 2026-02-13: Changed Find & Replace from popup Form to inline panel overlaid on top-right corner of Python editor. Escape key from editor also dismisses the panel.
 - 2026-02-13: Added Ctrl+F shortcut to open Find & Replace dialog from the Python editor. Added search/filter box to Data Reference tab: filters datasets by name, column name/type, and [UserVisible] description text; also filters registered classes and context variables. Uses placeholder text pattern.
 - 2026-02-13: Added field-level detail view in Data Reference tab: clicking a field/column node shows the property's [Description] attribute text, type info, parent dataset, and type-appropriate example Python code. Uses System.ComponentModel.DescriptionAttribute on Customer and Employee properties. Falls back to "No description available" for properties without descriptions. Field node tags use string arrays to avoid underscore-in-name parsing issues.
 - 2026-02-13: Updated output section to light mode: white background, dark text, adjusted all AppendOutput colors for readability on light backgrounds.

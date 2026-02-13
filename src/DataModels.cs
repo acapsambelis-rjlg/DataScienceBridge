@@ -8,6 +8,7 @@ namespace DataScienceWorkbench
     public class UserVisibleAttribute : Attribute
     {
         public string Description { get; private set; }
+        public string Example { get; set; }
 
         public UserVisibleAttribute() { Description = null; }
         public UserVisibleAttribute(string description) { Description = description; }
@@ -96,7 +97,7 @@ namespace DataScienceWorkbench
         [UserVisible("Loyalty tier: Bronze, Silver, Gold, or Platinum")]
         public string Tier { get; set; }
 
-        [UserVisible("Maximum credit limit in dollars")]
+        [UserVisible("Maximum credit limit in dollars", Example = "# Credit limit distribution\n{dataset}.{field}.hist(bins=20)\nplt.xlabel('Credit Limit')\nplt.show()")]
         public double CreditLimit { get; set; }
 
         [UserVisible("Whether the customer account is currently active")]

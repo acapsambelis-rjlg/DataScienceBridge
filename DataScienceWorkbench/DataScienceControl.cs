@@ -1616,7 +1616,23 @@ namespace DataScienceWorkbench
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
 
-            if (typeName == "string")
+            string customExample = null;
+            if (uvAttrs.Length > 0)
+                customExample = ((UserVisibleAttribute)uvAttrs[0]).Example;
+
+            if (!string.IsNullOrEmpty(customExample))
+            {
+                string resolved = customExample.Replace("{dataset}", datasetName).Replace("{field}", fieldName);
+                foreach (string line in resolved.Split('\n'))
+                {
+                    string trimmed = line.TrimStart();
+                    if (trimmed.StartsWith("#"))
+                        AppendRefText(line + "\n", Color.FromArgb(0, 128, 0), false, 10);
+                    else
+                        AppendRefText(line + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
+            }
+            else if (typeName == "string")
             {
                 AppendRefText("# Value counts\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".value_counts()\n\n", Color.FromArgb(60, 60, 60), false, 10);
