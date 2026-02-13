@@ -15,7 +15,7 @@ namespace DataScienceWorkbench
         private List<Employee> employees;
 
         private bool packagesLoaded;
-        private List<PackageListItem> allPackageItems = new List<PackageListItem>();
+        private List<string> allPackageItems = new List<string>();
         private PythonSyntaxHighlighter syntaxHighlighter;
         private Timer highlightTimer;
         private bool suppressHighlight;
@@ -2408,25 +2408,31 @@ namespace DataScienceWorkbench
 
             if (!pythonRunner.PythonAvailable)
             {
-                allPackageItems.Add(new PackageListItem("(Python not available — cannot list packages)", "", "MSG"));
-                PopulatePackageList("");
+                packageListBox.Items.Add("(Python not available — cannot list packages)");
                 return;
             }
 
-            var result = pythonRunner.ListPackagesGrouped();
+            var result = pythonRunner.ListPackages();
             if (result.Success && !string.IsNullOrEmpty(result.Output))
             {
-                foreach (var line in result.Output.Split('\n'))
+                var lines = result.Output.Split('\n');
+                foreach (var line in lines)
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
-                    var parts = line.Split('\t');
-                    if (parts.Length < 3) continue;
-                    allPackageItems.Add(new PackageListItem(parts[1], parts[2], parts[0]));
+                    var trimmed = line.Trim();
+                    if (trimmed.StartsWith("Package") && trimmed.Contains("Version")) continue;
+                    if (trimmed.StartsWith("---")) continue;
+                    var parts = trimmed.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 2)
+                        allPackageItems.Add(parts[0] + "  " + parts[1]);
+                    else if (parts.Length == 1)
+                        allPackageItems.Add(parts[0]);
                 }
+                allPackageItems.Sort(StringComparer.OrdinalIgnoreCase);
             }
             else if (!result.Success)
             {
-                allPackageItems.Add(new PackageListItem("(Failed to list packages: " + result.Error + ")", "", "MSG"));
+                packageListBox.Items.Add("(Failed to list packages: " + result.Error + ")");
             }
 
             PopulatePackageList("");
@@ -2471,116 +2477,17 @@ namespace DataScienceWorkbench
         private void PopulatePackageList(string filter)
         {
             packageListBox.Items.Clear();
-
-            var baseItems = new List<PackageListItem>();
-            var userItems = new List<PackageListItem>();
-            var depItems = new List<PackageListItem>();
-            var msgItems = new List<PackageListItem>();
-
             bool hasFilter = !string.IsNullOrEmpty(filter);
 
             foreach (var item in allPackageItems)
             {
-                if (item.Category == "MSG")
-                {
-                    if (!hasFilter) msgItems.Add(item);
+                if (hasFilter && item.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
                     continue;
-                }
-
-                if (hasFilter && item.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
-                    continue;
-
-                if (item.Category == "BASE") baseItems.Add(item);
-                else if (item.Category == "USER") userItems.Add(item);
-                else depItems.Add(item);
+                packageListBox.Items.Add(item);
             }
 
-            if (msgItems.Count > 0 && !hasFilter)
-            {
-                foreach (var m in msgItems) packageListBox.Items.Add(m);
-                return;
-            }
-
-            if (!hasFilter || baseItems.Count > 0)
-            {
-                packageListBox.Items.Add(new PackageListItem("Base Packages", "", "HDR"));
-                if (baseItems.Count == 0)
-                    packageListBox.Items.Add(new PackageListItem("(none)", "", "MSG"));
-                else
-                    foreach (var item in baseItems) packageListBox.Items.Add(item);
-            }
-
-            if (userItems.Count > 0)
-            {
-                packageListBox.Items.Add(new PackageListItem("User Installed", "", "HDR"));
-                foreach (var item in userItems) packageListBox.Items.Add(item);
-            }
-
-            if (!hasFilter || depItems.Count > 0)
-            {
-                packageListBox.Items.Add(new PackageListItem("Dependencies", "", "HDR"));
-                if (depItems.Count == 0)
-                    packageListBox.Items.Add(new PackageListItem("(none)", "", "MSG"));
-                else
-                    foreach (var item in depItems) packageListBox.Items.Add(item);
-            }
-
-            if (hasFilter && baseItems.Count == 0 && userItems.Count == 0 && depItems.Count == 0)
-            {
-                packageListBox.Items.Add(new PackageListItem("No packages match '" + filter + "'", "", "MSG"));
-            }
-        }
-
-        private void packageListBox_DrawItem(object sender, DrawItemEventArgs e)
-        {
-            if (e.Index < 0) return;
-            e.DrawBackground();
-
-            var item = packageListBox.Items[e.Index] as PackageListItem;
-            if (item == null)
-            {
-                e.DrawFocusRectangle();
-                return;
-            }
-
-            var bounds = e.Bounds;
-
-            if (item.Category == "HDR")
-            {
-                using (var bgBrush = new SolidBrush(Color.FromArgb(60, 60, 70)))
-                    e.Graphics.FillRectangle(bgBrush, bounds);
-                using (var font = new Font(packageListBox.Font.FontFamily, packageListBox.Font.Size, FontStyle.Bold))
-                using (var brush = new SolidBrush(Color.FromArgb(200, 220, 255)))
-                    e.Graphics.DrawString(item.Name, font, brush, bounds.X + 6, bounds.Y + 2);
-            }
-            else if (item.Category == "MSG")
-            {
-                using (var brush = new SolidBrush(Color.FromArgb(140, 140, 140)))
-                    e.Graphics.DrawString(item.Name, packageListBox.Font, brush, bounds.X + 16, bounds.Y + 2);
-            }
-            else
-            {
-                bool isDep = item.Category == "DEP";
-                Color nameColor = isDep ? Color.FromArgb(160, 160, 160) : Color.FromArgb(40, 40, 40);
-                Color verColor = Color.FromArgb(120, 120, 120);
-                int indent = isDep ? 16 : 10;
-
-                bool selected = (e.State & DrawItemState.Selected) != 0;
-                if (selected)
-                {
-                    nameColor = Color.White;
-                    verColor = Color.FromArgb(210, 210, 210);
-                }
-
-                using (var brush = new SolidBrush(nameColor))
-                    e.Graphics.DrawString(item.Name, packageListBox.Font, brush, bounds.X + indent, bounds.Y + 2);
-
-                float nameWidth = e.Graphics.MeasureString(item.Name.PadRight(25), packageListBox.Font).Width;
-                using (var brush = new SolidBrush(verColor))
-                    e.Graphics.DrawString(item.Version, packageListBox.Font, brush, bounds.X + indent + nameWidth, bounds.Y + 2);
-            }
-
-            e.DrawFocusRectangle();
+            if (packageListBox.Items.Count == 0 && hasFilter)
+                packageListBox.Items.Add("No packages match '" + filter + "'");
         }
 
         private void OnShowHelp(object sender, EventArgs e)
@@ -2786,24 +2693,4 @@ plt.show()
         public string Notes { get; set; }
     }
 
-    public class PackageListItem
-    {
-        public string Name { get; set; }
-        public string Version { get; set; }
-        public string Category { get; set; }
-
-        public PackageListItem(string name, string version, string category)
-        {
-            Name = name;
-            Version = version;
-            Category = category;
-        }
-
-        public override string ToString()
-        {
-            if (Category == "HDR") return "── " + Name + " ──";
-            if (string.IsNullOrEmpty(Version)) return Name;
-            return Name + "  " + Version;
-        }
-    }
 }
