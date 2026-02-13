@@ -4,6 +4,57 @@ using System.Linq;
 
 namespace DataScienceWorkbench
 {
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
+    public class UserVisibleAttribute : Attribute
+    {
+    }
+
+    public static class UserVisibleHelper
+    {
+        public static List<System.Reflection.PropertyInfo> GetVisibleProperties(Type type)
+        {
+            var allProps = type.GetProperties();
+            var markedProps = new List<System.Reflection.PropertyInfo>();
+            bool anyMarked = false;
+
+            foreach (var p in allProps)
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
+
+                if (p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0)
+                {
+                    markedProps.Add(p);
+                    anyMarked = true;
+                }
+            }
+
+            if (anyMarked)
+                return markedProps;
+
+            var result = new List<System.Reflection.PropertyInfo>();
+            foreach (var p in allProps)
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
+                result.Add(p);
+            }
+            return result;
+        }
+
+        public static string GetPythonTypeName(Type t)
+        {
+            if (t == typeof(int) || t == typeof(long) || t == typeof(short) || t == typeof(byte)) return "int";
+            if (t == typeof(double) || t == typeof(float) || t == typeof(decimal)) return "float";
+            if (t == typeof(bool)) return "bool";
+            if (t == typeof(string)) return "string";
+            if (t == typeof(DateTime)) return "datetime";
+            return t.Name;
+        }
+    }
+
     public class Address
     {
         public string Street { get; set; }
@@ -17,21 +68,21 @@ namespace DataScienceWorkbench
 
     public class Customer
     {
-        public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public DateTime RegistrationDate { get; set; }
-        public string Tier { get; set; }
-        public double CreditLimit { get; set; }
-        public bool IsActive { get; set; }
+        [UserVisible] public int Id { get; set; }
+        [UserVisible] public string FirstName { get; set; }
+        [UserVisible] public string LastName { get; set; }
+        [UserVisible] public string Email { get; set; }
+        [UserVisible] public string Phone { get; set; }
+        [UserVisible] public DateTime DateOfBirth { get; set; }
+        [UserVisible] public DateTime RegistrationDate { get; set; }
+        [UserVisible] public string Tier { get; set; }
+        [UserVisible] public double CreditLimit { get; set; }
+        [UserVisible] public bool IsActive { get; set; }
         public Address Address { get; set; }
         public List<Order> Orders { get; set; }
 
-        public string FullName { get { return FirstName + " " + LastName; } }
-        public int Age { get { return (int)((DateTime.Now - DateOfBirth).TotalDays / 365.25); } }
+        [UserVisible] public string FullName { get { return FirstName + " " + LastName; } }
+        [UserVisible] public int Age { get { return (int)((DateTime.Now - DateOfBirth).TotalDays / 365.25); } }
     }
 
     public class Product
@@ -86,20 +137,20 @@ namespace DataScienceWorkbench
 
     public class Employee
     {
-        public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Department { get; set; }
-        public string Title { get; set; }
-        public DateTime HireDate { get; set; }
-        public double Salary { get; set; }
-        public double PerformanceScore { get; set; }
-        public int ManagerId { get; set; }
-        public bool IsRemote { get; set; }
-        public string Office { get; set; }
+        [UserVisible] public int Id { get; set; }
+        [UserVisible] public string FirstName { get; set; }
+        [UserVisible] public string LastName { get; set; }
+        [UserVisible] public string Department { get; set; }
+        [UserVisible] public string Title { get; set; }
+        [UserVisible] public DateTime HireDate { get; set; }
+        [UserVisible] public double Salary { get; set; }
+        [UserVisible] public double PerformanceScore { get; set; }
+        [UserVisible] public int ManagerId { get; set; }
+        [UserVisible] public bool IsRemote { get; set; }
+        [UserVisible] public string Office { get; set; }
 
-        public string FullName { get { return FirstName + " " + LastName; } }
-        public int YearsEmployed { get { return (int)((DateTime.Now - HireDate).TotalDays / 365.25); } }
+        [UserVisible] public string FullName { get { return FirstName + " " + LastName; } }
+        [UserVisible] public int YearsEmployed { get { return (int)((DateTime.Now - HireDate).TotalDays / 365.25); } }
     }
 
     public class SensorReading

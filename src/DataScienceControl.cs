@@ -28,6 +28,7 @@ namespace DataScienceWorkbench
         private bool suppressAutoComplete;
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
         private Dictionary<string, Func<string>> inMemoryDataSources = new Dictionary<string, Func<string>>();
+        private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, string> registeredPythonClasses = new Dictionary<string, string>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
         private HashSet<int> bookmarks = new HashSet<int>();
@@ -853,30 +854,23 @@ namespace DataScienceWorkbench
 
         public void RegisterInMemoryData<T>(string name, Func<List<T>> dataProvider) where T : class
         {
+            inMemoryDataTypes[name] = typeof(T);
             inMemoryDataSources[name] = () =>
             {
                 var data = dataProvider();
-                var props = typeof(T).GetProperties();
+                var visibleProps = UserVisibleHelper.GetVisibleProperties(typeof(T));
                 var sb = new System.Text.StringBuilder();
 
                 var headerParts = new List<string>();
-                foreach (var p in props)
-                {
-                    if (p.GetIndexParameters().Length > 0) continue;
-                    if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                    if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
+                foreach (var p in visibleProps)
                     headerParts.Add(p.Name);
-                }
                 sb.AppendLine(string.Join(",", headerParts));
 
                 foreach (var item in data)
                 {
                     var vals = new List<string>();
-                    foreach (var p in props)
+                    foreach (var p in visibleProps)
                     {
-                        if (p.GetIndexParameters().Length > 0) continue;
-                        if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                        if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
                         var val = p.GetValue(item);
                         string s = val != null ? val.ToString() : "";
                         if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
@@ -887,6 +881,7 @@ namespace DataScienceWorkbench
                 }
                 return sb.ToString();
             };
+            UpdateDynamicSymbols();
             PopulateReferenceTree();
         }
 
@@ -1120,10 +1115,22 @@ namespace DataScienceWorkbench
         private void UpdateDynamicSymbols()
         {
             var names = new List<string>();
+            names.AddRange(inMemoryDataTypes.Keys);
             names.AddRange(registeredPythonClasses.Keys);
             names.AddRange(contextVariables.Keys);
             symbolAnalyzer.SetDynamicKnownSymbols(names);
             autoComplete.SetDynamicSymbols(names);
+
+            var colMap = new Dictionary<string, List<string>>();
+            foreach (var kvp in inMemoryDataTypes)
+            {
+                var visibleProps = UserVisibleHelper.GetVisibleProperties(kvp.Value);
+                var colNames = new List<string>();
+                foreach (var p in visibleProps)
+                    colNames.Add(p.Name);
+                colMap[kvp.Key] = colNames;
+            }
+            autoComplete.SetDatasetColumns(colMap);
         }
 
         private Dictionary<string, string> SerializeInMemoryData()
@@ -1311,23 +1318,20 @@ namespace DataScienceWorkbench
         {
             refTreeView.Nodes.Clear();
 
-            var datasets = new[]
+            foreach (var kvp in inMemoryDataTypes)
             {
-                new { Name = "customers", Class = "Customer", Count = customers.Count, Tag = "customers" },
-                new { Name = "employees", Class = "Employee", Count = employees.Count, Tag = "employees" },
-            };
-
-            foreach (var ds in datasets)
-            {
-                var node = refTreeView.Nodes.Add(ds.Name + "  (" + ds.Count + ")");
-                node.Tag = ds.Tag;
+                string name = kvp.Key;
+                Type type = kvp.Value;
+                int count = GetRecordCountForTag(name);
+                var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
+                node.Tag = name;
                 node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
 
-                var columns = GetColumnsForDataset(ds.Tag);
+                var columns = GetColumnsForDataset(name);
                 foreach (var col in columns)
                 {
                     var child = node.Nodes.Add(col.Item1 + "  :  " + col.Item2);
-                    child.Tag = ds.Tag;
+                    child.Tag = name;
                     child.ForeColor = Color.FromArgb(80, 80, 80);
                 }
             }
@@ -1367,44 +1371,18 @@ namespace DataScienceWorkbench
         private List<Tuple<string, string>> GetColumnsForDataset(string tag)
         {
             var cols = new List<Tuple<string, string>>();
-            switch (tag)
+            Type type;
+            if (!inMemoryDataTypes.TryGetValue(tag, out type))
+                return cols;
+
+            var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
+            foreach (var p in visibleProps)
             {
-                case "customers":
-                    cols.Add(Tuple.Create("Id", "int"));
-                    cols.Add(Tuple.Create("FirstName", "string"));
-                    cols.Add(Tuple.Create("LastName", "string"));
-                    cols.Add(Tuple.Create("Email", "string"));
-                    cols.Add(Tuple.Create("Phone", "string"));
-                    cols.Add(Tuple.Create("DateOfBirth", "datetime"));
-                    cols.Add(Tuple.Create("RegistrationDate", "datetime"));
-                    cols.Add(Tuple.Create("Tier", "string"));
-                    cols.Add(Tuple.Create("CreditLimit", "float"));
-                    cols.Add(Tuple.Create("IsActive", "bool"));
-                    cols.Add(Tuple.Create("Street", "string (Address)"));
-                    cols.Add(Tuple.Create("City", "string (Address)"));
-                    cols.Add(Tuple.Create("State", "string (Address)"));
-                    cols.Add(Tuple.Create("ZipCode", "string (Address)"));
-                    cols.Add(Tuple.Create("Country", "string (Address)"));
-                    cols.Add(Tuple.Create("Latitude", "float (Address)"));
-                    cols.Add(Tuple.Create("Longitude", "float (Address)"));
-                    cols.Add(Tuple.Create("FullName", "string (computed)"));
-                    cols.Add(Tuple.Create("Age", "int (computed)"));
-                    break;
-                case "employees":
-                    cols.Add(Tuple.Create("Id", "int"));
-                    cols.Add(Tuple.Create("FirstName", "string"));
-                    cols.Add(Tuple.Create("LastName", "string"));
-                    cols.Add(Tuple.Create("Department", "string"));
-                    cols.Add(Tuple.Create("Title", "string"));
-                    cols.Add(Tuple.Create("HireDate", "datetime"));
-                    cols.Add(Tuple.Create("Salary", "float"));
-                    cols.Add(Tuple.Create("PerformanceScore", "float"));
-                    cols.Add(Tuple.Create("ManagerId", "int"));
-                    cols.Add(Tuple.Create("IsRemote", "bool"));
-                    cols.Add(Tuple.Create("Office", "string"));
-                    cols.Add(Tuple.Create("FullName", "string (computed)"));
-                    cols.Add(Tuple.Create("YearsEmployed", "int (computed)"));
-                    break;
+                string typeName = UserVisibleHelper.GetPythonTypeName(p.PropertyType);
+                bool isComputed = p.GetSetMethod() == null;
+                if (isComputed)
+                    typeName += " (computed)";
+                cols.Add(Tuple.Create(p.Name, typeName));
             }
             return cols;
         }
@@ -1587,22 +1565,17 @@ namespace DataScienceWorkbench
 
         private string GetClassNameForTag(string tag)
         {
-            switch (tag)
-            {
-                case "customers": return "Customer";
-                case "employees": return "Employee";
-                default: return tag;
-            }
+            Type type;
+            if (inMemoryDataTypes.TryGetValue(tag, out type))
+                return type.Name;
+            return tag;
         }
 
         private int GetRecordCountForTag(string tag)
         {
-            switch (tag)
-            {
-                case "customers": return customers.Count;
-                case "employees": return employees.Count;
-                default: return 0;
-            }
+            if (tag == "customers") return customers.Count;
+            if (tag == "employees") return employees.Count;
+            return 0;
         }
 
         private string GetExampleCode(string tag)

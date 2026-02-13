@@ -83,8 +83,7 @@ namespace DataScienceWorkbench
             "calendar", "locale", "gettext",
             "operator", "contextlib",
             "data_dir",
-            "self", "cls",
-            "customers", "employees"
+            "self", "cls"
         };
 
         private static readonly HashSet<string> MagicNames = new HashSet<string> {

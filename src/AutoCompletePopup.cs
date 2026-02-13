@@ -64,10 +64,12 @@ namespace DataScienceWorkbench
             "nrows", "select_dtypes()", "memory_usage()"
         };
 
-        private static readonly Dictionary<string, List<string>> DatasetColumns = new Dictionary<string, List<string>> {
-            { "customers", new List<string> { "Id", "FirstName", "LastName", "Email", "Phone", "DateOfBirth", "RegistrationDate", "Tier", "CreditLimit", "IsActive", "FullName", "Age" } },
-            { "employees", new List<string> { "Id", "FirstName", "LastName", "Department", "Title", "HireDate", "Salary", "PerformanceScore", "ManagerId", "IsRemote", "Office", "FullName", "YearsEmployed" } }
-        };
+        private Dictionary<string, List<string>> DatasetColumns = new Dictionary<string, List<string>>();
+
+        public void SetDatasetColumns(Dictionary<string, List<string>> columns)
+        {
+            DatasetColumns = new Dictionary<string, List<string>>(columns);
+        }
 
         static AutoCompletePopup()
         {
@@ -122,16 +124,11 @@ namespace DataScienceWorkbench
                 "plt.annotate", "plt.text", "plt.axhline", "plt.axvline"
             };
 
-            var datasetNames = new[] {
-                "customers", "employees"
-            };
-
             AllItems.AddRange(keywords);
             AllItems.AddRange(builtins);
             AllItems.AddRange(pandasMethods);
             AllItems.AddRange(numpyMethods);
             AllItems.AddRange(matplotlibMethods);
-            AllItems.AddRange(datasetNames);
 
             AllItems.Sort(StringComparer.OrdinalIgnoreCase);
         }

@@ -43,7 +43,7 @@ Keep them in sync when making changes.
 ## DataScienceControl Public API
 - **LoadData(customers, employees)** - Replace demo data with custom datasets
 - **RegisterInMemoryData(name, values, columnName)** - Register IEnumerable for in-memory piping to Python (no file I/O)
-- **RegisterInMemoryData<T>(name, dataProvider)** - Register a Func<List<T>> for in-memory piping (uses reflection)
+- **RegisterInMemoryData<T>(name, dataProvider)** - Register a Func<List<T>> for in-memory piping (uses reflection, respects [UserVisible] attribute)
 - **RegisterInMemoryData(name, dataTableProvider)** - Register a Func<DataTable> for in-memory piping
 - **UnregisterInMemoryData(name)** - Remove a registered in-memory data source
 - **RegisterPythonClass(className, pythonCode)** - Register a Python class definition injected before every script run
@@ -87,6 +87,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added [UserVisible] attribute for property-level visibility control: properties marked with [UserVisible] are the only ones serialized to Python, shown in Data Reference, and offered in autocomplete. If no properties are marked, all eligible properties are included (backward compatible). GetColumnsForDataset and GetClassNameForTag now use reflection instead of hardcoded switch statements. AutoCompletePopup dataset columns and PythonSymbolAnalyzer dataset names are now dynamic.
 - 2026-02-13: Cleanup sweep: removed unused dataset fields (products, orders, sensorReadings, stockPrices, webEvents), Custom Data Sources UI section, Custom Data Access snippet, demo MainForm registrations (measurements, MathHelper, context vars), dead cases in GetColumnsForDataset/GetExampleCode/GetClassNameForTag/GetRecordCountForTag, unused dataset entries in AutoCompletePopup. Simplified LoadData API to (customers, employees). Made dataGen local to InitializeData.
 - 2026-02-13: Replaced Data Browser tab with Data Reference tab: removed DataGridView/dataset combo (Data Browser), promoted Data Reference content (tree view + detail panel) to tab index 1, removed redundant separate Data Reference tab. App now has 3 tabs: Python Editor, Data Reference, Package Manager. Package Manager lazy-load index updated from 3 to 2.
 - 2026-02-13: Added plt.show() support: monkey-patches matplotlib's show() to save figures and display them in a PlotViewerForm window with navigation (prev/next) and Save As functionality; all snippets updated to use plt.show() instead of plt.savefig(); PythonResult now includes PlotPaths list
