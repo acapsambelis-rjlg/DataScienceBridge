@@ -16,7 +16,7 @@ namespace DataScienceWorkbench.PythonWorkbench
         public UserVisibleAttribute(string description) { Description = description; }
     }
 
-    public static class UserVisibleProperties
+    public static class UserVisibleHelper
     {
         public static List<System.Reflection.PropertyInfo> GetVisibleProperties(Type type)
         {

@@ -21,8 +21,8 @@ namespace DataScienceWorkbench
             this.editorTab = new System.Windows.Forms.TabPage();
             this.mainSplit = new System.Windows.Forms.SplitContainer();
             this.editorPanel = new System.Windows.Forms.Panel();
-            this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
-            this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
+            this.pythonEditor = new DataScienceWorkbench.PythonWorkbench.SquiggleRichTextBox();
+            this.lineNumberPanel = new DataScienceWorkbench.PythonWorkbench.LineNumberPanel();
             this.editorMenuBar = new System.Windows.Forms.MenuStrip();
             this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.outputPanel = new System.Windows.Forms.Panel();
@@ -454,8 +454,8 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.TabPage editorTab;
         private System.Windows.Forms.SplitContainer mainSplit;
         private System.Windows.Forms.Panel editorPanel;
-        private DataScienceWorkbench.SquiggleRichTextBox pythonEditor;
-        private DataScienceWorkbench.LineNumberPanel lineNumberPanel;
+        private DataScienceWorkbench.PythonWorkbench.SquiggleRichTextBox pythonEditor;
+        private DataScienceWorkbench.PythonWorkbench.LineNumberPanel lineNumberPanel;
         private System.Windows.Forms.MenuStrip editorMenuBar;
         private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
         private System.Windows.Forms.Panel outputPanel;
