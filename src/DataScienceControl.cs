@@ -2480,8 +2480,12 @@ namespace DataScienceWorkbench
 
             foreach (var item in allPackageItems)
             {
-                if (hasFilter && item.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
-                    continue;
+                if (hasFilter)
+                {
+                    string name = item.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                    if (name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+                }
                 packageListBox.Items.Add(item);
             }
 
