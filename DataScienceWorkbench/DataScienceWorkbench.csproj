@@ -53,7 +53,9 @@
     <Compile Include="DataScienceControl.Designer.cs">
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="AutoCompletePopup.cs" />
+    <Compile Include="AutoCompletePopup.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="PlotViewerForm.cs">
       <SubType>Form</SubType>
     </Compile>
