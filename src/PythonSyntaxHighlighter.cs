@@ -8,17 +8,17 @@ namespace DataScienceWorkbench
 {
     public class PythonSyntaxHighlighter
     {
-        private static readonly Color KeywordColor = Color.FromArgb(86, 156, 214);
-        private static readonly Color BuiltinColor = Color.FromArgb(78, 201, 176);
-        private static readonly Color StringColor = Color.FromArgb(206, 145, 120);
-        private static readonly Color CommentColor = Color.FromArgb(106, 153, 85);
-        private static readonly Color NumberColor = Color.FromArgb(181, 206, 168);
-        private static readonly Color DecoratorColor = Color.FromArgb(220, 220, 170);
-        private static readonly Color DefaultColor = Color.FromArgb(212, 212, 212);
-        private static readonly Color BackgroundColor = Color.FromArgb(30, 30, 30);
-        private static readonly Color SelfColor = Color.FromArgb(86, 156, 214);
-        private static readonly Color FunctionDefColor = Color.FromArgb(220, 220, 170);
-        private static readonly Color ClassDefColor = Color.FromArgb(78, 201, 176);
+        private static readonly Color KeywordColor = Color.FromArgb(0, 0, 255);
+        private static readonly Color BuiltinColor = Color.FromArgb(38, 127, 153);
+        private static readonly Color StringColor = Color.FromArgb(163, 21, 21);
+        private static readonly Color CommentColor = Color.FromArgb(0, 128, 0);
+        private static readonly Color NumberColor = Color.FromArgb(9, 134, 88);
+        private static readonly Color DecoratorColor = Color.FromArgb(155, 100, 0);
+        private static readonly Color DefaultColor = Color.FromArgb(0, 0, 0);
+        private static readonly Color BackgroundColor = Color.FromArgb(255, 255, 255);
+        private static readonly Color SelfColor = Color.FromArgb(0, 0, 255);
+        private static readonly Color FunctionDefColor = Color.FromArgb(116, 83, 0);
+        private static readonly Color ClassDefColor = Color.FromArgb(38, 127, 153);
 
         private static readonly HashSet<string> Keywords = new HashSet<string> {
             "False", "None", "True", "and", "as", "assert", "async", "await",

@@ -38,7 +38,7 @@ namespace DataScienceWorkbench
             if (editor == null) return;
 
             e.Graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-            e.Graphics.Clear(Color.FromArgb(40, 40, 40));
+            e.Graphics.Clear(Color.FromArgb(240, 240, 240));
 
             int firstCharIndex = editor.GetCharIndexFromPosition(new Point(0, 0));
             int firstLine = editor.GetLineFromCharIndex(firstCharIndex);
@@ -46,7 +46,7 @@ namespace DataScienceWorkbench
             int totalLines = editor.Lines.Length;
             if (totalLines == 0) totalLines = 1;
 
-            using (var brush = new SolidBrush(Color.FromArgb(140, 140, 140)))
+            using (var brush = new SolidBrush(Color.FromArgb(110, 110, 110)))
             using (var sf = new StringFormat())
             {
                 sf.Alignment = StringAlignment.Far;
@@ -67,7 +67,7 @@ namespace DataScienceWorkbench
                 }
             }
 
-            using (var pen = new Pen(Color.FromArgb(60, 60, 60)))
+            using (var pen = new Pen(Color.FromArgb(200, 200, 200)))
             {
                 e.Graphics.DrawLine(pen, this.Width - 1, 0, this.Width - 1, this.Height);
             }

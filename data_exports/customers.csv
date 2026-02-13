@@ -14,7 +14,7 @@ Id,FirstName,LastName,Email,Phone,DateOfBirth,RegistrationDate,Tier,CreditLimit,
 13,Kevin,Johnson,user13@example.com,(225) 683-5833,3/11/1974 12:00:00 AM,11/3/2023 12:00:00 AM,Bronze,29830.91,False,Kevin Johnson,51
 14,Nina,Anderson,user14@example.com,(239) 211-1573,9/1/1982 12:00:00 AM,1/25/2022 12:00:00 AM,Platinum,7220.65,True,Nina Anderson,43
 15,Laura,Harris,user15@example.com,(890) 213-6296,7/23/1981 12:00:00 AM,4/2/2021 12:00:00 AM,Platinum,4786.96,False,Laura Harris,44
-16,Charlie,Brown,user16@example.com,(513) 353-9593,2/12/1986 12:00:00 AM,8/22/2019 12:00:00 AM,Diamond,27450.6,True,Charlie Brown,39
+16,Charlie,Brown,user16@example.com,(513) 353-9593,2/12/1986 12:00:00 AM,8/22/2019 12:00:00 AM,Diamond,27450.6,True,Charlie Brown,40
 17,Steven,Sanchez,user17@example.com,(829) 557-1136,4/5/1998 12:00:00 AM,2/23/2024 12:00:00 AM,Bronze,8256.6,True,Steven Sanchez,27
 18,Rachel,Lee,user18@example.com,(325) 560-3807,2/26/1967 12:00:00 AM,12/22/2023 12:00:00 AM,Diamond,37902.41,True,Rachel Lee,58
 19,Rachel,Thompson,user19@example.com,(952) 594-9213,7/29/1965 12:00:00 AM,5/23/2019 12:00:00 AM,Bronze,17911.9,True,Rachel Thompson,60

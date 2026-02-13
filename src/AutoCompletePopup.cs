@@ -121,8 +121,8 @@ namespace DataScienceWorkbench
                 Font = editor.Font,
                 BorderStyle = BorderStyle.FixedSingle,
                 IntegralHeight = false,
-                BackColor = Color.FromArgb(37, 37, 38),
-                ForeColor = Color.FromArgb(212, 212, 212)
+                BackColor = Color.FromArgb(255, 255, 255),
+                ForeColor = Color.FromArgb(0, 0, 0)
             };
 
             listBox.DrawMode = DrawMode.OwnerDrawFixed;
@@ -152,7 +152,7 @@ namespace DataScienceWorkbench
                 ShowInTaskbar = false,
                 StartPosition = FormStartPosition.Manual,
                 TopMost = true,
-                BackColor = Color.FromArgb(37, 37, 38)
+                BackColor = Color.FromArgb(255, 255, 255)
             };
             popupForm.Controls.Add(listBox);
             listBox.Dock = DockStyle.Fill;
@@ -165,8 +165,8 @@ namespace DataScienceWorkbench
 
             string item = listBox.Items[e.Index].ToString();
             bool selected = (e.State & DrawItemState.Selected) != 0;
-            Color bgColor = selected ? Color.FromArgb(4, 57, 94) : Color.FromArgb(37, 37, 38);
-            Color fgColor = Color.FromArgb(212, 212, 212);
+            Color bgColor = selected ? Color.FromArgb(0, 120, 215) : Color.FromArgb(255, 255, 255);
+            Color fgColor = selected ? Color.White : Color.FromArgb(0, 0, 0);
 
             using (var bg = new SolidBrush(bgColor))
                 e.Graphics.FillRectangle(bg, e.Bounds);

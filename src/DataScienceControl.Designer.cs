@@ -185,12 +185,12 @@ namespace DataScienceWorkbench
             // pythonEditor
             // 
             this.pythonEditor.AcceptsTab = true;
-            this.pythonEditor.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.pythonEditor.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.pythonEditor.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.pythonEditor.DetectUrls = false;
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pythonEditor.Font = new System.Drawing.Font("Consolas", 10F);
-            this.pythonEditor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(212)))), ((int)(((byte)(212)))), ((int)(((byte)(212)))));
+            this.pythonEditor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.pythonEditor.Location = new System.Drawing.Point(45, 25);
             this.pythonEditor.Name = "pythonEditor";
             this.pythonEditor.Size = new System.Drawing.Size(541, 425);
@@ -279,10 +279,10 @@ namespace DataScienceWorkbench
             // 
             // outputBox
             // 
-            this.outputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.outputBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(248)))));
             this.outputBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.outputBox.Font = new System.Drawing.Font("Consolas", 9F);
-            this.outputBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
+            this.outputBox.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.outputBox.Location = new System.Drawing.Point(0, 22);
             this.outputBox.Name = "outputBox";
             this.outputBox.ReadOnly = true;

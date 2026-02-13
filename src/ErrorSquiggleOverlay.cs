@@ -11,8 +11,8 @@ namespace DataScienceWorkbench
         private int errorLineNumber = -1;
         private const int WM_PAINT = 0x000F;
 
-        private static readonly Color CurrentLineColor = Color.FromArgb(20, 255, 255, 255);
-        private static readonly Color BracketHighlightColor = Color.FromArgb(80, 128, 128, 128);
+        private static readonly Color CurrentLineColor = Color.FromArgb(25, 0, 0, 0);
+        private static readonly Color BracketHighlightColor = Color.FromArgb(60, 0, 120, 215);
         private static readonly Color WarningSquiggleColor = Color.FromArgb(220, 180, 50);
         private int matchedBracketPos1 = -1;
         private int matchedBracketPos2 = -1;
@@ -208,7 +208,7 @@ namespace DataScienceWorkbench
             {
                 g.FillRectangle(brush, rect);
             }
-            using (var pen = new Pen(Color.FromArgb(120, 180, 180, 180)))
+            using (var pen = new Pen(Color.FromArgb(120, 0, 80, 180)))
             {
                 g.DrawRectangle(pen, rect);
             }

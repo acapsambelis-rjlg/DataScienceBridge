@@ -1019,7 +1019,7 @@ namespace DataScienceWorkbench
             }
 
             RaiseStatus("Running script...");
-            AppendOutput("--- Running script at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.Cyan);
+            AppendOutput("--- Running script at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
 
             Application.DoEvents();
 
@@ -1030,17 +1030,17 @@ namespace DataScienceWorkbench
             var result = pythonRunner.Execute(script, dataExportDir, memData);
 
             if (!string.IsNullOrEmpty(result.Output))
-                AppendOutput(result.Output, Color.FromArgb(220, 220, 220));
+                AppendOutput(result.Output, Color.FromArgb(0, 0, 0));
 
             if (!string.IsNullOrEmpty(result.Error))
             {
                 if (result.Success)
-                    AppendOutput(result.Error, Color.FromArgb(200, 200, 100));
+                    AppendOutput(result.Error, Color.FromArgb(140, 120, 0));
                 else
-                    AppendOutput("ERROR:\n" + result.Error, Color.FromArgb(255, 100, 100));
+                    AppendOutput("ERROR:\n" + result.Error, Color.FromArgb(200, 0, 0));
             }
 
-            AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.Cyan);
+            AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.FromArgb(0, 100, 180));
             RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
         }
 
