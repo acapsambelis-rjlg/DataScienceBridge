@@ -14,6 +14,7 @@ namespace DataScienceWorkbench
         private List<Employee> employees;
 
         private bool packagesLoaded;
+        private List<PackageListItem> allPackageItems = new List<PackageListItem>();
         private PythonSyntaxHighlighter syntaxHighlighter;
         private Timer highlightTimer;
         private bool suppressHighlight;
@@ -114,6 +115,7 @@ namespace DataScienceWorkbench
             RegisterAllDatasetsInMemory();
             PopulateReferenceTree();
             SetupRefSearch();
+            SetupPkgSearch();
             suppressHighlight = true;
             pythonEditor.Text = GetDefaultScript();
             suppressHighlight = false;
@@ -2397,53 +2399,134 @@ namespace DataScienceWorkbench
 
         private void OnRefreshPackages(object sender, EventArgs e)
         {
+            allPackageItems.Clear();
             packageListBox.Items.Clear();
+            pkgSearchBox.Text = pkgSearchPlaceholder;
+            pkgSearchBox.ForeColor = Color.Gray;
+            pkgSearchPlaceholderActive = true;
 
             if (!pythonRunner.PythonAvailable)
             {
-                packageListBox.Items.Add(new PackageListItem("(Python not available — cannot list packages)", "", "MSG"));
+                allPackageItems.Add(new PackageListItem("(Python not available — cannot list packages)", "", "MSG"));
+                PopulatePackageList("");
                 return;
             }
 
             var result = pythonRunner.ListPackagesGrouped();
             if (result.Success && !string.IsNullOrEmpty(result.Output))
             {
-                var baseItems = new List<PackageListItem>();
-                var userItems = new List<PackageListItem>();
-                var depItems = new List<PackageListItem>();
-
                 foreach (var line in result.Output.Split('\n'))
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     var parts = line.Split('\t');
                     if (parts.Length < 3) continue;
-                    var item = new PackageListItem(parts[1], parts[2], parts[0]);
-                    if (parts[0] == "BASE") baseItems.Add(item);
-                    else if (parts[0] == "USER") userItems.Add(item);
-                    else depItems.Add(item);
+                    allPackageItems.Add(new PackageListItem(parts[1], parts[2], parts[0]));
+                }
+            }
+            else if (!result.Success)
+            {
+                allPackageItems.Add(new PackageListItem("(Failed to list packages: " + result.Error + ")", "", "MSG"));
+            }
+
+            PopulatePackageList("");
+        }
+
+        private bool pkgSearchPlaceholderActive = true;
+        private readonly string pkgSearchPlaceholder = "Search packages...";
+
+        private void SetupPkgSearch()
+        {
+            pkgSearchBox.Text = pkgSearchPlaceholder;
+            pkgSearchBox.ForeColor = Color.Gray;
+            pkgSearchPlaceholderActive = true;
+
+            pkgSearchBox.GotFocus += (s, ev) =>
+            {
+                if (pkgSearchPlaceholderActive)
+                {
+                    pkgSearchBox.Text = "";
+                    pkgSearchBox.ForeColor = Color.Black;
+                    pkgSearchPlaceholderActive = false;
+                }
+            };
+
+            pkgSearchBox.LostFocus += (s, ev) =>
+            {
+                if (string.IsNullOrEmpty(pkgSearchBox.Text))
+                {
+                    pkgSearchBox.Text = pkgSearchPlaceholder;
+                    pkgSearchBox.ForeColor = Color.Gray;
+                    pkgSearchPlaceholderActive = true;
+                }
+            };
+        }
+
+        private void OnPkgSearchChanged(object sender, EventArgs e)
+        {
+            if (pkgSearchPlaceholderActive) return;
+            PopulatePackageList(pkgSearchBox.Text.Trim());
+        }
+
+        private void PopulatePackageList(string filter)
+        {
+            packageListBox.Items.Clear();
+
+            var baseItems = new List<PackageListItem>();
+            var userItems = new List<PackageListItem>();
+            var depItems = new List<PackageListItem>();
+            var msgItems = new List<PackageListItem>();
+
+            bool hasFilter = !string.IsNullOrEmpty(filter);
+
+            foreach (var item in allPackageItems)
+            {
+                if (item.Category == "MSG")
+                {
+                    if (!hasFilter) msgItems.Add(item);
+                    continue;
                 }
 
+                if (hasFilter && item.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                if (item.Category == "BASE") baseItems.Add(item);
+                else if (item.Category == "USER") userItems.Add(item);
+                else depItems.Add(item);
+            }
+
+            if (msgItems.Count > 0 && !hasFilter)
+            {
+                foreach (var m in msgItems) packageListBox.Items.Add(m);
+                return;
+            }
+
+            if (!hasFilter || baseItems.Count > 0)
+            {
                 packageListBox.Items.Add(new PackageListItem("Base Packages", "", "HDR"));
                 if (baseItems.Count == 0)
                     packageListBox.Items.Add(new PackageListItem("(none)", "", "MSG"));
                 else
                     foreach (var item in baseItems) packageListBox.Items.Add(item);
+            }
 
-                if (userItems.Count > 0)
-                {
-                    packageListBox.Items.Add(new PackageListItem("User Installed", "", "HDR"));
-                    foreach (var item in userItems) packageListBox.Items.Add(item);
-                }
+            if (userItems.Count > 0)
+            {
+                packageListBox.Items.Add(new PackageListItem("User Installed", "", "HDR"));
+                foreach (var item in userItems) packageListBox.Items.Add(item);
+            }
 
+            if (!hasFilter || depItems.Count > 0)
+            {
                 packageListBox.Items.Add(new PackageListItem("Dependencies", "", "HDR"));
                 if (depItems.Count == 0)
                     packageListBox.Items.Add(new PackageListItem("(none)", "", "MSG"));
                 else
                     foreach (var item in depItems) packageListBox.Items.Add(item);
             }
-            else if (!result.Success)
+
+            if (hasFilter && baseItems.Count == 0 && userItems.Count == 0 && depItems.Count == 0)
             {
-                packageListBox.Items.Add(new PackageListItem("(Failed to list packages: " + result.Error + ")", "", "MSG"));
+                packageListBox.Items.Add(new PackageListItem("No packages match '" + filter + "'", "", "MSG"));
             }
         }
 

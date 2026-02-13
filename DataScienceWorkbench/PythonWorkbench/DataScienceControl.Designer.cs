@@ -273,6 +273,7 @@ namespace DataScienceWorkbench
             // pkgRightPanel
             // 
             this.pkgRightPanel.Controls.Add(this.packageListBox);
+            this.pkgRightPanel.Controls.Add(this.pkgSearchBox);
             this.pkgRightPanel.Controls.Add(this.pkgListLabel);
             this.pkgRightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pkgRightPanel.Location = new System.Drawing.Point(350, 0);
@@ -303,6 +304,17 @@ namespace DataScienceWorkbench
             this.pkgListLabel.Size = new System.Drawing.Size(422, 22);
             this.pkgListLabel.TabIndex = 1;
             this.pkgListLabel.Text = "Installed Packages:";
+            // 
+            // pkgSearchBox
+            // 
+            this.pkgSearchBox = new System.Windows.Forms.TextBox();
+            this.pkgSearchBox.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pkgSearchBox.Font = new System.Drawing.Font("Consolas", 9F);
+            this.pkgSearchBox.Location = new System.Drawing.Point(10, 32);
+            this.pkgSearchBox.Name = "pkgSearchBox";
+            this.pkgSearchBox.Size = new System.Drawing.Size(422, 22);
+            this.pkgSearchBox.TabIndex = 2;
+            this.pkgSearchBox.TextChanged += new System.EventHandler(this.OnPkgSearchChanged);
             // 
             // pkgLeftPanel
             // 
@@ -483,5 +495,6 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.Button installBtn;
         private System.Windows.Forms.TextBox packageNameBox;
         private System.Windows.Forms.Label pkgLabel;
+        private System.Windows.Forms.TextBox pkgSearchBox;
     }
 }
