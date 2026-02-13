@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace DataScienceWorkbench
@@ -34,6 +35,40 @@ namespace DataScienceWorkbench
 
         private static readonly List<string> AllItems = new List<string>();
 
+        private static readonly List<string> DataFrameMethods = new List<string> {
+            "head()", "tail()", "info()", "describe()", "shape",
+            "columns", "dtypes", "index", "values", "iloc", "loc",
+            "groupby()", "sort_values()", "sort_index()",
+            "merge()", "join()",
+            "drop()", "dropna()", "fillna()", "isna()", "notna()",
+            "apply()", "map()", "applymap()",
+            "value_counts()", "unique()", "nunique()",
+            "mean()", "median()", "std()", "sum()", "min()", "max()", "count()",
+            "agg()", "transform()",
+            "reset_index()", "set_index()", "rename()",
+            "astype()", "copy()", "replace()",
+            "to_csv()", "to_excel()", "to_json()",
+            "plot()", "plot.bar()", "plot.hist()", "plot.scatter()",
+            "corr()", "cov()", "sample()", "nlargest()", "nsmallest()",
+            "str.contains()", "str.replace()", "str.split()", "str.lower()", "str.upper()",
+            "dt.year", "dt.month", "dt.day", "dt.hour",
+            "df", "query()", "isin()", "between()", "clip()",
+            "pivot_table()", "melt()", "stack()", "unstack()",
+            "rolling()", "expanding()", "shift()", "diff()", "pct_change()",
+            "nrows", "select_dtypes()", "memory_usage()"
+        };
+
+        private static readonly Dictionary<string, List<string>> DatasetColumns = new Dictionary<string, List<string>> {
+            { "products", new List<string> { "Id", "Name", "Category", "SubCategory", "SKU", "Price", "Cost", "StockQuantity", "ReorderLevel", "Weight", "Supplier", "Rating", "ReviewCount", "IsDiscontinued", "DateAdded", "Margin", "MarginPercent" } },
+            { "customers", new List<string> { "Id", "FirstName", "LastName", "Email", "Phone", "DateOfBirth", "RegistrationDate", "Tier", "CreditLimit", "IsActive", "FullName", "Age" } },
+            { "orders", new List<string> { "Id", "CustomerId", "OrderDate", "ShipDate", "Status", "ShipMethod", "ShippingCost", "PaymentMethod", "Subtotal", "Total", "ItemCount" } },
+            { "order_items", new List<string> { "ProductId", "ProductName", "Quantity", "UnitPrice", "Discount", "LineTotal" } },
+            { "employees", new List<string> { "Id", "FirstName", "LastName", "Department", "Title", "HireDate", "Salary", "PerformanceScore", "ManagerId", "IsRemote", "Office", "FullName", "YearsEmployed" } },
+            { "sensor_readings", new List<string> { "SensorId", "SensorType", "Location", "Timestamp", "Value", "Unit", "Status", "BatteryLevel" } },
+            { "stock_prices", new List<string> { "Symbol", "CompanyName", "Date", "Open", "High", "Low", "Close", "Volume", "AdjClose" } },
+            { "web_events", new List<string> { "SessionId", "UserId", "Timestamp", "EventType", "Page", "Referrer", "Browser", "Device", "Country", "Duration" } }
+        };
+
         static AutoCompletePopup()
         {
             var keywords = new[] {
@@ -59,23 +94,7 @@ namespace DataScienceWorkbench
             var pandasMethods = new[] {
                 "pd.read_csv", "pd.DataFrame", "pd.Series", "pd.concat", "pd.merge",
                 "pd.to_datetime", "pd.to_numeric", "pd.get_dummies", "pd.cut", "pd.qcut",
-                "pd.pivot_table", "pd.crosstab", "pd.melt",
-                ".head()", ".tail()", ".info()", ".describe()", ".shape",
-                ".columns", ".dtypes", ".index", ".values", ".iloc", ".loc",
-                ".groupby()", ".sort_values()", ".sort_index()",
-                ".merge()", ".join()", ".concat()",
-                ".drop()", ".dropna()", ".fillna()", ".isna()", ".notna()",
-                ".apply()", ".map()", ".applymap()",
-                ".value_counts()", ".unique()", ".nunique()",
-                ".mean()", ".median()", ".std()", ".sum()", ".min()", ".max()", ".count()",
-                ".agg()", ".transform()",
-                ".reset_index()", ".set_index()", ".rename()",
-                ".astype()", ".copy()", ".replace()",
-                ".to_csv()", ".to_excel()", ".to_json()",
-                ".plot()", ".plot.bar()", ".plot.hist()", ".plot.scatter()",
-                ".corr()", ".cov()", ".sample()", ".nlargest()", ".nsmallest()",
-                ".str.contains()", ".str.replace()", ".str.split()", ".str.lower()", ".str.upper()",
-                ".dt.year", ".dt.month", ".dt.day", ".dt.hour"
+                "pd.pivot_table", "pd.crosstab", "pd.melt"
             };
 
             var numpyMethods = new[] {
@@ -103,11 +122,17 @@ namespace DataScienceWorkbench
                 "plt.annotate", "plt.text", "plt.axhline", "plt.axvline"
             };
 
+            var datasetNames = new[] {
+                "products", "customers", "orders", "order_items",
+                "employees", "sensor_readings", "stock_prices", "web_events"
+            };
+
             AllItems.AddRange(keywords);
             AllItems.AddRange(builtins);
             AllItems.AddRange(pandasMethods);
             AllItems.AddRange(numpyMethods);
             AllItems.AddRange(matplotlibMethods);
+            AllItems.AddRange(datasetNames);
 
             AllItems.Sort(StringComparer.OrdinalIgnoreCase);
         }
@@ -221,16 +246,25 @@ namespace DataScienceWorkbench
                 wordStart--;
             wordStart++;
 
-            if (pos - wordStart < 2) { Hide(); return; }
-
             string prefix = text.Substring(wordStart, pos - wordStart);
             triggerStart = wordStart;
 
-            var matches = AllItems
-                .Where(item => item.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ||
-                               item.TrimStart('.').StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                .Take(15)
-                .ToList();
+            List<string> matches;
+            int dotIndex = prefix.LastIndexOf('.');
+            if (dotIndex >= 0)
+            {
+                string objectName = prefix.Substring(0, dotIndex);
+                string memberPrefix = prefix.Substring(dotIndex + 1);
+                matches = GetDotCompletions(objectName, memberPrefix, text);
+            }
+            else
+            {
+                if (prefix.Length < 2) { Hide(); return; }
+                matches = AllItems
+                    .Where(item => item.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .Take(15)
+                    .ToList();
+            }
 
             if (matches.Count == 0 || (matches.Count == 1 && matches[0].Equals(prefix, StringComparison.OrdinalIgnoreCase)))
             {
@@ -239,6 +273,205 @@ namespace DataScienceWorkbench
             }
 
             Show(matches);
+        }
+
+        private List<string> GetDotCompletions(string objectName, string memberPrefix, string code)
+        {
+            var members = new List<string>();
+
+            if (DatasetColumns.ContainsKey(objectName))
+            {
+                members.AddRange(DatasetColumns[objectName]);
+                members.AddRange(DataFrameMethods);
+            }
+            else if (objectName == "self")
+            {
+                var classMembers = ExtractClassMembersForSelf(code, editor.SelectionStart);
+                members.AddRange(classMembers);
+            }
+            else
+            {
+                var staticItems = AllItems
+                    .Where(item => item.StartsWith(objectName + ".", StringComparison.OrdinalIgnoreCase))
+                    .Select(item => item.Substring(objectName.Length + 1))
+                    .ToList();
+
+                if (staticItems.Count > 0)
+                {
+                    members.AddRange(staticItems);
+                }
+                else
+                {
+                    var classInfo = ExtractClassMembers(code);
+                    if (classInfo.ContainsKey(objectName))
+                    {
+                        members.AddRange(classInfo[objectName]);
+                    }
+                    else
+                    {
+                        string varType = FindVariableType(objectName, code);
+                        if (varType != null && classInfo.ContainsKey(varType))
+                        {
+                            members.AddRange(classInfo[varType]);
+                        }
+                        else
+                        {
+                            members.AddRange(DataFrameMethods);
+                        }
+                    }
+                }
+            }
+
+            var filtered = members
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(m => string.IsNullOrEmpty(memberPrefix) ||
+                           m.StartsWith(memberPrefix, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(m => m, StringComparer.OrdinalIgnoreCase)
+                .Take(15)
+                .ToList();
+
+            return filtered;
+        }
+
+        private List<string> ExtractClassMembersForSelf(string code, int cursorPos)
+        {
+            var members = new List<string>();
+            string className = FindEnclosingClass(code, cursorPos);
+            if (className == null) return members;
+
+            var allClassMembers = ExtractClassMembers(code);
+            if (allClassMembers.ContainsKey(className))
+                members.AddRange(allClassMembers[className]);
+
+            return members;
+        }
+
+        private string FindEnclosingClass(string code, int cursorPos)
+        {
+            int searchPos = Math.Min(cursorPos, code.Length);
+            var classMatches = Regex.Matches(code.Substring(0, searchPos), @"^(\s*)class\s+(\w+)", RegexOptions.Multiline);
+
+            string bestClass = null;
+            int bestPos = -1;
+
+            foreach (Match m in classMatches)
+            {
+                string indent = m.Groups[1].Value;
+                string name = m.Groups[2].Value;
+                int classPos = m.Index;
+
+                if (classPos < searchPos)
+                {
+                    if (bestPos == -1 || classPos > bestPos)
+                    {
+                        int classBodyStart = code.IndexOf(':', classPos);
+                        if (classBodyStart >= 0 && classBodyStart < searchPos)
+                        {
+                            int lineStart = code.LastIndexOf('\n', Math.Max(searchPos - 1, 0));
+                            if (lineStart < 0) lineStart = 0;
+                            string curLine = code.Substring(lineStart, searchPos - lineStart);
+                            int curIndent = curLine.Length - curLine.TrimStart().Length;
+                            if (curIndent > indent.Length)
+                            {
+                                bestClass = name;
+                                bestPos = classPos;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return bestClass;
+        }
+
+        private Dictionary<string, List<string>> ExtractClassMembers(string code)
+        {
+            var result = new Dictionary<string, List<string>>();
+            var classMatches = Regex.Matches(code, @"^(\s*)class\s+(\w+)[^:]*:", RegexOptions.Multiline);
+
+            foreach (Match cm in classMatches)
+            {
+                string classIndent = cm.Groups[1].Value;
+                string className = cm.Groups[2].Value;
+                int classBodyStart = cm.Index + cm.Length;
+                int directMemberIndent = classIndent.Length + 4;
+
+                if (!result.ContainsKey(className))
+                    result[className] = new List<string>();
+
+                var memberSet = new HashSet<string>();
+
+                string remaining = code.Substring(classBodyStart);
+                string[] lines = remaining.Split('\n');
+                int skipUntilIndent = -1;
+
+                foreach (string line in lines)
+                {
+                    if (line.Trim().Length == 0) continue;
+                    int lineIndent = line.Length - line.TrimStart().Length;
+
+                    if (lineIndent <= classIndent.Length)
+                        break;
+
+                    if (skipUntilIndent >= 0)
+                    {
+                        if (lineIndent > skipUntilIndent)
+                            continue;
+                        skipUntilIndent = -1;
+                    }
+
+                    string trimmed = line.TrimStart();
+
+                    if (trimmed.StartsWith("class "))
+                    {
+                        skipUntilIndent = lineIndent;
+                        continue;
+                    }
+
+                    var defMatch = Regex.Match(trimmed, @"^def\s+(\w+)\s*\(");
+                    if (defMatch.Success && lineIndent == directMemberIndent)
+                    {
+                        string methodName = defMatch.Groups[1].Value;
+                        if (!methodName.StartsWith("__") || methodName == "__init__")
+                            memberSet.Add(methodName + "()");
+                    }
+
+                    var selfAttrMatches = Regex.Matches(trimmed, @"\bself\.(\w+)\s*=");
+                    foreach (Match sam in selfAttrMatches)
+                    {
+                        string attrName = sam.Groups[1].Value;
+                        if (!attrName.StartsWith("_"))
+                            memberSet.Add(attrName);
+                    }
+
+                    if (lineIndent == directMemberIndent)
+                    {
+                        var classVarMatch = Regex.Match(trimmed, @"^(\w+)\s*=");
+                        if (classVarMatch.Success && !trimmed.StartsWith("def ") && !trimmed.StartsWith("class "))
+                        {
+                            memberSet.Add(classVarMatch.Groups[1].Value);
+                        }
+                    }
+                }
+
+                result[className].AddRange(memberSet);
+            }
+
+            return result;
+        }
+
+        private string FindVariableType(string varName, string code)
+        {
+            var pattern = new Regex(@"\b" + Regex.Escape(varName) + @"\s*=\s*(\w+)\s*\(", RegexOptions.Multiline);
+            var matches = pattern.Matches(code);
+            if (matches.Count > 0)
+            {
+                string typeName = matches[matches.Count - 1].Groups[1].Value;
+                char first = typeName[0];
+                if (char.IsUpper(first))
+                    return typeName;
+            }
+            return null;
         }
 
         private void Show(List<string> items)
@@ -307,15 +540,27 @@ namespace DataScienceWorkbench
             string text = editor.Text;
             string prefix = text.Substring(triggerStart, pos - triggerStart);
 
-            string insertion = selected;
-            if (selected.StartsWith(".") && prefix.Length > 0 && !prefix.StartsWith("."))
+            int dotIdx = prefix.LastIndexOf('.');
+            if (dotIdx >= 0)
             {
-                insertion = selected.TrimStart('.');
+                int memberStart = triggerStart + dotIdx + 1;
+                editor.Select(memberStart, pos - memberStart);
+                editor.SelectedText = selected;
+                editor.SelectionStart = memberStart + selected.Length;
+            }
+            else
+            {
+                string insertion = selected;
+                if (selected.StartsWith(".") && prefix.Length > 0 && !prefix.StartsWith("."))
+                {
+                    insertion = selected.TrimStart('.');
+                }
+
+                editor.Select(triggerStart, pos - triggerStart);
+                editor.SelectedText = insertion;
+                editor.SelectionStart = triggerStart + insertion.Length;
             }
 
-            editor.Select(triggerStart, pos - triggerStart);
-            editor.SelectedText = insertion;
-            editor.SelectionStart = triggerStart + insertion.Length;
             editor.SelectionLength = 0;
             editor.Focus();
         }

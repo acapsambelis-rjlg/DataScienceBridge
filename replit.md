@@ -56,7 +56,7 @@ Keep them in sync when making changes.
 
 ## Key Features
 - **7 dummy datasets**: Products (200), Customers (150), Orders (500), Employees (100), Sensor Readings (1000), Stock Prices (365 days x 10 symbols), Web Events (2000)
-- **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, autocomplete, bracket matching, current line highlight, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, and bookmarks
+- **Integrated Python editor** with syntax highlighting, line numbers, syntax checking, code snippets, context-aware autocomplete (dataset columns, class members, DataFrame methods), bracket matching, current line highlight, auto-indentation, block indent/unindent, line duplicate/move, code folding indicators, and bookmarks
 - **Data Browser** tab with DataGridView for browsing all datasets
 - **Package Manager** tab for installing/uninstalling pip packages (lazy-loaded on first tab visit)
 - **In-memory data bridge**: All .NET data streamed to Python via stdin as pre-loaded variables (e.g., `products.Cost.mean()`)
@@ -81,6 +81,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added context-aware dot-completion autocomplete: dataset variables show column names + DataFrame methods, self. shows class methods/attributes, ClassName. shows class members, instance variables infer type from constructor calls. Enhanced symbol analyzer: dataset names (products, customers, etc.) and self/cls no longer produce false squiggles; added global/nonlocal/lambda support and except line skipping
 - 2026-02-13: Added error tooltips on squiggle hover: hovering over red (syntax error) or yellow (undefined name) squiggles shows a dark-themed tooltip with the error message; tooltips auto-hide when mouse leaves the error region or errors are cleared
 - 2026-02-13: Switched from CSV file bridge to fully in-memory data bridge: all datasets are now top-level Python variables (e.g., `products.Cost.mean()` instead of `dotnet.measurements.values.mean()`). Removed ExportCustomData, ExportAllData, CSV export code, DataExporter class. Updated all snippets, help text, Data Reference tab, and default script.
 - 2026-02-13: Added Tab/Shift+Tab block indent/unindent, Ctrl+D line duplicate, Alt+Up/Down line move, code folding indicators in gutter, bookmarks (Ctrl+B toggle, F2/Shift+F2 navigate, click gutter), widened line number panel to 60px

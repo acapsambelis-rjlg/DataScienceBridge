@@ -75,7 +75,10 @@ namespace DataScienceWorkbench
             "decimal", "fractions", "statistics",
             "calendar", "locale", "gettext",
             "operator", "contextlib",
-            "data_dir"
+            "data_dir",
+            "self", "cls",
+            "products", "customers", "orders", "order_items",
+            "employees", "sensor_readings", "stock_prices", "web_events"
         };
 
         private static readonly HashSet<string> MagicNames = new HashSet<string> {
@@ -164,7 +167,7 @@ namespace DataScienceWorkbench
                         {
                             string param = p.Trim().Split('=')[0].Trim().Split(':')[0].Trim();
                             if (param.StartsWith("*")) param = param.TrimStart('*');
-                            if (param.Length > 0 && param != "self" && Regex.IsMatch(param, @"^[a-zA-Z_]\w*$"))
+                            if (param.Length > 0 && Regex.IsMatch(param, @"^[a-zA-Z_]\w*$"))
                                 defined.Add(param);
                         }
                     }
@@ -217,6 +220,21 @@ namespace DataScienceWorkbench
                     }
                 }
 
+                if (trimmed.StartsWith("global ") || trimmed.StartsWith("nonlocal "))
+                {
+                    string keyword = trimmed.StartsWith("global ") ? "global" : "nonlocal";
+                    var declMatch = Regex.Match(cline, @"\b" + keyword + @"\s+(.+)");
+                    if (declMatch.Success)
+                    {
+                        foreach (string part in declMatch.Groups[1].Value.Split(','))
+                        {
+                            string name = part.Trim();
+                            if (Regex.IsMatch(name, @"^[a-zA-Z_]\w*$"))
+                                defined.Add(name);
+                        }
+                    }
+                }
+
                 if (trimmed.StartsWith("for "))
                 {
                     var forMatch = Regex.Match(cline, @"\bfor\s+(.+?)\s+in\s+");
@@ -264,6 +282,18 @@ namespace DataScienceWorkbench
                 var listCompVars = Regex.Matches(mline, @"\bfor\s+(\w+)\s+in\b");
                 foreach (Match lcm in listCompVars)
                     defined.Add(lcm.Groups[1].Value);
+
+                var lambdaMatches = Regex.Matches(mline, @"\blambda\s+([^:]+):");
+                foreach (Match lm in lambdaMatches)
+                {
+                    foreach (string p in lm.Groups[1].Value.Split(','))
+                    {
+                        string param = p.Trim().Split('=')[0].Trim();
+                        if (param.StartsWith("*")) param = param.TrimStart('*');
+                        if (param.Length > 0 && Regex.IsMatch(param, @"^[a-zA-Z_]\w*$"))
+                            defined.Add(param);
+                    }
+                }
 
                 pos += cline.Length + 1;
             }
@@ -325,7 +355,9 @@ namespace DataScienceWorkbench
                 string linePrefix = code.Substring(lineStart, m.Index - lineStart).TrimStart();
                 if (linePrefix.StartsWith("def ") || linePrefix.StartsWith("class ") ||
                     linePrefix.StartsWith("import ") || linePrefix.StartsWith("from ") ||
-                    linePrefix.StartsWith("@"))
+                    linePrefix.StartsWith("@") ||
+                    linePrefix.StartsWith("global ") || linePrefix.StartsWith("nonlocal ") ||
+                    linePrefix.StartsWith("except ") || linePrefix.StartsWith("except:"))
                     continue;
 
                 string key = name + ":" + m.Index;
