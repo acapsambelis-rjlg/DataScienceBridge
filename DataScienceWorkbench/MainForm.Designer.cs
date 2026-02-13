@@ -1,3 +1,5 @@
+using DataScienceWorkbench.PythonWorkbench;
+
 namespace DataScienceWorkbench
 {
     partial class MainForm
@@ -17,7 +19,8 @@ namespace DataScienceWorkbench
 
         private void InitializeComponent()
         {
-            this.dataScienceControl = new DataScienceWorkbench.DataScienceControl();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            this.dataScienceControl = new DataScienceControl();
             this.statusBar = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusBar.SuspendLayout();
@@ -26,16 +29,17 @@ namespace DataScienceWorkbench
             // dataScienceControl
             // 
             this.dataScienceControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataScienceControl.Location = new System.Drawing.Point(0, 24);
+            this.dataScienceControl.Location = new System.Drawing.Point(0, 0);
             this.dataScienceControl.Name = "dataScienceControl";
-            this.dataScienceControl.Size = new System.Drawing.Size(1184, 729);
+            this.dataScienceControl.ScriptText = resources.GetString("dataScienceControl.ScriptText");
+            this.dataScienceControl.Size = new System.Drawing.Size(1184, 727);
             this.dataScienceControl.TabIndex = 0;
             // 
             // statusBar
             // 
             this.statusBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.statusLabel});
-            this.statusBar.Location = new System.Drawing.Point(0, 753);
+            this.statusBar.Location = new System.Drawing.Point(0, 727);
             this.statusBar.Name = "statusBar";
             this.statusBar.Size = new System.Drawing.Size(1184, 22);
             this.statusBar.TabIndex = 1;
@@ -50,7 +54,7 @@ namespace DataScienceWorkbench
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1184, 775);
+            this.ClientSize = new System.Drawing.Size(1184, 749);
             this.Controls.Add(this.dataScienceControl);
             this.Controls.Add(this.statusBar);
             this.KeyPreview = true;
@@ -62,11 +66,12 @@ namespace DataScienceWorkbench
             this.statusBar.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion
 
-        private DataScienceWorkbench.DataScienceControl dataScienceControl;
+        private DataScienceControl dataScienceControl;
         private System.Windows.Forms.StatusStrip statusBar;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
     }

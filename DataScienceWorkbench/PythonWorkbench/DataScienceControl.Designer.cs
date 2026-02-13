@@ -1,4 +1,4 @@
-namespace DataScienceWorkbench
+namespace DataScienceWorkbench.PythonWorkbench
 {
     partial class DataScienceControl
     {
@@ -21,8 +21,8 @@ namespace DataScienceWorkbench
             this.editorTab = new System.Windows.Forms.TabPage();
             this.mainSplit = new System.Windows.Forms.SplitContainer();
             this.editorPanel = new System.Windows.Forms.Panel();
-            this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
-            this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
+            this.pythonEditor = new SquiggleRichTextBox();
+            this.lineNumberPanel = new LineNumberPanel();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.runBtn = new System.Windows.Forms.ToolStripButton();
             this.toolSep1 = new System.Windows.Forms.ToolStripSeparator();
@@ -501,8 +501,8 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.TabPage editorTab;
         private System.Windows.Forms.SplitContainer mainSplit;
         private System.Windows.Forms.Panel editorPanel;
-        private DataScienceWorkbench.SquiggleRichTextBox pythonEditor;
-        private DataScienceWorkbench.LineNumberPanel lineNumberPanel;
+        private SquiggleRichTextBox pythonEditor;
+        private LineNumberPanel lineNumberPanel;
         private System.Windows.Forms.ToolStrip toolBar;
         private System.Windows.Forms.ToolStripButton runBtn;
         private System.Windows.Forms.ToolStripSeparator toolSep1;

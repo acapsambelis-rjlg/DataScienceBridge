@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace DataScienceWorkbench
+namespace DataScienceWorkbench.PythonWorkbench
 {
     public partial class DataScienceControl : UserControl
     {

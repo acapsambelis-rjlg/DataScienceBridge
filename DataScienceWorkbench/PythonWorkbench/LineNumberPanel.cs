@@ -5,7 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Windows.Forms;
 
-namespace DataScienceWorkbench
+namespace DataScienceWorkbench.PythonWorkbench
 {
     public class LineNumberPanel : Panel
     {

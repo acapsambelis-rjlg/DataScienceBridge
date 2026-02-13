@@ -44,23 +44,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataModels.cs" />
-    <Compile Include="ErrorSquiggleOverlay.cs">
+    <Compile Include="PythonWorkbench\ErrorSquiggleOverlay.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DataScienceControl.cs">
+    <Compile Include="PythonWorkbench\DataScienceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DataScienceControl.Designer.cs">
+    <Compile Include="PythonWorkbench\DataScienceControl.Designer.cs">
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="AutoCompletePopup.cs">
+    <Compile Include="PythonWorkbench\AutoCompletePopup.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PlotViewerForm.cs">
+    <Compile Include="PythonWorkbench\PlotViewerForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="JsonHelper.cs" />
-    <Compile Include="LineNumberPanel.cs">
+    <Compile Include="PythonWorkbench\LineNumberPanel.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="MainForm.cs">
@@ -70,16 +69,16 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="PythonBridge.cs" />
-    <Compile Include="PythonSymbolAnalyzer.cs" />
-    <Compile Include="PythonSyntaxHighlighter.cs" />
+    <Compile Include="PythonWorkbench\PythonBridge.cs" />
+    <Compile Include="PythonWorkbench\PythonSymbolAnalyzer.cs" />
+    <Compile Include="PythonWorkbench\PythonSyntaxHighlighter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DataScienceControl.resx">
+    <EmbeddedResource Include="PythonWorkbench\DataScienceControl.resx">
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
