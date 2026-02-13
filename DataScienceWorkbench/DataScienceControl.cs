@@ -106,13 +106,13 @@ namespace DataScienceWorkbench
             InitializeData();
             SetupSnippetMenu();
             SetupSyntaxHighlighting();
+            RegisterAllDatasetsInMemory();
+            PopulateReferenceTree();
             suppressHighlight = true;
             pythonEditor.Text = GetDefaultScript();
             suppressHighlight = false;
             ResetUndoStack();
             ApplySyntaxHighlighting();
-            RegisterAllDatasetsInMemory();
-            PopulateReferenceTree();
         }
 
         private void SetupSyntaxHighlighting()
