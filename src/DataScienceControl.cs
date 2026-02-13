@@ -1355,28 +1355,6 @@ namespace DataScienceWorkbench
                 }
             }
 
-            var customSources = new List<string>();
-            foreach (var name in inMemoryDataSources.Keys)
-            {
-                bool isBuiltin = name == "customers" || name == "employees";
-                if (!isBuiltin)
-                    customSources.Add(name);
-            }
-
-            if (customSources.Count > 0)
-            {
-                var memNode = refTreeView.Nodes.Add("Custom Data Sources");
-                memNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
-                memNode.Tag = "inmemory";
-                foreach (var name in customSources)
-                {
-                    var child = memNode.Nodes.Add(name);
-                    child.Tag = "inmemory_" + name;
-                    child.ForeColor = Color.FromArgb(80, 80, 80);
-                }
-                memNode.Expand();
-            }
-
             if (registeredPythonClasses.Count > 0)
             {
                 var classNode = refTreeView.Nodes.Add("Registered Classes  (" + registeredPythonClasses.Count + ")");
@@ -1533,12 +1511,6 @@ namespace DataScienceWorkbench
             if (e.Node == null || e.Node.Tag == null) return;
             string tag = e.Node.Tag.ToString();
 
-            if (tag.StartsWith("inmemory"))
-            {
-                ShowInMemoryDetail(tag);
-                return;
-            }
-
             if (tag == "regclasses" || tag.StartsWith("regclass_"))
             {
                 ShowRegisteredClassDetail(tag);
@@ -1594,47 +1566,6 @@ namespace DataScienceWorkbench
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
             string example = GetExampleCode(tag);
             AppendRefText(example + "\n", Color.FromArgb(60, 60, 60), false, 10);
-
-            refDetailBox.SelectionStart = 0;
-            refDetailBox.ScrollToCaret();
-        }
-
-        private void ShowInMemoryDetail(string tag)
-        {
-            refDetailBox.Clear();
-
-            if (tag == "inmemory")
-            {
-                AppendRefText("Custom Data Sources\n\n", Color.FromArgb(0, 0, 180), true, 12);
-                AppendRefText("Data registered via RegisterInMemoryData() from .NET.\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("Accessed directly as Python variables.\n\n", Color.FromArgb(60, 60, 60), false, 10);
-
-                foreach (var name in inMemoryDataSources.Keys)
-                {
-                    bool isBuiltin = name == "customers" || name == "employees";
-                    if (!isBuiltin)
-                        AppendRefText("  " + name + "\n", Color.FromArgb(128, 0, 128), false, 10);
-                }
-
-                AppendRefText("\n", Color.Black, false, 10);
-                AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
-                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                AppendRefText("# Access custom data:\n", Color.FromArgb(0, 128, 0), false, 10);
-                AppendRefText("print(dataset_name.head())\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("print(dataset_name.column.mean())\n", Color.FromArgb(60, 60, 60), false, 10);
-            }
-            else
-            {
-                string name = tag.Substring("inmemory_".Length);
-                AppendRefText(name + "\n\n", Color.FromArgb(0, 0, 180), true, 12);
-                AppendRefText("Custom data source registered from .NET.\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("Streamed via stdin (no file I/O).\n\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
-                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                AppendRefText("# Access this data source:\n", Color.FromArgb(0, 128, 0), false, 10);
-                AppendRefText("print(" + name + ".head())\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("print(" + name + ".describe())\n", Color.FromArgb(60, 60, 60), false, 10);
-            }
 
             refDetailBox.SelectionStart = 0;
             refDetailBox.ScrollToCaret();
