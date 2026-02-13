@@ -87,6 +87,7 @@ bash run.sh      # Run the application
 - Current form and data are dummy/demo content
 
 ## Recent Changes
+- 2026-02-13: Added Ctrl+F shortcut to open Find & Replace dialog from the Python editor. Added search/filter box to Data Reference tab: filters datasets by name, column name/type, and [UserVisible] description text; also filters registered classes and context variables. Uses placeholder text pattern.
 - 2026-02-13: Added field-level detail view in Data Reference tab: clicking a field/column node shows the property's [Description] attribute text, type info, parent dataset, and type-appropriate example Python code. Uses System.ComponentModel.DescriptionAttribute on Customer and Employee properties. Falls back to "No description available" for properties without descriptions. Field node tags use string arrays to avoid underscore-in-name parsing issues.
 - 2026-02-13: Updated output section to light mode: white background, dark text, adjusted all AppendOutput colors for readability on light backgrounds.
 - 2026-02-13: Added [UserVisible] attribute for property-level visibility control: properties marked with [UserVisible] are the only ones serialized to Python, shown in Data Reference, and offered in autocomplete. If no properties are marked, all eligible properties are included (backward compatible). GetColumnsForDataset and GetClassNameForTag now use reflection instead of hardcoded switch statements. AutoCompletePopup dataset columns and PythonSymbolAnalyzer dataset names are now dynamic.
