@@ -1539,8 +1539,8 @@ namespace DataScienceWorkbench
                     }
                 }
 
-                var visibleProps = PythonVisibleHelper.GetVisibleProperties(type);
-                foreach (var p in visibleProps)
+                var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
+                foreach (var fp in flatProps)
                 {
                     if (matchedColNames.Contains(fp.ColumnName)) continue;
                     var fpAttr = fp.GetAttribute();

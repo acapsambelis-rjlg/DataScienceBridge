@@ -5,13 +5,13 @@ using System.Linq;
 namespace DataScienceWorkbench
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class UserVisibleAttribute : Attribute
+    public class PythonVisibleAttribute : Attribute
     {
         public string Description { get; private set; }
         public string Example { get; set; }
 
-        public UserVisibleAttribute() { Description = null; }
-        public UserVisibleAttribute(string description) { Description = description; }
+        public PythonVisibleAttribute() { Description = null; }
+        public PythonVisibleAttribute(string description) { Description = description; }
     }
 
     public class FlattenedProperty
@@ -32,16 +32,16 @@ namespace DataScienceWorkbench
             return current;
         }
 
-        public UserVisibleAttribute GetAttribute()
+        public PythonVisibleAttribute GetAttribute()
         {
             var leaf = PropertyPath[PropertyPath.Length - 1];
-            var attrs = leaf.GetCustomAttributes(typeof(UserVisibleAttribute), true);
-            if (attrs.Length > 0) return (UserVisibleAttribute)attrs[0];
+            var attrs = leaf.GetCustomAttributes(typeof(PythonVisibleAttribute), true);
+            if (attrs.Length > 0) return (PythonVisibleAttribute)attrs[0];
             return null;
         }
     }
 
-    public static class UserVisibleHelper
+    public static class PythonVisibleHelper
     {
         public static List<System.Reflection.PropertyInfo> GetVisibleProperties(Type type)
         {
@@ -56,7 +56,7 @@ namespace DataScienceWorkbench
                 if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsUserVisibleClass(p.PropertyType)) continue;
                 if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && IsUserVisibleClass(p.PropertyType)) continue;
 
-                if (p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0)
+                if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
                     markedProps.Add(p);
                     anyMarked = true;
@@ -93,7 +93,7 @@ namespace DataScienceWorkbench
             foreach (var p in allProps)
             {
                 if (p.GetIndexParameters().Length > 0) continue;
-                if (p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0)
+                if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
                     anyMarked = true;
                     break;
@@ -111,7 +111,7 @@ namespace DataScienceWorkbench
 
                 if (isNestedVisibleClass)
                 {
-                    bool propMarked = p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0;
+                    bool propMarked = p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0;
                     if (anyMarked && !propMarked) continue;
 
                     string nestedPrefix = string.IsNullOrEmpty(prefix) ? p.Name + "_" : prefix + p.Name + "_";
@@ -124,7 +124,7 @@ namespace DataScienceWorkbench
 
                 if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
 
-                if (anyMarked && p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length == 0) continue;
+                if (anyMarked && p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length == 0) continue;
 
                 string colName = string.IsNullOrEmpty(prefix) ? p.Name : prefix + p.Name;
                 var fullPath = new System.Reflection.PropertyInfo[parentPath.Length + 1];
@@ -143,7 +143,7 @@ namespace DataScienceWorkbench
 
         public static bool IsUserVisibleClass(Type t)
         {
-            return t.IsClass && t != typeof(string) && t.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0;
+            return t.IsClass && t != typeof(string) && t.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0;
         }
 
         public static string GetPythonTypeName(Type t)
@@ -157,65 +157,65 @@ namespace DataScienceWorkbench
         }
     }
 
-    [UserVisible("Customer mailing address")]
+    [PythonVisible("Customer mailing address")]
     public class Address
     {
-        [UserVisible("Street address")]
+        [PythonVisible("Street address")]
         public string Street { get; set; }
-        [UserVisible("City name")]
+        [PythonVisible("City name")]
         public string City { get; set; }
-        [UserVisible("State or province code")]
+        [PythonVisible("State or province code")]
         public string State { get; set; }
-        [UserVisible("Postal/ZIP code")]
+        [PythonVisible("Postal/ZIP code")]
         public string ZipCode { get; set; }
-        [UserVisible("Country name")]
+        [PythonVisible("Country name")]
         public string Country { get; set; }
-        [UserVisible("GPS latitude coordinate")]
+        [PythonVisible("GPS latitude coordinate")]
         public double Latitude { get; set; }
-        [UserVisible("GPS longitude coordinate")]
+        [PythonVisible("GPS longitude coordinate")]
         public double Longitude { get; set; }
     }
 
     public class Customer
     {
-        [UserVisible("Unique customer identifier")]
+        [PythonVisible("Unique customer identifier")]
         public int Id { get; set; }
 
-        [UserVisible("Customer's first name")]
+        [PythonVisible("Customer's first name")]
         public string FirstName { get; set; }
 
-        [UserVisible("Customer's last name")]
+        [PythonVisible("Customer's last name")]
         public string LastName { get; set; }
 
-        [UserVisible("Customer's email address")]
+        [PythonVisible("Customer's email address")]
         public string Email { get; set; }
 
-        [UserVisible("Customer's phone number")]
+        [PythonVisible("Customer's phone number")]
         public string Phone { get; set; }
 
-        [UserVisible("Customer's date of birth")]
+        [PythonVisible("Customer's date of birth")]
         public DateTime DateOfBirth { get; set; }
 
-        [UserVisible("Date the customer registered")]
+        [PythonVisible("Date the customer registered")]
         public DateTime RegistrationDate { get; set; }
 
-        [UserVisible("Loyalty tier: Bronze, Silver, Gold, or Platinum")]
+        [PythonVisible("Loyalty tier: Bronze, Silver, Gold, or Platinum")]
         public string Tier { get; set; }
 
-        [UserVisible("Maximum credit limit in dollars", Example = "# Credit limit distribution\n{dataset}.{field}.hist(bins=20)\nplt.xlabel('Credit Limit')\nplt.show()")]
+        [PythonVisible("Maximum credit limit in dollars", Example = "# Credit limit distribution\n{dataset}.{field}.hist(bins=20)\nplt.xlabel('Credit Limit')\nplt.show()")]
         public double CreditLimit { get; set; }
 
-        [UserVisible("Whether the customer account is currently active")]
+        [PythonVisible("Whether the customer account is currently active")]
         public bool IsActive { get; set; }
 
-        [UserVisible("Customer's mailing address")]
+        [PythonVisible("Customer's mailing address")]
         public Address Address { get; set; }
         public List<Order> Orders { get; set; }
 
-        [UserVisible("Computed full name (FirstName + LastName)")]
+        [PythonVisible("Computed full name (FirstName + LastName)")]
         public string FullName { get { return FirstName + " " + LastName; } }
 
-        [UserVisible("Computed age in years based on DateOfBirth")]
+        [PythonVisible("Computed age in years based on DateOfBirth")]
         public int Age { get { return (int)((DateTime.Now - DateOfBirth).TotalDays / 365.25); } }
     }
 
@@ -271,43 +271,43 @@ namespace DataScienceWorkbench
 
     public class Employee
     {
-        [UserVisible("Unique employee identifier")]
+        [PythonVisible("Unique employee identifier")]
         public int Id { get; set; }
 
-        [UserVisible("Employee's first name")]
+        [PythonVisible("Employee's first name")]
         public string FirstName { get; set; }
 
-        [UserVisible("Employee's last name")]
+        [PythonVisible("Employee's last name")]
         public string LastName { get; set; }
 
-        [UserVisible("Department name (e.g. Engineering, Sales, HR)")]
+        [PythonVisible("Department name (e.g. Engineering, Sales, HR)")]
         public string Department { get; set; }
 
-        [UserVisible("Job title within the department")]
+        [PythonVisible("Job title within the department")]
         public string Title { get; set; }
 
-        [UserVisible("Date the employee was hired")]
+        [PythonVisible("Date the employee was hired")]
         public DateTime HireDate { get; set; }
 
-        [UserVisible("Annual salary in dollars")]
+        [PythonVisible("Annual salary in dollars")]
         public double Salary { get; set; }
 
-        [UserVisible("Performance review score from 0.0 to 5.0")]
+        [PythonVisible("Performance review score from 0.0 to 5.0")]
         public double PerformanceScore { get; set; }
 
-        [UserVisible("Id of the employee's direct manager (0 if none)")]
+        [PythonVisible("Id of the employee's direct manager (0 if none)")]
         public int ManagerId { get; set; }
 
-        [UserVisible("Whether the employee works remotely")]
+        [PythonVisible("Whether the employee works remotely")]
         public bool IsRemote { get; set; }
 
-        [UserVisible("Office location name")]
+        [PythonVisible("Office location name")]
         public string Office { get; set; }
 
-        [UserVisible("Computed full name (FirstName + LastName)")]
+        [PythonVisible("Computed full name (FirstName + LastName)")]
         public string FullName { get { return FirstName + " " + LastName; } }
 
-        [UserVisible("Computed years of employment based on HireDate")]
+        [PythonVisible("Computed years of employment based on HireDate")]
         public int YearsEmployed { get { return (int)((DateTime.Now - HireDate).TotalDays / 365.25); } }
     }
 
