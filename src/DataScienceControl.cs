@@ -116,6 +116,7 @@ namespace DataScienceWorkbench
             PopulateReferenceTree();
             SetupRefSearch();
             SetupPkgSearch();
+            SetupTooltips();
             suppressHighlight = true;
             pythonEditor.Text = GetDefaultScript();
             suppressHighlight = false;
@@ -1398,6 +1399,9 @@ namespace DataScienceWorkbench
 
             var helpMenu = new ToolStripMenuItem("Help");
             helpMenu.DropDownItems.Add("Quick Start Guide", null, OnShowHelp);
+            helpMenu.DropDownItems.Add("Keyboard Shortcuts", null, OnShowKeyboardShortcuts);
+            helpMenu.DropDownItems.Add("Editor Features", null, OnShowEditorFeatures);
+            helpMenu.DropDownItems.Add(new ToolStripSeparator());
             helpMenu.DropDownItems.Add("About", null, (s, e) => MessageBox.Show(
                 "Data Science Workbench v1.0\n\n" +
                 "A .NET Windows Forms control with\n" +
@@ -2440,6 +2444,25 @@ namespace DataScienceWorkbench
         private bool pkgSearchPlaceholderActive = true;
         private readonly string pkgSearchPlaceholder = "Search packages...";
 
+        private void SetupTooltips()
+        {
+            var tips = new ToolTip();
+            tips.AutoPopDelay = 10000;
+            tips.InitialDelay = 400;
+            tips.ReshowDelay = 200;
+
+            tips.SetToolTip(pythonEditor, "Python code editor  |  Press F5 to run  |  Ctrl+H to find & replace");
+            tips.SetToolTip(installBtn, "Install the named package from PyPI into the virtual environment");
+            tips.SetToolTip(uninstallBtn, "Remove the selected package from the virtual environment");
+            tips.SetToolTip(refreshBtn, "Reload the list of installed packages");
+            tips.SetToolTip(packageNameBox, "Type a package name to install (e.g. scikit-learn, seaborn)");
+            tips.SetToolTip(pkgSearchBox, "Filter the package list by name");
+            tips.SetToolTip(refSearchBox, "Filter datasets, columns, classes, and variables by name");
+            tips.SetToolTip(refTreeView, "Browse available datasets, columns, registered classes, and context variables");
+            tips.SetToolTip(quickCombo, "Select a commonly used package to install");
+            tips.SetToolTip(quickInstallBtn, "Install the selected quick-install package");
+        }
+
         private void SetupPkgSearch()
         {
             pkgSearchBox.Text = pkgSearchPlaceholder;
@@ -2521,6 +2544,96 @@ TIPS:
   - .NET host can register classes and context variables";
 
             MessageBox.Show(help, "Quick Start Guide", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void OnShowKeyboardShortcuts(object sender, EventArgs e)
+        {
+            string shortcuts = @"=== Keyboard Shortcuts ===
+
+RUNNING CODE
+  F5                    Run script
+  Ctrl+Shift+S          Check syntax
+
+FILE
+  Ctrl+S                Save script to file
+  Ctrl+O                Open script from file
+
+EDITING
+  Ctrl+Z                Undo
+  Ctrl+Y                Redo
+  Ctrl+X / C / V        Cut / Copy / Paste
+  Ctrl+A                Select all
+  Ctrl+H                Find & Replace
+  Ctrl+D                Duplicate current line
+  Alt+Up / Down         Move current line up/down
+  Tab                   Indent selected lines
+  Shift+Tab             Unindent selected lines
+  Delete                Delete selection
+
+BOOKMARKS
+  Ctrl+B                Toggle bookmark on current line
+  F2                    Jump to next bookmark
+  Shift+F2              Jump to previous bookmark
+
+EDITOR
+  Ctrl+Mouse Wheel      Zoom in/out
+  Escape                Close autocomplete / Find panel";
+
+            MessageBox.Show(shortcuts, "Keyboard Shortcuts", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void OnShowEditorFeatures(object sender, EventArgs e)
+        {
+            string features = @"=== Editor Features ===
+
+SYNTAX HIGHLIGHTING
+  Python keywords, strings, numbers, comments,
+  and built-in functions are color-coded automatically.
+
+AUTOCOMPLETE
+  Displays suggestions as you type, including:
+  - Python keywords and built-in functions
+  - Dataset column names (e.g. customers.CreditLimit)
+  - DataFrame methods (after .df.)
+  - Registered class members and context variables
+  Press Tab or Enter to accept, Escape to dismiss.
+
+ERROR DETECTION
+  - Real-time syntax checking with red underlines
+  - Undefined variable warnings with blue underlines
+  - Hover over underlined text for error details
+
+LINE NUMBERS
+  Displayed in the gutter on the left side.
+  Bookmark indicators appear as blue circles.
+
+BRACKET MATCHING
+  Matching parentheses, brackets, and braces
+  are highlighted when the cursor is adjacent.
+
+CODE SNIPPETS
+  Use 'Insert Snippet' in the menu bar for
+  ready-made code templates (statistics, plots, etc).
+
+DATA REFERENCE TAB
+  Browse all available datasets, their columns,
+  data types, and registered classes. Use the search
+  box to filter. Click an item to see details and
+  example code in the panel below.
+
+PACKAGE MANAGER TAB
+  Install or uninstall Python packages. Type a
+  package name and click Install. Use the search
+  box to filter the installed package list.
+  Click Refresh to update the list after changes.
+
+PLOT VIEWER
+  When your script calls plt.show(), plots are
+  captured and displayed in a viewer window.
+  Use Previous/Next to browse multiple plots,
+  and Save to export as PNG.";
+
+            MessageBox.Show(features, "Editor Features", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         public void AppendOutput(string text, Color color)
