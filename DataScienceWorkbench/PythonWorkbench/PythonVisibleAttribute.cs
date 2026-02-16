@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 namespace DataScienceWorkbench.PythonWorkbench
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = true)]
-    public class UserVisibleAttribute : Attribute
+    public class PythonVisibleAttribute : Attribute
     {
         public string Description { get; private set; }
         public string Example { get; set; }
 
-        public UserVisibleAttribute() { Description = null; }
-        public UserVisibleAttribute(string description) { Description = description; }
+        public PythonVisibleAttribute() { Description = null; }
+        public PythonVisibleAttribute(string description) { Description = description; }
     }
 
-    public static class UserVisibleHelper
+    public static class PythonVisibleHelper
     {
         public static List<System.Reflection.PropertyInfo> GetVisibleProperties(Type type)
         {
@@ -30,7 +30,7 @@ namespace DataScienceWorkbench.PythonWorkbench
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
                 if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
 
-                if (p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0)
+                if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
                     markedProps.Add(p);
                     anyMarked = true;

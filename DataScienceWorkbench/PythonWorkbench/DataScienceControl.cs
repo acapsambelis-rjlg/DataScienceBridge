@@ -943,7 +943,7 @@ namespace DataScienceWorkbench
             inMemoryDataSources[name] = () =>
             {
                 var data = dataProvider();
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(typeof(T));
+                var visibleProps = PythonVisibleHelper.GetVisibleProperties(typeof(T));
                 var sb = new System.Text.StringBuilder();
 
                 var headerParts = new List<string>();
@@ -1222,7 +1222,7 @@ namespace DataScienceWorkbench
                 var colMap = new Dictionary<string, List<string>>();
                 foreach (var kvp in inMemoryDataTypes)
                 {
-                    var visibleProps = UserVisibleHelper.GetVisibleProperties(kvp.Value);
+                    var visibleProps = PythonVisibleHelper.GetVisibleProperties(kvp.Value);
                     var colNames = new List<string>();
                     foreach (var p in visibleProps)
                         colNames.Add(p.Name);
@@ -1539,14 +1539,14 @@ namespace DataScienceWorkbench
                     }
                 }
 
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
+                var visibleProps = PythonVisibleHelper.GetVisibleProperties(type);
                 foreach (var p in visibleProps)
                 {
                     if (matchedColNames.Contains(p.Name)) continue;
-                    var attr = p.GetCustomAttributes(typeof(UserVisibleAttribute), true);
+                    var attr = p.GetCustomAttributes(typeof(PythonVisibleAttribute), true);
                     if (attr.Length > 0)
                     {
-                        string desc = ((UserVisibleAttribute)attr[0]).Description;
+                        string desc = ((PythonVisibleAttribute)attr[0]).Description;
                         if (!string.IsNullOrEmpty(desc) && desc.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             var colEntry = columns.Find(c => c.Item1 == p.Name);
@@ -1693,10 +1693,10 @@ namespace DataScienceWorkbench
             if (!inMemoryDataTypes.TryGetValue(tag, out type))
                 return cols;
 
-            var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
+            var visibleProps = PythonVisibleHelper.GetVisibleProperties(type);
             foreach (var p in visibleProps)
             {
-                string typeName = UserVisibleHelper.GetPythonTypeName(p.PropertyType);
+                string typeName = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
                 bool isComputed = p.GetSetMethod() == null;
                 if (isComputed)
                     typeName += " (computed)";
@@ -1741,7 +1741,7 @@ namespace DataScienceWorkbench
             var prop = type.GetProperty(fieldName);
             if (prop == null) return;
 
-            string typeName = UserVisibleHelper.GetPythonTypeName(prop.PropertyType);
+            string typeName = PythonVisibleHelper.GetPythonTypeName(prop.PropertyType);
             bool isComputed = prop.GetSetMethod() == null;
 
             refDetailBox.Clear();
@@ -1751,10 +1751,10 @@ namespace DataScienceWorkbench
 
             AppendRefText("Description\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            var uvAttrs = prop.GetCustomAttributes(typeof(UserVisibleAttribute), true);
+            var uvAttrs = prop.GetCustomAttributes(typeof(PythonVisibleAttribute), true);
             string desc = null;
             if (uvAttrs.Length > 0)
-                desc = ((UserVisibleAttribute)uvAttrs[0]).Description;
+                desc = ((PythonVisibleAttribute)uvAttrs[0]).Description;
             if (!string.IsNullOrEmpty(desc))
             {
                 AppendRefText(desc + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -1774,7 +1774,7 @@ namespace DataScienceWorkbench
 
             string customExample = null;
             if (uvAttrs.Length > 0)
-                customExample = ((UserVisibleAttribute)uvAttrs[0]).Example;
+                customExample = ((PythonVisibleAttribute)uvAttrs[0]).Example;
 
             if (!string.IsNullOrEmpty(customExample))
             {

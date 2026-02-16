@@ -19,43 +19,43 @@ namespace DataScienceWorkbench
 
     public class Customer
     {
-        [UserVisible("Unique customer identifier")]
+        [PythonVisible("Unique customer identifier")]
         public int Id { get; set; }
 
-        [UserVisible("Customer's first name")]
+        [PythonVisible("Customer's first name")]
         public string FirstName { get; set; }
 
-        [UserVisible("Customer's last name")]
+        [PythonVisible("Customer's last name")]
         public string LastName { get; set; }
 
-        [UserVisible("Customer's email address")]
+        [PythonVisible("Customer's email address")]
         public string Email { get; set; }
 
-        [UserVisible("Customer's phone number")]
+        [PythonVisible("Customer's phone number")]
         public string Phone { get; set; }
 
-        [UserVisible("Customer's date of birth")]
+        [PythonVisible("Customer's date of birth")]
         public DateTime DateOfBirth { get; set; }
 
-        [UserVisible("Date the customer registered")]
+        [PythonVisible("Date the customer registered")]
         public DateTime RegistrationDate { get; set; }
 
-        [UserVisible("Loyalty tier: Bronze, Silver, Gold, or Platinum")]
+        [PythonVisible("Loyalty tier: Bronze, Silver, Gold, or Platinum")]
         public string Tier { get; set; }
 
-        [UserVisible("Maximum credit limit in dollars", Example = "# Credit limit distribution\n{dataset}.{field}.hist(bins=20)\nplt.xlabel('Credit Limit')\nplt.show()")]
+        [PythonVisible("Maximum credit limit in dollars", Example = "# Credit limit distribution\n{dataset}.{field}.hist(bins=20)\nplt.xlabel('Credit Limit')\nplt.show()")]
         public double CreditLimit { get; set; }
 
-        [UserVisible("Whether the customer account is currently active")]
+        [PythonVisible("Whether the customer account is currently active")]
         public bool IsActive { get; set; }
 
         public Address Address { get; set; }
         public List<Order> Orders { get; set; }
 
-        [UserVisible("Computed full name (FirstName + LastName)")]
+        [PythonVisible("Computed full name (FirstName + LastName)")]
         public string FullName { get { return FirstName + " " + LastName; } }
 
-        [UserVisible("Computed age in years based on DateOfBirth")]
+        [PythonVisible("Computed age in years based on DateOfBirth")]
         public int Age { get { return (int)((DateTime.Now - DateOfBirth).TotalDays / 365.25); } }
     }
 
@@ -111,43 +111,43 @@ namespace DataScienceWorkbench
 
     public class Employee
     {
-        [UserVisible("Unique employee identifier")]
+        [PythonVisible("Unique employee identifier")]
         public int Id { get; set; }
 
-        [UserVisible("Employee's first name")]
+        [PythonVisible("Employee's first name")]
         public string FirstName { get; set; }
 
-        [UserVisible("Employee's last name")]
+        [PythonVisible("Employee's last name")]
         public string LastName { get; set; }
 
-        [UserVisible("Department name (e.g. Engineering, Sales, HR)")]
+        [PythonVisible("Department name (e.g. Engineering, Sales, HR)")]
         public string Department { get; set; }
 
-        [UserVisible("Job title within the department")]
+        [PythonVisible("Job title within the department")]
         public string Title { get; set; }
 
-        [UserVisible("Date the employee was hired")]
+        [PythonVisible("Date the employee was hired")]
         public DateTime HireDate { get; set; }
 
-        [UserVisible("Annual salary in dollars")]
+        [PythonVisible("Annual salary in dollars")]
         public double Salary { get; set; }
 
-        [UserVisible("Performance review score from 0.0 to 5.0")]
+        [PythonVisible("Performance review score from 0.0 to 5.0")]
         public double PerformanceScore { get; set; }
 
-        [UserVisible("Id of the employee's direct manager (0 if none)")]
+        [PythonVisible("Id of the employee's direct manager (0 if none)")]
         public int ManagerId { get; set; }
 
-        [UserVisible("Whether the employee works remotely")]
+        [PythonVisible("Whether the employee works remotely")]
         public bool IsRemote { get; set; }
 
-        [UserVisible("Office location name")]
+        [PythonVisible("Office location name")]
         public string Office { get; set; }
 
-        [UserVisible("Computed full name (FirstName + LastName)")]
+        [PythonVisible("Computed full name (FirstName + LastName)")]
         public string FullName { get { return FirstName + " " + LastName; } }
 
-        [UserVisible("Computed years of employment based on HireDate")]
+        [PythonVisible("Computed years of employment based on HireDate")]
         public int YearsEmployed { get { return (int)((DateTime.Now - HireDate).TotalDays / 365.25); } }
     }
 
