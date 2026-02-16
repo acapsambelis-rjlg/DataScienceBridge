@@ -1966,15 +1966,20 @@ namespace DataScienceWorkbench
             AppendRefText("Columns (" + subProps.Count + ")\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
 
-            int maxLen = 0;
+            int maxPropLen = 0;
             foreach (var fp in subProps)
-                if (fp.ColumnName.Length > maxLen) maxLen = fp.ColumnName.Length;
+            {
+                string propName = fp.PropertyPath[fp.PropertyPath.Length - 1].Name;
+                if (propName.Length > maxPropLen) maxPropLen = propName.Length;
+            }
 
             foreach (var fp in subProps)
             {
+                string propName = fp.PropertyPath[fp.PropertyPath.Length - 1].Name;
                 string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
                 if (fp.IsComputed) typeName += " (computed)";
-                AppendRefText("  " + fp.ColumnName.PadRight(maxLen + 2), Color.FromArgb(0, 0, 0), false, 10);
+                AppendRefText("  " + propName.PadRight(maxPropLen + 2), Color.FromArgb(0, 0, 0), false, 10);
+                AppendRefText("\u2192  " + fp.ColumnName + "  :  ", Color.FromArgb(120, 120, 120), false, 10);
                 AppendRefText(typeName + "\n", Color.FromArgb(100, 100, 100), false, 10);
             }
 
