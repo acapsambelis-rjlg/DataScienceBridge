@@ -943,20 +943,20 @@ namespace DataScienceWorkbench
             inMemoryDataSources[name] = () =>
             {
                 var data = dataProvider();
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(typeof(T));
+                var flatProps = UserVisibleHelper.GetFlattenedProperties(typeof(T));
                 var sb = new System.Text.StringBuilder();
 
                 var headerParts = new List<string>();
-                foreach (var p in visibleProps)
-                    headerParts.Add(p.Name);
+                foreach (var fp in flatProps)
+                    headerParts.Add(fp.ColumnName);
                 sb.AppendLine(string.Join(",", headerParts));
 
                 foreach (var item in data)
                 {
                     var vals = new List<string>();
-                    foreach (var p in visibleProps)
+                    foreach (var fp in flatProps)
                     {
-                        var val = p.GetValue(item);
+                        var val = fp.GetValue(item);
                         string s = val != null ? val.ToString() : "";
                         if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
                             s = "\"" + s.Replace("\"", "\"\"") + "\"";
@@ -1222,10 +1222,10 @@ namespace DataScienceWorkbench
                 var colMap = new Dictionary<string, List<string>>();
                 foreach (var kvp in inMemoryDataTypes)
                 {
-                    var visibleProps = UserVisibleHelper.GetVisibleProperties(kvp.Value);
+                    var flatProps = UserVisibleHelper.GetFlattenedProperties(kvp.Value);
                     var colNames = new List<string>();
-                    foreach (var p in visibleProps)
-                        colNames.Add(p.Name);
+                    foreach (var fp in flatProps)
+                        colNames.Add(fp.ColumnName);
                     colMap[kvp.Key] = colNames;
                 }
                 autoComplete.SetDatasetColumns(colMap);
@@ -1539,21 +1539,21 @@ namespace DataScienceWorkbench
                     }
                 }
 
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
-                foreach (var p in visibleProps)
+                var flatProps = UserVisibleHelper.GetFlattenedProperties(type);
+                foreach (var fp in flatProps)
                 {
-                    if (matchedColNames.Contains(p.Name)) continue;
-                    var attr = p.GetCustomAttributes(typeof(UserVisibleAttribute), true);
-                    if (attr.Length > 0)
+                    if (matchedColNames.Contains(fp.ColumnName)) continue;
+                    var fpAttr = fp.GetAttribute();
+                    if (fpAttr != null)
                     {
-                        string desc = ((UserVisibleAttribute)attr[0]).Description;
+                        string desc = fpAttr.Description;
                         if (!string.IsNullOrEmpty(desc) && desc.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            var colEntry = columns.Find(c => c.Item1 == p.Name);
+                            var colEntry = columns.Find(c => c.Item1 == fp.ColumnName);
                             if (colEntry != null)
                             {
                                 matchingCols.Add(colEntry);
-                                matchedColNames.Add(p.Name);
+                                matchedColNames.Add(fp.ColumnName);
                             }
                         }
                     }
@@ -1693,14 +1693,13 @@ namespace DataScienceWorkbench
             if (!inMemoryDataTypes.TryGetValue(tag, out type))
                 return cols;
 
-            var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
-            foreach (var p in visibleProps)
+            var flatProps = UserVisibleHelper.GetFlattenedProperties(type);
+            foreach (var fp in flatProps)
             {
-                string typeName = UserVisibleHelper.GetPythonTypeName(p.PropertyType);
-                bool isComputed = p.GetSetMethod() == null;
-                if (isComputed)
+                string typeName = UserVisibleHelper.GetPythonTypeName(fp.LeafType);
+                if (fp.IsComputed)
                     typeName += " (computed)";
-                cols.Add(Tuple.Create(p.Name, typeName));
+                cols.Add(Tuple.Create(fp.ColumnName, typeName));
             }
             return cols;
         }
@@ -1738,23 +1737,25 @@ namespace DataScienceWorkbench
             Type type;
             if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
 
-            var prop = type.GetProperty(fieldName);
-            if (prop == null) return;
+            var flatProps = UserVisibleHelper.GetFlattenedProperties(type);
+            FlattenedProperty fp = null;
+            foreach (var f in flatProps)
+            {
+                if (f.ColumnName == fieldName) { fp = f; break; }
+            }
+            if (fp == null) return;
 
-            string typeName = UserVisibleHelper.GetPythonTypeName(prop.PropertyType);
-            bool isComputed = prop.GetSetMethod() == null;
+            string typeName = UserVisibleHelper.GetPythonTypeName(fp.LeafType);
 
             refDetailBox.Clear();
 
             AppendRefText(fieldName, Color.FromArgb(0, 0, 180), true, 12);
-            AppendRefText("  :  " + typeName + (isComputed ? " (computed)" : "") + "\n\n", Color.FromArgb(100, 100, 100), false, 12);
+            AppendRefText("  :  " + typeName + (fp.IsComputed ? " (computed)" : "") + "\n\n", Color.FromArgb(100, 100, 100), false, 12);
 
             AppendRefText("Description\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            var uvAttrs = prop.GetCustomAttributes(typeof(UserVisibleAttribute), true);
-            string desc = null;
-            if (uvAttrs.Length > 0)
-                desc = ((UserVisibleAttribute)uvAttrs[0]).Description;
+            var attr = fp.GetAttribute();
+            string desc = attr != null ? attr.Description : null;
             if (!string.IsNullOrEmpty(desc))
             {
                 AppendRefText(desc + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -1772,9 +1773,7 @@ namespace DataScienceWorkbench
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
 
-            string customExample = null;
-            if (uvAttrs.Length > 0)
-                customExample = ((UserVisibleAttribute)uvAttrs[0]).Example;
+            string customExample = attr != null ? attr.Example : null;
 
             if (!string.IsNullOrEmpty(customExample))
             {

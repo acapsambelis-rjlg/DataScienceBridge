@@ -6,14 +6,22 @@ using DataScienceWorkbench.PythonWorkbench;
 namespace DataScienceWorkbench
 {
 
+    [UserVisible("Customer mailing address")]
     public class Address
     {
+        [UserVisible("Street address")]
         public string Street { get; set; }
+        [UserVisible("City name")]
         public string City { get; set; }
+        [UserVisible("State or province code")]
         public string State { get; set; }
+        [UserVisible("Postal/ZIP code")]
         public string ZipCode { get; set; }
+        [UserVisible("Country name")]
         public string Country { get; set; }
+        [UserVisible("GPS latitude coordinate")]
         public double Latitude { get; set; }
+        [UserVisible("GPS longitude coordinate")]
         public double Longitude { get; set; }
     }
 
@@ -49,6 +57,7 @@ namespace DataScienceWorkbench
         [UserVisible("Whether the customer account is currently active")]
         public bool IsActive { get; set; }
 
+        [UserVisible("Customer's mailing address")]
         public Address Address { get; set; }
         public List<Order> Orders { get; set; }
 
