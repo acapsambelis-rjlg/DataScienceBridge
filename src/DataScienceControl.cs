@@ -1841,6 +1841,16 @@ namespace DataScienceWorkbench
             {
                 AppendRefText(desc + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
             }
+            else if (fp.PropertyPath.Length > 1)
+            {
+                string leafName = fp.PropertyPath[fp.PropertyPath.Length - 1].Name;
+                var pathParts = new List<string>();
+                for (int i = 0; i < fp.PropertyPath.Length - 1; i++)
+                    pathParts.Add(fp.PropertyPath[i].Name + " (" + fp.PropertyPath[i].PropertyType.Name + ")");
+                string pathDesc = string.Join(" > ", pathParts.ToArray());
+                AppendRefText(leafName + " property from nested class path: " + pathDesc + ".\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Flattened as column: " + fp.ColumnName + "\n\n", Color.FromArgb(100, 100, 100), false, 10);
+            }
             else
             {
                 AppendRefText("No description available.\n\n", Color.FromArgb(150, 150, 150), false, 10);
@@ -1849,7 +1859,18 @@ namespace DataScienceWorkbench
             AppendRefText("Dataset\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
             string className = GetClassNameForTag(datasetName);
-            AppendRefText("  " + className + "." + fieldName + "  (variable: " + datasetName + ")\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            if (fp.PropertyPath.Length > 1)
+            {
+                var dotPath = new List<string>();
+                foreach (var pi in fp.PropertyPath)
+                    dotPath.Add(pi.Name);
+                AppendRefText("  " + className + "." + string.Join(".", dotPath.ToArray()) + "  (variable: " + datasetName + ")\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("  Column name: " + fieldName + "\n\n", Color.FromArgb(100, 100, 100), false, 10);
+            }
+            else
+            {
+                AppendRefText("  " + className + "." + fieldName + "  (variable: " + datasetName + ")\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
 
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
