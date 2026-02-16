@@ -273,9 +273,9 @@ namespace DataScienceWorkbench
             // 
             // pkgRightPanel
             // 
-            this.pkgRightPanel.Controls.Add(this.pkgListLabel);
-            this.pkgRightPanel.Controls.Add(this.pkgSearchBox);
             this.pkgRightPanel.Controls.Add(this.packageListBox);
+            this.pkgRightPanel.Controls.Add(this.pkgSearchBox);
+            this.pkgRightPanel.Controls.Add(this.pkgListLabel);
             this.pkgRightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pkgRightPanel.Location = new System.Drawing.Point(350, 0);
             this.pkgRightPanel.Name = "pkgRightPanel";
