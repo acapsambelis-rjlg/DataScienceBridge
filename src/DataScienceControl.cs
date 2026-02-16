@@ -1522,56 +1522,46 @@ namespace DataScienceWorkbench
                 string name = kvp.Key;
                 Type type = kvp.Value;
                 int count = GetRecordCountForTag(name);
-                var columns = GetColumnsForDataset(name);
 
                 bool datasetMatches = name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
                 var matchedColNames = new HashSet<string>(StringComparer.Ordinal);
-                var matchingCols = new List<Tuple<string, string>>();
-
-                foreach (var col in columns)
-                {
-                    if (col.Item1.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                        col.Item2.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
-                        matchingCols.Add(col);
-                        matchedColNames.Add(col.Item1);
-                    }
-                }
 
                 var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
                 foreach (var fp in flatProps)
                 {
-                    if (matchedColNames.Contains(fp.ColumnName)) continue;
-                    var fpAttr = fp.GetAttribute();
-                    if (fpAttr != null)
+                    string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
+                    bool colMatch = fp.ColumnName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0
+                        || typeName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                    if (!colMatch)
                     {
-                        string desc = fpAttr.Description;
-                        if (!string.IsNullOrEmpty(desc) && desc.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                        var fpAttr = fp.GetAttribute();
+                        if (fpAttr != null)
                         {
-                            var colEntry = columns.Find(c => c.Item1 == fp.ColumnName);
-                            if (colEntry != null)
-                            {
-                                matchingCols.Add(colEntry);
-                                matchedColNames.Add(fp.ColumnName);
-                            }
+                            string desc = fpAttr.Description;
+                            if (!string.IsNullOrEmpty(desc) && desc.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                                colMatch = true;
                         }
                     }
+                    if (!colMatch)
+                    {
+                        foreach (var pi in fp.PropertyPath)
+                        {
+                            if (pi.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                            { colMatch = true; break; }
+                        }
+                    }
+                    if (colMatch)
+                        matchedColNames.Add(fp.ColumnName);
                 }
 
-                if (datasetMatches || matchingCols.Count > 0)
+                if (datasetMatches || matchedColNames.Count > 0)
                 {
                     var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
                     node.Tag = name;
                     node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
 
-                    var colsToShow = datasetMatches ? columns : matchingCols;
-                    foreach (var col in colsToShow)
-                    {
-                        var child = node.Nodes.Add(col.Item1 + "  :  " + col.Item2);
-                        child.Tag = new string[] { "field", name, col.Item1 };
-                        child.ForeColor = Color.FromArgb(80, 80, 80);
-                    }
-                    node.Expand();
+                    AddHierarchicalColumns(node, name, type, datasetMatches ? null : matchedColNames);
+                    node.ExpandAll();
                 }
             }
 
@@ -1631,6 +1621,98 @@ namespace DataScienceWorkbench
             refTreeView.EndUpdate();
         }
 
+        private void AddHierarchicalColumns(TreeNode parentNode, string datasetName, Type type, HashSet<string> filterColumns)
+        {
+            var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
+            var groupChildren = new Dictionary<string, List<FlattenedProperty>>(StringComparer.Ordinal);
+            var directProps = new List<FlattenedProperty>();
+
+            foreach (var fp in flatProps)
+            {
+                if (filterColumns != null && !filterColumns.Contains(fp.ColumnName)) continue;
+
+                if (fp.PropertyPath.Length <= 1)
+                {
+                    directProps.Add(fp);
+                }
+                else
+                {
+                    string groupName = fp.PropertyPath[0].Name;
+                    if (!groupChildren.ContainsKey(groupName))
+                        groupChildren[groupName] = new List<FlattenedProperty>();
+                    groupChildren[groupName].Add(fp);
+                }
+            }
+
+            foreach (var fp in directProps)
+            {
+                string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
+                if (fp.IsComputed) typeName += " (computed)";
+                var child = parentNode.Nodes.Add(fp.ColumnName + "  :  " + typeName);
+                child.Tag = new string[] { "field", datasetName, fp.ColumnName };
+                child.ForeColor = Color.FromArgb(80, 80, 80);
+            }
+
+            foreach (var kvp in groupChildren)
+            {
+                string groupName = kvp.Key;
+                var groupProps = kvp.Value;
+                string groupTypeName = groupProps[0].PropertyPath[0].PropertyType.Name;
+                string groupPrefix = groupName + "_";
+                var groupNode = parentNode.Nodes.Add(groupName + "  (" + groupTypeName + ")");
+                groupNode.Tag = new string[] { "subclass", datasetName, groupPrefix };
+                groupNode.ForeColor = Color.FromArgb(0, 100, 130);
+                groupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
+
+                AddSubclassChildren(groupNode, datasetName, groupProps, 1, filterColumns, groupPrefix);
+            }
+        }
+
+        private void AddSubclassChildren(TreeNode parentNode, string datasetName, List<FlattenedProperty> groupProps, int depth, HashSet<string> filterColumns, string pathPrefix)
+        {
+            var subGroups = new Dictionary<string, List<FlattenedProperty>>(StringComparer.Ordinal);
+            var leafProps = new List<FlattenedProperty>();
+
+            foreach (var fp in groupProps)
+            {
+                if (fp.PropertyPath.Length > depth + 1)
+                {
+                    string subGroupName = fp.PropertyPath[depth].Name;
+                    if (!subGroups.ContainsKey(subGroupName))
+                        subGroups[subGroupName] = new List<FlattenedProperty>();
+                    subGroups[subGroupName].Add(fp);
+                }
+                else
+                {
+                    leafProps.Add(fp);
+                }
+            }
+
+            foreach (var fp in leafProps)
+            {
+                string leafName = fp.PropertyPath[fp.PropertyPath.Length - 1].Name;
+                string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
+                if (fp.IsComputed) typeName += " (computed)";
+                var child = parentNode.Nodes.Add(leafName + "  \u2192  " + fp.ColumnName + "  :  " + typeName);
+                child.Tag = new string[] { "field", datasetName, fp.ColumnName };
+                child.ForeColor = Color.FromArgb(80, 80, 80);
+            }
+
+            foreach (var kvp in subGroups)
+            {
+                string subGroupName = kvp.Key;
+                var subGroupProps = kvp.Value;
+                string subGroupTypeName = subGroupProps[0].PropertyPath[depth].PropertyType.Name;
+                string subPrefix = pathPrefix + subGroupName + "_";
+                var subGroupNode = parentNode.Nodes.Add(subGroupName + "  (" + subGroupTypeName + ")");
+                subGroupNode.Tag = new string[] { "subclass", datasetName, subPrefix };
+                subGroupNode.ForeColor = Color.FromArgb(0, 100, 130);
+                subGroupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
+
+                AddSubclassChildren(subGroupNode, datasetName, subGroupProps, depth + 1, filterColumns, subPrefix);
+            }
+        }
+
         private void PopulateReferenceTree()
         {
             refTreeView.Nodes.Clear();
@@ -1644,13 +1726,8 @@ namespace DataScienceWorkbench
                 node.Tag = name;
                 node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
 
-                var columns = GetColumnsForDataset(name);
-                foreach (var col in columns)
-                {
-                    var child = node.Nodes.Add(col.Item1 + "  :  " + col.Item2);
-                    child.Tag = new string[] { "field", name, col.Item1 };
-                    child.ForeColor = Color.FromArgb(80, 80, 80);
-                }
+                AddHierarchicalColumns(node, name, type, null);
+                node.Expand();
             }
 
             if (registeredPythonClasses.Count > 0)
@@ -1711,6 +1788,11 @@ namespace DataScienceWorkbench
             if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "field")
             {
                 ShowFieldDetail(tagArr[1], tagArr[2]);
+                return;
+            }
+            if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "subclass")
+            {
+                ShowSubclassDetail(tagArr[1], tagArr[2], e.Node);
                 return;
             }
 
@@ -1813,6 +1895,79 @@ namespace DataScienceWorkbench
                 AppendRefText(datasetName + "." + fieldName + ".describe()\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("# Mean value\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".mean()\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            refDetailBox.SelectionStart = 0;
+            refDetailBox.ScrollToCaret();
+        }
+
+        private void ShowSubclassDetail(string datasetName, string prefix, TreeNode node)
+        {
+            Type type;
+            if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
+
+            var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
+            var subProps = new List<FlattenedProperty>();
+            foreach (var fp in flatProps)
+            {
+                if (fp.ColumnName.StartsWith(prefix, StringComparison.Ordinal))
+                    subProps.Add(fp);
+            }
+
+            string displayName = prefix.TrimEnd('_');
+            if (displayName.Contains("_"))
+                displayName = displayName.Substring(displayName.LastIndexOf('_') + 1);
+            else
+                displayName = prefix.TrimEnd('_');
+
+            string subclassTypeName = "";
+            foreach (var fp in subProps)
+            {
+                int segCount = prefix.Split(new[] { '_' }, StringSplitOptions.RemoveEmptyEntries).Length;
+                if (fp.PropertyPath.Length >= segCount)
+                {
+                    subclassTypeName = fp.PropertyPath[segCount - 1].PropertyType.Name;
+                    break;
+                }
+            }
+
+            refDetailBox.Clear();
+
+            AppendRefText(displayName, Color.FromArgb(0, 100, 130), true, 12);
+            AppendRefText("  (" + subclassTypeName + ")\n\n", Color.FromArgb(100, 100, 100), false, 12);
+
+            AppendRefText("Nested class from ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(datasetName, Color.FromArgb(0, 0, 180), true, 10);
+            AppendRefText("\n", Color.Black, false, 10);
+            AppendRefText("Columns are flattened with prefix: ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(prefix + "\n\n", Color.FromArgb(128, 0, 0), false, 10);
+
+            AppendRefText("Columns (" + subProps.Count + ")\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+
+            int maxLen = 0;
+            foreach (var fp in subProps)
+                if (fp.ColumnName.Length > maxLen) maxLen = fp.ColumnName.Length;
+
+            foreach (var fp in subProps)
+            {
+                string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
+                if (fp.IsComputed) typeName += " (computed)";
+                AppendRefText("  " + fp.ColumnName.PadRight(maxLen + 2), Color.FromArgb(0, 0, 0), false, 10);
+                AppendRefText(typeName + "\n", Color.FromArgb(100, 100, 100), false, 10);
+            }
+
+            AppendRefText("\n", Color.Black, false, 10);
+            AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+
+            AppendRefText("# Select all " + displayName + " columns\n", Color.FromArgb(0, 128, 0), false, 10);
+            AppendRefText(datasetName + "[[c for c in " + datasetName + ".columns if c.startswith('" + prefix + "')]]\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            if (subProps.Count > 0)
+            {
+                AppendRefText("# Access a specific column\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + subProps[0].ColumnName + "\n", Color.FromArgb(60, 60, 60), false, 10);
             }
 
             refDetailBox.SelectionStart = 0;
