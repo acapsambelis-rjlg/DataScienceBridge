@@ -943,7 +943,7 @@ namespace DataScienceWorkbench
             inMemoryDataSources[name] = () =>
             {
                 var data = dataProvider();
-                var flatProps = UserVisibleHelper.GetFlattenedProperties(typeof(T));
+                var flatProps = PythonVisibleHelper.GetFlattenedProperties(typeof(T));
                 var sb = new System.Text.StringBuilder();
 
                 var headerParts = new List<string>();
@@ -1222,7 +1222,7 @@ namespace DataScienceWorkbench
                 var colMap = new Dictionary<string, List<string>>();
                 foreach (var kvp in inMemoryDataTypes)
                 {
-                    var flatProps = UserVisibleHelper.GetFlattenedProperties(kvp.Value);
+                    var flatProps = PythonVisibleHelper.GetFlattenedProperties(kvp.Value);
                     var colNames = new List<string>();
                     foreach (var fp in flatProps)
                         colNames.Add(fp.ColumnName);
@@ -1539,7 +1539,7 @@ namespace DataScienceWorkbench
                     }
                 }
 
-                var visibleProps = UserVisibleHelper.GetVisibleProperties(type);
+                var visibleProps = PythonVisibleHelper.GetVisibleProperties(type);
                 foreach (var p in visibleProps)
                 {
                     if (matchedColNames.Contains(fp.ColumnName)) continue;
@@ -1693,10 +1693,10 @@ namespace DataScienceWorkbench
             if (!inMemoryDataTypes.TryGetValue(tag, out type))
                 return cols;
 
-            var flatProps = UserVisibleHelper.GetFlattenedProperties(type);
+            var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
             foreach (var fp in flatProps)
             {
-                string typeName = UserVisibleHelper.GetPythonTypeName(fp.LeafType);
+                string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
                 if (fp.IsComputed)
                     typeName += " (computed)";
                 cols.Add(Tuple.Create(fp.ColumnName, typeName));
@@ -1737,7 +1737,7 @@ namespace DataScienceWorkbench
             Type type;
             if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
 
-            var flatProps = UserVisibleHelper.GetFlattenedProperties(type);
+            var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
             FlattenedProperty fp = null;
             foreach (var f in flatProps)
             {
@@ -1745,7 +1745,7 @@ namespace DataScienceWorkbench
             }
             if (fp == null) return;
 
-            string typeName = UserVisibleHelper.GetPythonTypeName(fp.LeafType);
+            string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
 
             refDetailBox.Clear();
 

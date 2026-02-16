@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DataScienceWorkbench.PythonWorkbench
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class UserVisibleAttribute : Attribute
+    public class PythonVisibleAttribute : Attribute
     {
         public string Description { get; private set; }
         public string Example { get; set; }
@@ -34,16 +34,16 @@ namespace DataScienceWorkbench.PythonWorkbench
             return current;
         }
 
-        public UserVisibleAttribute GetAttribute()
+        public PythonVisibleAttribute GetAttribute()
         {
             var leaf = PropertyPath[PropertyPath.Length - 1];
-            var attrs = leaf.GetCustomAttributes(typeof(UserVisibleAttribute), true);
-            if (attrs.Length > 0) return (UserVisibleAttribute)attrs[0];
+            var attrs = leaf.GetCustomAttributes(typeof(PythonVisibleAttribute), true);
+            if (attrs.Length > 0) return (PythonVisibleAttribute)attrs[0];
             return null;
         }
     }
 
-    public static class UserVisibleHelper
+    public static class PythonVisibleHelper
     {
         public static List<System.Reflection.PropertyInfo> GetVisibleProperties(Type type)
         {
@@ -95,7 +95,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             foreach (var p in allProps)
             {
                 if (p.GetIndexParameters().Length > 0) continue;
-                if (p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0)
+                if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
                     anyMarked = true;
                     break;
@@ -113,7 +113,7 @@ namespace DataScienceWorkbench.PythonWorkbench
 
                 if (isNestedVisibleClass)
                 {
-                    bool propMarked = p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0;
+                    bool propMarked = p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0;
                     if (anyMarked && !propMarked) continue;
 
                     string nestedPrefix = string.IsNullOrEmpty(prefix) ? p.Name + "_" : prefix + p.Name + "_";
@@ -126,7 +126,7 @@ namespace DataScienceWorkbench.PythonWorkbench
 
                 if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
 
-                if (anyMarked && p.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length == 0) continue;
+                if (anyMarked && p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length == 0) continue;
 
                 string colName = string.IsNullOrEmpty(prefix) ? p.Name : prefix + p.Name;
                 var fullPath = new System.Reflection.PropertyInfo[parentPath.Length + 1];
@@ -145,7 +145,7 @@ namespace DataScienceWorkbench.PythonWorkbench
 
         public static bool IsUserVisibleClass(Type t)
         {
-            return t.IsClass && t != typeof(string) && t.GetCustomAttributes(typeof(UserVisibleAttribute), true).Length > 0;
+            return t.IsClass && t != typeof(string) && t.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0;
         }
 
         public static string GetPythonTypeName(Type t)
