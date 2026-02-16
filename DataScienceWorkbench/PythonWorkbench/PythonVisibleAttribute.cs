@@ -55,8 +55,8 @@ namespace DataScienceWorkbench.PythonWorkbench
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsUserVisibleClass(p.PropertyType)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && IsUserVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsPythonVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && IsPythonVisibleClass(p.PropertyType)) continue;
 
                 if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
@@ -109,7 +109,7 @@ namespace DataScienceWorkbench.PythonWorkbench
 
                 bool isNestedVisibleClass = p.PropertyType.IsClass
                     && p.PropertyType != typeof(string)
-                    && IsUserVisibleClass(p.PropertyType);
+                    && IsPythonVisibleClass(p.PropertyType);
 
                 if (isNestedVisibleClass)
                 {
@@ -143,7 +143,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             }
         }
 
-        public static bool IsUserVisibleClass(Type t)
+        public static bool IsPythonVisibleClass(Type t)
         {
             return t.IsClass && t != typeof(string) && t.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0;
         }
