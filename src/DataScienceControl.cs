@@ -33,6 +33,7 @@ namespace DataScienceWorkbench
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, PythonClassInfo> registeredPythonClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
+        private ContextMenuStrip fileContextMenu;
         private float editorFontSize = 10f;
         private const float MinFontSize = 6f;
         private const float MaxFontSize = 28f;
@@ -121,7 +122,7 @@ namespace DataScienceWorkbench
 
             outputLabel.Font = uiFontBold;
             pkgListLabel.Font = uiFontBold;
-            fileListBox.Font = ResolveUIFont(9f);
+            fileTreeView.Font = ResolveUIFont(9f);
             fileListLabel.Font = uiFontBold;
         }
 
@@ -201,10 +202,11 @@ namespace DataScienceWorkbench
                     if (activeFile != null && !activeFile.IsModified)
                     {
                         activeFile.IsModified = true;
-                        int fidx = openFiles.IndexOf(activeFile);
-                        if (fidx >= 0 && fidx < fileListBox.Items.Count)
+                        if (activeFile.FilePath != null)
                         {
-                            fileListBox.Items[fidx] = "\u2022 " + activeFile.FileName;
+                            var node = FindNodeByPath(fileTreeView.Nodes, activeFile.FilePath);
+                            if (node != null)
+                                node.Text = "\u2022 " + activeFile.FileName;
                         }
                     }
                 }
@@ -2572,7 +2574,7 @@ namespace DataScienceWorkbench
             if (!Directory.Exists(scriptsDir))
                 Directory.CreateDirectory(scriptsDir);
 
-            var existingFiles = Directory.GetFiles(scriptsDir, "*.py");
+            var existingFiles = Directory.GetFiles(scriptsDir, "*.py", SearchOption.AllDirectories);
 
             if (existingFiles.Length == 0)
             {
@@ -2589,13 +2591,28 @@ namespace DataScienceWorkbench
             }
             else
             {
-                foreach (var fp in existingFiles.OrderBy(f => f))
+                var rootFiles = Directory.GetFiles(scriptsDir, "*.py");
+                foreach (var fp in rootFiles.OrderBy(f => f))
                 {
                     var tab = new FileTab
                     {
                         FilePath = fp,
                         FileName = Path.GetFileName(fp),
                         Content = File.ReadAllText(fp),
+                        CursorPosition = 0,
+                        IsModified = false
+                    };
+                    openFiles.Add(tab);
+                }
+
+                if (openFiles.Count == 0)
+                {
+                    var firstFile = existingFiles.OrderBy(f => f).First();
+                    var tab = new FileTab
+                    {
+                        FilePath = firstFile,
+                        FileName = Path.GetFileName(firstFile),
+                        Content = File.ReadAllText(firstFile),
                         CursorPosition = 0,
                         IsModified = false
                     };
@@ -2609,46 +2626,372 @@ namespace DataScienceWorkbench
 
         private void SetupFileListEvents()
         {
-            fileListBox.SelectedIndexChanged += OnFileListSelectionChanged;
-            fileListBox.DrawItem += OnFileListDrawItem;
+            fileTreeView.NodeMouseClick += OnFileTreeNodeClick;
+            fileTreeView.NodeMouseDoubleClick += OnFileTreeNodeDoubleClick;
+            fileTreeView.AfterLabelEdit += OnFileTreeAfterLabelEdit;
             fileNewBtn.Click += OnNewFile;
             fileOpenBtn.Click += OnOpenFile;
             fileCloseBtn.Click += OnCloseFile;
+
+            fileContextMenu = new ContextMenuStrip();
+            fileTreeView.MouseUp += (s, e) =>
+            {
+                if (e.Button == MouseButtons.Right)
+                {
+                    var node = fileTreeView.GetNodeAt(e.X, e.Y);
+                    fileTreeView.SelectedNode = node;
+                    BuildFileContextMenu(node);
+                    fileContextMenu.Show(fileTreeView, e.Location);
+                }
+            };
         }
 
-        private void OnFileListDrawItem(object sender, DrawItemEventArgs e)
+        private void BuildFileContextMenu(TreeNode node)
         {
-            if (e.Index < 0 || e.Index >= openFiles.Count) return;
+            fileContextMenu.Items.Clear();
 
-            var ft = openFiles[e.Index];
-            bool isActive = (ft == activeFile);
+            fileContextMenu.Items.Add("New File", null, OnNewFile);
+            fileContextMenu.Items.Add("New Folder", null, OnNewFolder);
 
-            Color bgColor = isActive ? Color.FromArgb(210, 230, 255) : Color.FromArgb(245, 245, 245);
-            using (var bg = new SolidBrush(bgColor))
-                e.Graphics.FillRectangle(bg, e.Bounds);
+            if (node != null)
+            {
+                string path = (string)node.Tag;
+                bool isFolder = Directory.Exists(path);
 
-            var font = isActive ? new Font(fileListBox.Font, FontStyle.Bold) : fileListBox.Font;
-            string text = ft.IsModified ? "\u2022 " + ft.FileName : "  " + ft.FileName;
-            Color textColor = Color.FromArgb(30, 30, 30);
+                fileContextMenu.Items.Add(new ToolStripSeparator());
 
-            using (var tb = new SolidBrush(textColor))
-                e.Graphics.DrawString(text, font, tb, e.Bounds.X + 4, e.Bounds.Y + 2);
+                if (!isFolder)
+                {
+                    fileContextMenu.Items.Add("Open", null, (s, e) => OpenFileFromTree(node));
+                }
 
-            if (isActive) font.Dispose();
+                var renameItem = new ToolStripMenuItem("Rename", null, (s, e) => { node.BeginEdit(); });
+                fileContextMenu.Items.Add(renameItem);
+
+                var deleteItem = new ToolStripMenuItem("Delete", null, (s, e) => OnDeleteFileOrFolder(node));
+                fileContextMenu.Items.Add(deleteItem);
+            }
+        }
+
+        private void OnFileTreeNodeClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            OpenFileFromTree(e.Node);
+        }
+
+        private void OnFileTreeNodeDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            OpenFileFromTree(e.Node);
+        }
+
+        private void OpenFileFromTree(TreeNode node)
+        {
+            if (node == null) return;
+            string tag = node.Tag as string;
+            if (tag == null) return;
+
+            if (tag.StartsWith("UNSAVED:"))
+            {
+                string unsavedName = tag.Substring(8);
+                var ft = openFiles.Find(f => f.FilePath == null && f.FileName == unsavedName);
+                if (ft != null && ft != activeFile)
+                    SwitchToFile(ft);
+                return;
+            }
+
+            if (Directory.Exists(tag)) return;
+
+            var existing = openFiles.Find(f => f.FilePath != null &&
+                f.FilePath.Equals(tag, StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null)
+            {
+                if (existing != activeFile)
+                    SwitchToFile(existing);
+                return;
+            }
+
+            var newTab = new FileTab
+            {
+                FilePath = tag,
+                FileName = Path.GetFileName(tag),
+                Content = File.ReadAllText(tag),
+                CursorPosition = 0,
+                IsModified = false
+            };
+            openFiles.Add(newTab);
+            SwitchToFile(newTab);
+            RaiseStatus("Opened: " + newTab.FileName);
+        }
+
+        private void OnNewFolder(object sender, EventArgs e)
+        {
+            string parentDir = scriptsDir;
+            var selectedNode = fileTreeView.SelectedNode;
+            if (selectedNode != null)
+            {
+                string tag = selectedNode.Tag as string;
+                if (tag != null && Directory.Exists(tag))
+                    parentDir = tag;
+                else if (tag != null && File.Exists(tag))
+                    parentDir = Path.GetDirectoryName(tag);
+            }
+
+            string baseName = "new_folder";
+            string folderPath = Path.Combine(parentDir, baseName);
+            int counter = 1;
+            while (Directory.Exists(folderPath))
+            {
+                folderPath = Path.Combine(parentDir, baseName + counter);
+                counter++;
+            }
+
+            Directory.CreateDirectory(folderPath);
+            RefreshFileList();
+
+            var node = FindNodeByPath(fileTreeView.Nodes, folderPath);
+            if (node != null)
+            {
+                fileTreeView.SelectedNode = node;
+                node.BeginEdit();
+            }
+
+            RaiseStatus("Created folder: " + Path.GetFileName(folderPath));
+        }
+
+        private void OnDeleteFileOrFolder(TreeNode node)
+        {
+            if (node == null) return;
+            string path = node.Tag as string;
+            if (path == null || path.StartsWith("UNSAVED:")) return;
+
+            bool isFolder = Directory.Exists(path);
+            string itemName = Path.GetFileName(path);
+            string message = isFolder
+                ? "Delete folder '" + itemName + "' and all its contents?\n\nThis cannot be undone."
+                : "Delete file '" + itemName + "'?\n\nThis cannot be undone.";
+
+            var result = MessageBox.Show(message, "Confirm Delete",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes) return;
+
+            if (isFolder)
+            {
+                var toClose = openFiles.FindAll(f => f.FilePath != null &&
+                    f.FilePath.StartsWith(path + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
+                foreach (var ft in toClose)
+                    openFiles.Remove(ft);
+
+                Directory.Delete(path, true);
+            }
+            else
+            {
+                var openTab = openFiles.Find(f => f.FilePath != null &&
+                    f.FilePath.Equals(path, StringComparison.OrdinalIgnoreCase));
+                if (openTab != null)
+                {
+                    openFiles.Remove(openTab);
+                }
+
+                File.Delete(path);
+            }
+
+            if (openFiles.Count == 0)
+            {
+                var mainTab = new FileTab
+                {
+                    FilePath = Path.Combine(scriptsDir, "main.py"),
+                    FileName = "main.py",
+                    Content = GetDefaultScript(),
+                    CursorPosition = 0,
+                    IsModified = false
+                };
+                openFiles.Add(mainTab);
+                File.WriteAllText(mainTab.FilePath, mainTab.Content);
+            }
+
+            if (activeFile == null || !openFiles.Contains(activeFile))
+            {
+                LoadFileIntoEditor(openFiles[0]);
+            }
+
+            RefreshFileList();
+            RaiseStatus("Deleted: " + itemName);
+        }
+
+        private void OnFileTreeAfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        {
+            if (e.Label == null)
+            {
+                e.CancelEdit = true;
+                return;
+            }
+
+            string newName = e.Label.Trim();
+            if (string.IsNullOrEmpty(newName))
+            {
+                e.CancelEdit = true;
+                return;
+            }
+
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            foreach (char c in newName)
+            {
+                if (Array.IndexOf(invalidChars, c) >= 0)
+                {
+                    e.CancelEdit = true;
+                    MessageBox.Show("The name contains invalid characters.", "Invalid Name",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+
+            string oldPath = e.Node.Tag as string;
+            if (oldPath == null || oldPath.StartsWith("UNSAVED:"))
+            {
+                e.CancelEdit = true;
+                return;
+            }
+
+            bool isFolder = Directory.Exists(oldPath);
+            string parentDir = Path.GetDirectoryName(oldPath);
+
+            if (!isFolder && !newName.EndsWith(".py", StringComparison.OrdinalIgnoreCase))
+                newName += ".py";
+
+            string newPath = Path.Combine(parentDir, newName);
+
+            if (newPath.Equals(oldPath, StringComparison.OrdinalIgnoreCase))
+            {
+                e.CancelEdit = true;
+                return;
+            }
+
+            if ((isFolder && Directory.Exists(newPath)) || (!isFolder && File.Exists(newPath)))
+            {
+                e.CancelEdit = true;
+                MessageBox.Show("An item with this name already exists.", "Name Conflict",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                if (isFolder)
+                {
+                    Directory.Move(oldPath, newPath);
+
+                    foreach (var ft in openFiles)
+                    {
+                        if (ft.FilePath != null && ft.FilePath.StartsWith(oldPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                        {
+                            ft.FilePath = newPath + ft.FilePath.Substring(oldPath.Length);
+                            ft.FileName = Path.GetFileName(ft.FilePath);
+                        }
+                    }
+                }
+                else
+                {
+                    File.Move(oldPath, newPath);
+
+                    var openTab = openFiles.Find(f => f.FilePath != null &&
+                        f.FilePath.Equals(oldPath, StringComparison.OrdinalIgnoreCase));
+                    if (openTab != null)
+                    {
+                        openTab.FilePath = newPath;
+                        openTab.FileName = newName;
+                    }
+                }
+
+                e.CancelEdit = true;
+                RefreshFileList();
+                RaiseStatus("Renamed to: " + newName);
+            }
+            catch (Exception ex)
+            {
+                e.CancelEdit = true;
+                MessageBox.Show("Failed to rename: " + ex.Message, "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void RefreshFileList()
         {
-            fileListBox.Items.Clear();
-            foreach (var ft in openFiles)
+            fileTreeView.BeginUpdate();
+            fileTreeView.Nodes.Clear();
+            PopulateTreeNode(fileTreeView.Nodes, scriptsDir);
+            fileTreeView.ExpandAll();
+
+            if (activeFile != null && activeFile.FilePath != null)
             {
-                string display = ft.IsModified ? "\u2022 " + ft.FileName : "  " + ft.FileName;
-                fileListBox.Items.Add(display);
+                var node = FindNodeByPath(fileTreeView.Nodes, activeFile.FilePath);
+                if (node != null)
+                {
+                    fileTreeView.SelectedNode = node;
+                    node.NodeFont = new Font(fileTreeView.Font, FontStyle.Bold);
+                }
             }
 
-            int idx = openFiles.IndexOf(activeFile);
-            if (idx >= 0 && idx < fileListBox.Items.Count)
-                fileListBox.SelectedIndex = idx;
+            fileTreeView.EndUpdate();
+        }
+
+        private void PopulateTreeNode(TreeNodeCollection parentNodes, string dirPath)
+        {
+            foreach (var subDir in Directory.GetDirectories(dirPath).OrderBy(d => d))
+            {
+                string dirName = Path.GetFileName(subDir);
+                var dirNode = new TreeNode(dirName);
+                dirNode.Tag = subDir;
+                dirNode.ImageIndex = -1;
+                parentNodes.Add(dirNode);
+                PopulateTreeNode(dirNode.Nodes, subDir);
+            }
+
+            foreach (var filePath in Directory.GetFiles(dirPath, "*.py").OrderBy(f => f))
+            {
+                string fileName = Path.GetFileName(filePath);
+                var fileTab = openFiles.Find(f => f.FilePath != null &&
+                    f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
+
+                string displayName = fileName;
+                if (fileTab != null && fileTab.IsModified)
+                    displayName = "\u2022 " + fileName;
+
+                var fileNode = new TreeNode(displayName);
+                fileNode.Tag = filePath;
+
+                if (fileTab != null && fileTab == activeFile)
+                    fileNode.NodeFont = new Font(fileTreeView.Font, FontStyle.Bold);
+
+                parentNodes.Add(fileNode);
+            }
+
+            foreach (var ft in openFiles)
+            {
+                if (ft.FilePath == null)
+                {
+                    string displayName = ft.IsModified ? "\u2022 " + ft.FileName : ft.FileName;
+                    var node = new TreeNode(displayName);
+                    node.Tag = "UNSAVED:" + ft.FileName;
+                    node.ForeColor = Color.FromArgb(128, 128, 128);
+                    if (ft == activeFile)
+                        node.NodeFont = new Font(fileTreeView.Font, FontStyle.Bold);
+                    fileTreeView.Nodes.Add(node);
+                }
+            }
+        }
+
+        private TreeNode FindNodeByPath(TreeNodeCollection nodes, string path)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                string tag = node.Tag as string;
+                if (tag != null && tag.Equals(path, StringComparison.OrdinalIgnoreCase))
+                    return node;
+                var found = FindNodeByPath(node.Nodes, path);
+                if (found != null) return found;
+            }
+            return null;
         }
 
         private void SaveCurrentFileState()
@@ -2700,30 +3043,44 @@ namespace DataScienceWorkbench
             RaiseStatus("Editing: " + tab.FileName);
         }
 
-        private void OnFileListSelectionChanged(object sender, EventArgs e)
-        {
-            int idx = fileListBox.SelectedIndex;
-            if (idx < 0 || idx >= openFiles.Count) return;
-            var selected = openFiles[idx];
-            if (selected != activeFile)
-                SwitchToFile(selected);
-        }
-
         private void OnNewFile(object sender, EventArgs e)
         {
+            string targetDir = scriptsDir;
+            var selectedNode = fileTreeView.SelectedNode;
+            if (selectedNode != null)
+            {
+                string tag = selectedNode.Tag as string;
+                if (tag != null && Directory.Exists(tag))
+                    targetDir = tag;
+                else if (tag != null && File.Exists(tag))
+                    targetDir = Path.GetDirectoryName(tag);
+            }
+
             untitledCounter++;
             string name = "untitled" + untitledCounter + ".py";
+            string filePath = Path.Combine(targetDir, name);
+
+            File.WriteAllText(filePath, "");
+
             var tab = new FileTab
             {
-                FilePath = null,
+                FilePath = filePath,
                 FileName = name,
                 Content = "",
                 CursorPosition = 0,
-                IsModified = true
+                IsModified = false
             };
             openFiles.Add(tab);
             SwitchToFile(tab);
             RefreshFileList();
+
+            var node = FindNodeByPath(fileTreeView.Nodes, filePath);
+            if (node != null)
+            {
+                fileTreeView.SelectedNode = node;
+                node.BeginEdit();
+            }
+
             RaiseStatus("New file: " + name);
         }
 
@@ -2737,14 +3094,15 @@ namespace DataScienceWorkbench
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    string fileName = Path.GetFileName(dlg.FileName);
-                    var existing = openFiles.Find(f => f.FileName == fileName);
+                    var existing = openFiles.Find(f => f.FilePath != null &&
+                        f.FilePath.Equals(dlg.FileName, StringComparison.OrdinalIgnoreCase));
                     if (existing != null)
                     {
                         SwitchToFile(existing);
                         return;
                     }
 
+                    string fileName = Path.GetFileName(dlg.FileName);
                     string targetPath = Path.Combine(scriptsDir, fileName);
                     if (!dlg.FileName.Equals(targetPath, StringComparison.OrdinalIgnoreCase))
                     {
@@ -2798,8 +3156,17 @@ namespace DataScienceWorkbench
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    string fileName = Path.GetFileName(dlg.FileName);
-                    string targetPath = Path.Combine(scriptsDir, fileName);
+                    string targetPath = dlg.FileName;
+                    string fileName = Path.GetFileName(targetPath);
+
+                    if (!targetPath.StartsWith(scriptsDir, StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetPath = Path.Combine(scriptsDir, fileName);
+                    }
+
+                    string parentDir = Path.GetDirectoryName(targetPath);
+                    if (!Directory.Exists(parentDir))
+                        Directory.CreateDirectory(parentDir);
 
                     activeFile.Content = pythonEditor.Text;
                     File.WriteAllText(targetPath, activeFile.Content);

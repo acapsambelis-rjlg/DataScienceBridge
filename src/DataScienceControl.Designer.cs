@@ -21,7 +21,7 @@ namespace DataScienceWorkbench
             this.editorTab = new System.Windows.Forms.TabPage();
             this.mainSplit = new System.Windows.Forms.SplitContainer();
             this.fileListPanel = new System.Windows.Forms.Panel();
-            this.fileListBox = new System.Windows.Forms.ListBox();
+            this.fileTreeView = new System.Windows.Forms.TreeView();
             this.fileListLabel = new System.Windows.Forms.Label();
             this.fileListButtonPanel = new System.Windows.Forms.Panel();
             this.fileNewBtn = new System.Windows.Forms.Button();
@@ -131,7 +131,7 @@ namespace DataScienceWorkbench
             // 
             // fileListPanel
             // 
-            this.fileListPanel.Controls.Add(this.fileListBox);
+            this.fileListPanel.Controls.Add(this.fileTreeView);
             this.fileListPanel.Controls.Add(this.fileListSeparator);
             this.fileListPanel.Controls.Add(this.fileListButtonPanel);
             this.fileListPanel.Controls.Add(this.fileListLabel);
@@ -153,18 +153,22 @@ namespace DataScienceWorkbench
             this.fileListLabel.TabIndex = 0;
             this.fileListLabel.Text = "Files";
             // 
-            // fileListBox
+            // fileTreeView
             // 
-            this.fileListBox.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
-            this.fileListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.fileListBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fileListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.fileListBox.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.fileListBox.ItemHeight = 22;
-            this.fileListBox.Location = new System.Drawing.Point(0, 24);
-            this.fileListBox.Name = "fileListBox";
-            this.fileListBox.Size = new System.Drawing.Size(160, 328);
-            this.fileListBox.TabIndex = 1;
+            this.fileTreeView.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
+            this.fileTreeView.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.fileTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.fileTreeView.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.fileTreeView.FullRowSelect = true;
+            this.fileTreeView.HideSelection = false;
+            this.fileTreeView.ShowLines = true;
+            this.fileTreeView.ShowPlusMinus = true;
+            this.fileTreeView.ShowRootLines = true;
+            this.fileTreeView.LabelEdit = true;
+            this.fileTreeView.Location = new System.Drawing.Point(0, 24);
+            this.fileTreeView.Name = "fileTreeView";
+            this.fileTreeView.Size = new System.Drawing.Size(160, 328);
+            this.fileTreeView.TabIndex = 1;
             // 
             // fileListButtonPanel
             // 
@@ -596,7 +600,7 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.Label pkgLabel;
         private System.Windows.Forms.TextBox pkgSearchBox;
         private System.Windows.Forms.Panel fileListPanel;
-        private System.Windows.Forms.ListBox fileListBox;
+        private System.Windows.Forms.TreeView fileTreeView;
         private System.Windows.Forms.Label fileListLabel;
         private System.Windows.Forms.Panel fileListButtonPanel;
         private System.Windows.Forms.Button fileNewBtn;
