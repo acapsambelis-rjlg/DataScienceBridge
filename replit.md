@@ -10,6 +10,12 @@ The Data Science Workbench is a Windows Forms application developed with Mono (.
 ## System Architecture
 The application uses Mono (C# / .NET Framework 4.7.2 compatible) for cross-platform execution on Linux. Python integration occurs via subprocess-based execution, streaming data in-memory directly to Python variables. The UI is built with Windows Forms, and `DataScienceControl` is a self-contained, reusable component.
 
+**Namespace Structure (aligned between `src/` and `DataScienceWorkbench/PythonWorkbench/`):**
+- `DataScienceWorkbench` — DataScienceControl, AutoCompletePopup, MainForm, Program, DataModels, JsonHelper
+- `DataScienceWorkbench.PythonWorkbench` — PythonBridge, PythonSyntaxHighlighter, PythonSymbolAnalyzer, LineNumberPanel, SquiggleRichTextBox (ErrorSquiggleOverlay), PlotViewerForm, PythonVisibleAttribute
+
+Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` without namespace adjustments. The Designer.cs uses fully-qualified `DataScienceWorkbench.PythonWorkbench.` references for custom controls.
+
 **Key Features:**
 - **Multi-File Editor:** Supports multiple Python files with a TreeView-based file explorer panel showing the full directory hierarchy of `python/scripts/`. Features persistent storage, per-file state preservation (undo/redo, bookmarks, cursor/scroll position), and cross-file imports. Includes right-click context menu for file operations: New File, New Folder, Rename (inline label editing with validation), Delete (with confirmation), and folder/subfolder creation. Files in subdirectories are fully supported.
 - **Integrated Python Editor:** Features syntax highlighting, line numbers, real-time syntax checking, code snippets, context-aware autocomplete (for dataset columns, class members, DataFrame methods), bracket matching, code folding, bookmarks, and error squiggles with tooltips.
