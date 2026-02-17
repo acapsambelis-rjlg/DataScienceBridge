@@ -43,15 +43,15 @@ namespace DataScienceWorkbench
 
         private static readonly Regex TripleDoubleQuoteRegex = new Regex("\"\"\"[\\s\\S]*?\"\"\"", RegexOptions.Compiled);
         private static readonly Regex TripleSingleQuoteRegex = new Regex("'''[\\s\\S]*?'''", RegexOptions.Compiled);
-        private static readonly Regex DoubleQuoteRegex = new Regex("\"(?:[^\"\\\\]|\\\\.)*\"", RegexOptions.Compiled);
-        private static readonly Regex SingleQuoteRegex = new Regex("'(?:[^'\\\\]|\\\\.)*'", RegexOptions.Compiled);
-        private static readonly Regex FStringDoubleRegex = new Regex("[fF]\"(?:[^\"\\\\]|\\\\.)*\"", RegexOptions.Compiled);
-        private static readonly Regex FStringSingleRegex = new Regex("[fF]'(?:[^'\\\\]|\\\\.)*'", RegexOptions.Compiled);
+        private static readonly Regex DoubleQuoteRegex = new Regex("\"(?:[^\"\\\\\\r\\n]|\\\\[^\\r\\n])*\"", RegexOptions.Compiled);
+        private static readonly Regex SingleQuoteRegex = new Regex("'(?:[^'\\\\\\r\\n]|\\\\[^\\r\\n])*'", RegexOptions.Compiled);
+        private static readonly Regex FStringDoubleRegex = new Regex("[fF]\"(?:[^\"\\\\\\r\\n]|\\\\[^\\r\\n])*\"", RegexOptions.Compiled);
+        private static readonly Regex FStringSingleRegex = new Regex("[fF]'(?:[^'\\\\\\r\\n]|\\\\[^\\r\\n])*'", RegexOptions.Compiled);
         private static readonly Regex FStringTripleDoubleRegex = new Regex("[fF]\"\"\"[\\s\\S]*?\"\"\"", RegexOptions.Compiled);
         private static readonly Regex FStringTripleSingleRegex = new Regex("[fF]'''[\\s\\S]*?'''", RegexOptions.Compiled);
-        private static readonly Regex PrefixedStringRegex = new Regex("[rRbBuU]{1,2}\"(?:[^\"\\\\]|\\\\.)*\"", RegexOptions.Compiled);
-        private static readonly Regex PrefixedSingleRegex = new Regex("[rRbBuU]{1,2}'(?:[^'\\\\]|\\\\.)*'", RegexOptions.Compiled);
-        private static readonly Regex CommentRegex = new Regex("#[^\n]*", RegexOptions.Compiled);
+        private static readonly Regex PrefixedStringRegex = new Regex("[rRbBuU]{1,2}\"(?:[^\"\\\\\\r\\n]|\\\\[^\\r\\n])*\"", RegexOptions.Compiled);
+        private static readonly Regex PrefixedSingleRegex = new Regex("[rRbBuU]{1,2}'(?:[^'\\\\\\r\\n]|\\\\[^\\r\\n])*'", RegexOptions.Compiled);
+        private static readonly Regex CommentRegex = new Regex("#[^\\r\\n]*", RegexOptions.Compiled);
         private static readonly Regex NumberRegex = new Regex(@"\b\d+\.?\d*(?:[eE][+-]?\d+)?\b", RegexOptions.Compiled);
         private static readonly Regex DecoratorRegex = new Regex(@"^[ \t]*@\w+", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex WordRegex = new Regex(@"\b[a-zA-Z_]\w*\b", RegexOptions.Compiled);

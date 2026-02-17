@@ -3025,7 +3025,7 @@ else:
         if idx < n:
             img = imgs.iloc[idx]
             ax.imshow(np.array(img))
-            ax.set_title('Image ' + str(idx + 1), fontsize=8)
+            ax.set_title(f""Image {idx+1}"", fontsize=8)
         ax.axis('off')
     plt.suptitle(img_col + ' images')
     plt.tight_layout()
