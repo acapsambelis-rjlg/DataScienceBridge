@@ -2622,6 +2622,7 @@ namespace DataScienceWorkbench
             }
 
             activeFile = openFiles[0];
+            LoadFileIntoEditor(activeFile);
             RefreshFileList();
         }
 
