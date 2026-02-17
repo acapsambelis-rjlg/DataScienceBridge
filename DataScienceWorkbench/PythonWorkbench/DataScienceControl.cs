@@ -15,6 +15,7 @@ namespace DataScienceWorkbench
         private List<Employee> employees;
 
         private bool packagesLoaded;
+        private bool packagesLoading;
         private List<string> allPackageItems = new List<string>();
         private PythonSyntaxHighlighter syntaxHighlighter;
         private Timer highlightTimer;
@@ -1465,6 +1466,8 @@ namespace DataScienceWorkbench
                     AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
                     RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
                 }
+
+                LoadPackagesAsync();
             }
         }
 
@@ -2241,10 +2244,9 @@ namespace DataScienceWorkbench
 
         private void mainTabs_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (mainTabs.SelectedIndex == 2 && !packagesLoaded)
+            if (mainTabs.SelectedIndex == 2 && !packagesLoaded && !packagesLoading)
             {
-                packagesLoaded = true;
-                OnRefreshPackages(null, null);
+                LoadPackagesAsync();
             }
         }
 
@@ -2603,6 +2605,14 @@ namespace DataScienceWorkbench
 
         private void OnRefreshPackages(object sender, EventArgs e)
         {
+            LoadPackagesAsync();
+        }
+
+        private void LoadPackagesAsync()
+        {
+            if (packagesLoading) return;
+            packagesLoading = true;
+
             allPackageItems.Clear();
             packageListBox.Items.Clear();
             pkgSearchBox.Text = pkgSearchPlaceholder;
@@ -2612,33 +2622,70 @@ namespace DataScienceWorkbench
             if (!pythonRunner.PythonAvailable)
             {
                 packageListBox.Items.Add("(Python not available — cannot list packages)");
+                packagesLoading = false;
                 return;
             }
 
-            var result = pythonRunner.ListPackages();
-            if (result.Success && !string.IsNullOrEmpty(result.Output))
-            {
-                var lines = result.Output.Split('\n');
-                foreach (var line in lines)
-                {
-                    if (string.IsNullOrWhiteSpace(line)) continue;
-                    var trimmed = line.Trim();
-                    if (trimmed.StartsWith("Package") && trimmed.Contains("Version")) continue;
-                    if (trimmed.StartsWith("---")) continue;
-                    var parts = trimmed.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length >= 2)
-                        allPackageItems.Add(parts[0] + "  " + parts[1]);
-                    else if (parts.Length == 1)
-                        allPackageItems.Add(parts[0]);
-                }
-                allPackageItems.Sort(StringComparer.OrdinalIgnoreCase);
-            }
-            else if (!result.Success)
-            {
-                packageListBox.Items.Add("(Failed to list packages: " + result.Error + ")");
-            }
+            packageListBox.Items.Add("Loading packages...");
 
-            PopulatePackageList("");
+            System.Threading.ThreadPool.QueueUserWorkItem(_ =>
+            {
+                var items = new List<string>();
+                string error = null;
+
+                try
+                {
+                    var result = pythonRunner.ListPackages();
+
+                    if (result.Success && !string.IsNullOrEmpty(result.Output))
+                    {
+                        var lines = result.Output.Split('\n');
+                        foreach (var line in lines)
+                        {
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            var trimmed = line.Trim();
+                            if (trimmed.StartsWith("Package") && trimmed.Contains("Version")) continue;
+                            if (trimmed.StartsWith("---")) continue;
+                            var parts = trimmed.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length >= 2)
+                                items.Add(parts[0] + "  " + parts[1]);
+                            else if (parts.Length == 1)
+                                items.Add(parts[0]);
+                        }
+                        items.Sort(StringComparer.OrdinalIgnoreCase);
+                    }
+                    else if (!result.Success)
+                    {
+                        error = result.Error;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    error = ex.Message;
+                }
+
+                try
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        allPackageItems.Clear();
+                        allPackageItems.AddRange(items);
+                        packageListBox.Items.Clear();
+
+                        if (error != null)
+                            packageListBox.Items.Add("(Failed to list packages: " + error + ")");
+                        else
+                            PopulatePackageList("");
+
+                        packagesLoaded = true;
+                        packagesLoading = false;
+                    }));
+                }
+                catch (InvalidOperationException)
+                {
+                    packagesLoading = false;
+                }
+            });
         }
 
         private bool pkgSearchPlaceholderActive = true;
