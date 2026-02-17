@@ -2903,6 +2903,7 @@ PLOT VIEWER
 
         private void InsertSnippet(string code)
         {
+            PushUndo(pythonEditor.Text, pythonEditor.SelectionStart);
             int pos = pythonEditor.SelectionStart;
             suppressHighlight = true;
             pythonEditor.SelectionStart = pos;
@@ -2912,6 +2913,7 @@ PLOT VIEWER
             pythonEditor.SelectionStart = pos + code.Length;
             pythonEditor.Focus();
             ApplySyntaxHighlighting();
+            PushUndo(pythonEditor.Text, pythonEditor.SelectionStart);
         }
 
         private string GetDefaultScript()
