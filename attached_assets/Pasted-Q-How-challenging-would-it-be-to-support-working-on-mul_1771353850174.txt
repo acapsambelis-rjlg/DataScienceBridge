@@ -1,0 +1,27 @@
+Q:
+How challenging would it be to support working on multiple python files in this editor?
+
+A:
+That's a great question. It's definitely doable, but the effort ranges from moderate to significant depending on how deep you want to go. Here's a breakdown:
+
+Relatively straightforward (moderate effort):
+
+- Adding a tab bar above the editor to switch between open files
+- File open/save/save-as dialogs
+- Running whichever file is currently active
+- Each tab remembering its content and cursor position
+
+More involved (significant effort):
+
+- Each open file needs its own set of supporting components — the line number gutter, error squiggle overlay, undo history, bookmarks, scroll position, and find/replace state are all tightly coupled to the single editor right now. You'd either need to create separate instances of all those for each tab, or build a "swap" mechanism that saves and restores state when switching tabs.
+- The syntax highlighter and symbol analyzer currently operate on one document. They'd need to handle per-tab state.
+- The autocomplete popup is also wired to a single editor instance.
+
+The hardest part (high effort):
+
+- Cross-file awareness — if someone writes from helpers import my_function in one tab, making the autocomplete, syntax checker, and symbol analyzer recognize symbols from other open files would be a substantial undertaking. Without this, multi-file support would work but feel limited.
+- The data bridge (how .NET datasets get piped into Python) currently injects everything into one script execution. Supporting imports between user files would require either writing temporary files to disk or building a custom module loader.
+
+My honest assessment: A basic version — tabs with independent editing, save/load, and running the active file — is a medium-sized task, maybe a few sessions of work. But making it feel polished with cross-file symbol resolution and imports would be a considerably larger project.
+
+Would you like to explore implementing a basic version, or is this more of a future planning question?
