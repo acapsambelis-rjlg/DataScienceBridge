@@ -455,6 +455,19 @@ namespace DataScienceWorkbench
                 sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
                 sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
                 sb.AppendLine("    return df");
+                sb.AppendLine("class _DatasetRow:");
+                sb.AppendLine("    def __init__(self, series):");
+                sb.AppendLine("        object.__setattr__(self, '_s', series)");
+                sb.AppendLine("    def __getattr__(self, name):");
+                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
+                sb.AppendLine("        if name in _s.index:");
+                sb.AppendLine("            return _s[name]");
+                sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
+                sb.AppendLine("    def __repr__(self):");
+                sb.AppendLine("        return repr(object.__getattribute__(self, '_s'))");
+                sb.AppendLine("    def __dir__(self):");
+                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
+                sb.AppendLine("        return list(_s.index)");
                 sb.AppendLine("class _DotNetDataset:");
                 sb.AppendLine("    def __init__(self, df):");
                 sb.AppendLine("        object.__setattr__(self, '_df', df)");
@@ -468,7 +481,17 @@ namespace DataScienceWorkbench
                 sb.AppendLine("    def __len__(self):");
                 sb.AppendLine("        return len(object.__getattribute__(self, '_df'))");
                 sb.AppendLine("    def __getitem__(self, key):");
-                sb.AppendLine("        return object.__getattribute__(self, '_df')[key]");
+                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+                sb.AppendLine("        if isinstance(key, (int, slice)):");
+                sb.AppendLine("            result = _df.iloc[key]");
+                sb.AppendLine("            if isinstance(result, pd.Series):");
+                sb.AppendLine("                return _DatasetRow(result)");
+                sb.AppendLine("            return _DotNetDataset(result.reset_index(drop=True))");
+                sb.AppendLine("        return _df[key]");
+                sb.AppendLine("    def __iter__(self):");
+                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+                sb.AppendLine("        for i in range(len(_df)):");
+                sb.AppendLine("            yield _DatasetRow(_df.iloc[i])");
                 sb.AppendLine("    @property");
                 sb.AppendLine("    def df(self):");
                 sb.AppendLine("        return object.__getattribute__(self, '_df')");
@@ -485,7 +508,7 @@ namespace DataScienceWorkbench
                 sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
                 sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
                 sb.AppendLine("        globals()[_name] = _DotNetDataset(_tmpdf)");
-                sb.AppendLine("del _DotNetDataset, _decode_img, _decode_img_columns, _tmpdf");
+                sb.AppendLine("del _DatasetRow, _DotNetDataset, _decode_img, _decode_img_columns, _tmpdf");
                 sb.AppendLine();
             }
 

@@ -1921,15 +1921,16 @@ namespace DataScienceWorkbench
             }
             else if (typeName == "image")
             {
-                AppendRefText("# Display single image\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("# Access a single image via row indexing\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("img = " + datasetName + "[0]." + fieldName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("# Display it\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText("import matplotlib.pyplot as plt\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("import numpy as np\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("img = " + datasetName + "." + fieldName + ".iloc[0]\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("plt.imshow(np.array(img))\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("plt.axis('off')\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("plt.show()\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("# Convert to numpy array for calculations\n", Color.FromArgb(0, 128, 0), false, 10);
-                AppendRefText("arr = np.array(" + datasetName + "." + fieldName + ".iloc[0])\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("arr = np.array(" + datasetName + "[0]." + fieldName + ")\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("print(f'Shape: {arr.shape}, dtype: {arr.dtype}')\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("print(f'Mean pixel: {arr.mean():.1f}')\n", Color.FromArgb(60, 60, 60), false, 10);
             }
@@ -2776,10 +2777,13 @@ HOW TO USE:
   2. Press F5 or click Run to execute
   3. Datasets are pre-loaded as variables
   4. Access columns directly: customers.CreditLimit.mean()
-  5. Use .df for full DataFrame: customers.df.describe()
-  6. Install packages via Package Manager tab
+  5. Access rows by index: customers[0].Name
+  6. Slice datasets: first_five = customers[0:5]
+  7. Use .df for full DataFrame: customers.df.describe()
+  8. Install packages via Package Manager tab
 
 EXAMPLE:
+  print(customers[0].Name)
   print(customers.CreditLimit.mean())
   print(employees.df.groupby('Department')['Salary'].mean())
 
@@ -2841,6 +2845,7 @@ AUTOCOMPLETE
   Displays suggestions as you type, including:
   - Python keywords and built-in functions
   - Dataset column names (e.g. customers.CreditLimit)
+  - Row indexing (e.g. customers[0].Name, customers[0:5])
   - DataFrame methods (after .df.)
   - Registered class members and context variables
   Press Tab or Enter to accept, Escape to dismiss.
@@ -2914,6 +2919,8 @@ PLOT VIEWER
         {
             return @"# Datasets are pre-loaded as variables
 # Access columns directly: customers.CreditLimit.mean()
+# Access rows by index: customers[0].Name
+# Slice datasets: customers[0:5]
 # Use .df for full DataFrame: customers.df.describe()
 
 print('=== Data Science Workbench ===')
@@ -2921,6 +2928,7 @@ print()
 
 # Quick look at customers
 print(f'Customers: {len(customers)} records')
+print(f'First customer: {customers[0].Name}')
 print(f'Average credit limit: ${customers.CreditLimit.mean():.2f}')
 print()
 print('=== Customer Summary ===')

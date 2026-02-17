@@ -238,7 +238,8 @@ namespace DataScienceWorkbench
             }
 
             int wordStart = pos - 1;
-            while (wordStart >= 0 && (char.IsLetterOrDigit(text[wordStart]) || text[wordStart] == '_' || text[wordStart] == '.'))
+            while (wordStart >= 0 && (char.IsLetterOrDigit(text[wordStart]) || text[wordStart] == '_' || text[wordStart] == '.'
+                || text[wordStart] == '[' || text[wordStart] == ']' || text[wordStart] == ':'))
                 wordStart--;
             wordStart++;
 
@@ -272,11 +273,26 @@ namespace DataScienceWorkbench
             Show(matches);
         }
 
+        private static readonly Regex BracketIndexRegex = new Regex(@"^(\w+)\[.+\]$", RegexOptions.Compiled);
+
         private List<string> GetDotCompletions(string objectName, string memberPrefix, string code)
         {
             var members = new List<string>();
 
-            if (DatasetColumns.ContainsKey(objectName))
+            string baseName = objectName;
+            bool isRowAccess = false;
+            var bracketMatch = BracketIndexRegex.Match(objectName);
+            if (bracketMatch.Success)
+            {
+                baseName = bracketMatch.Groups[1].Value;
+                isRowAccess = true;
+            }
+
+            if (isRowAccess && DatasetColumns.ContainsKey(baseName))
+            {
+                members.AddRange(DatasetColumns[baseName]);
+            }
+            else if (DatasetColumns.ContainsKey(objectName))
             {
                 members.AddRange(DatasetColumns[objectName]);
                 members.AddRange(DataFrameMethods);
