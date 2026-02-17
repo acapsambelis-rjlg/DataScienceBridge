@@ -57,8 +57,8 @@ namespace DataScienceWorkbench.PythonWorkbench
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsPythonVisibleClass(p.PropertyType)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && IsPythonVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsPythonVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && IsPythonVisibleClass(p.PropertyType)) continue;
 
                 if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
@@ -75,7 +75,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType)) continue;
                 result.Add(p);
             }
             return result;
@@ -126,7 +126,7 @@ namespace DataScienceWorkbench.PythonWorkbench
                     continue;
                 }
 
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType)) continue;
 
                 if (anyMarked && p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length == 0) continue;
 
