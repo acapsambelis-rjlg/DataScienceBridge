@@ -27,6 +27,7 @@ namespace DataScienceWorkbench
             this.fileNewBtn = new System.Windows.Forms.Button();
             this.fileOpenBtn = new System.Windows.Forms.Button();
             this.fileCloseBtn = new System.Windows.Forms.Button();
+            this.fileListSeparator = new System.Windows.Forms.Panel();
             this.editorPanel = new System.Windows.Forms.Panel();
             this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
             this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
@@ -61,6 +62,8 @@ namespace DataScienceWorkbench
             this.mainSplit.Panel1.SuspendLayout();
             this.mainSplit.Panel2.SuspendLayout();
             this.mainSplit.SuspendLayout();
+            this.fileListPanel.SuspendLayout();
+            this.fileListButtonPanel.SuspendLayout();
             this.editorPanel.SuspendLayout();
             this.editorMenuBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
@@ -118,13 +121,16 @@ namespace DataScienceWorkbench
             this.mainSplit.SplitterWidth = 6;
             this.mainSplit.TabIndex = 0;
             // 
-            // fileListPanel
+            // fileListSeparator
             // 
-            this.fileListSeparator = new System.Windows.Forms.Panel();
             this.fileListSeparator.Dock = System.Windows.Forms.DockStyle.Right;
             this.fileListSeparator.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
             this.fileListSeparator.Size = new System.Drawing.Size(1, 380);
             this.fileListSeparator.Name = "fileListSeparator";
+            this.fileListSeparator.TabIndex = 4;
+            // 
+            // fileListPanel
+            // 
             this.fileListPanel.Controls.Add(this.fileListBox);
             this.fileListPanel.Controls.Add(this.fileListSeparator);
             this.fileListPanel.Controls.Add(this.fileListButtonPanel);
@@ -536,6 +542,8 @@ namespace DataScienceWorkbench
             this.mainSplit.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.mainSplit)).EndInit();
             this.mainSplit.ResumeLayout(false);
+            this.fileListButtonPanel.ResumeLayout(false);
+            this.fileListPanel.ResumeLayout(false);
             this.editorPanel.ResumeLayout(false);
             this.editorPanel.PerformLayout();
             this.editorMenuBar.ResumeLayout(false);

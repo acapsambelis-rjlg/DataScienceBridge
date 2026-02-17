@@ -27,9 +27,10 @@ namespace DataScienceWorkbench
             this.fileNewBtn = new System.Windows.Forms.Button();
             this.fileOpenBtn = new System.Windows.Forms.Button();
             this.fileCloseBtn = new System.Windows.Forms.Button();
+            this.fileListSeparator = new System.Windows.Forms.Panel();
             this.editorPanel = new System.Windows.Forms.Panel();
-            this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
-            this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
+            this.pythonEditor = new DataScienceWorkbench.PythonWorkbench.SquiggleRichTextBox();
+            this.lineNumberPanel = new DataScienceWorkbench.PythonWorkbench.LineNumberPanel();
             this.editorMenuBar = new System.Windows.Forms.MenuStrip();
             this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.outputPanel = new System.Windows.Forms.Panel();
@@ -61,6 +62,8 @@ namespace DataScienceWorkbench
             this.mainSplit.Panel1.SuspendLayout();
             this.mainSplit.Panel2.SuspendLayout();
             this.mainSplit.SuspendLayout();
+            this.fileListPanel.SuspendLayout();
+            this.fileListButtonPanel.SuspendLayout();
             this.editorPanel.SuspendLayout();
             this.editorMenuBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
@@ -118,13 +121,16 @@ namespace DataScienceWorkbench
             this.mainSplit.SplitterWidth = 6;
             this.mainSplit.TabIndex = 0;
             // 
-            // fileListPanel
+            // fileListSeparator
             // 
-            this.fileListSeparator = new System.Windows.Forms.Panel();
             this.fileListSeparator.Dock = System.Windows.Forms.DockStyle.Right;
             this.fileListSeparator.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
             this.fileListSeparator.Size = new System.Drawing.Size(1, 380);
             this.fileListSeparator.Name = "fileListSeparator";
+            this.fileListSeparator.TabIndex = 4;
+            // 
+            // fileListPanel
+            // 
             this.fileListPanel.Controls.Add(this.fileListBox);
             this.fileListPanel.Controls.Add(this.fileListSeparator);
             this.fileListPanel.Controls.Add(this.fileListButtonPanel);
@@ -536,6 +542,8 @@ namespace DataScienceWorkbench
             this.mainSplit.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.mainSplit)).EndInit();
             this.mainSplit.ResumeLayout(false);
+            this.fileListButtonPanel.ResumeLayout(false);
+            this.fileListPanel.ResumeLayout(false);
             this.editorPanel.ResumeLayout(false);
             this.editorPanel.PerformLayout();
             this.editorMenuBar.ResumeLayout(false);
@@ -560,8 +568,8 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.TabPage editorTab;
         private System.Windows.Forms.SplitContainer mainSplit;
         private System.Windows.Forms.Panel editorPanel;
-        private DataScienceWorkbench.SquiggleRichTextBox pythonEditor;
-        private DataScienceWorkbench.LineNumberPanel lineNumberPanel;
+        private DataScienceWorkbench.PythonWorkbench.SquiggleRichTextBox pythonEditor;
+        private DataScienceWorkbench.PythonWorkbench.LineNumberPanel lineNumberPanel;
         private System.Windows.Forms.MenuStrip editorMenuBar;
         private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
         private System.Windows.Forms.Panel outputPanel;
