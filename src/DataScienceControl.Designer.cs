@@ -138,7 +138,7 @@ namespace DataScienceWorkbench
             this.fileListPanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.fileListPanel.Location = new System.Drawing.Point(0, 0);
             this.fileListPanel.Name = "fileListPanel";
-            this.fileListPanel.Size = new System.Drawing.Size(160, 380);
+            this.fileListPanel.Size = new System.Drawing.Size(200, 380);
             this.fileListPanel.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
             this.fileListPanel.TabIndex = 3;
             // 
@@ -165,9 +165,11 @@ namespace DataScienceWorkbench
             this.fileTreeView.ShowPlusMinus = true;
             this.fileTreeView.ShowRootLines = true;
             this.fileTreeView.LabelEdit = true;
+            this.fileTreeView.Indent = 16;
+            this.fileTreeView.Scrollable = true;
             this.fileTreeView.Location = new System.Drawing.Point(0, 24);
             this.fileTreeView.Name = "fileTreeView";
-            this.fileTreeView.Size = new System.Drawing.Size(160, 328);
+            this.fileTreeView.Size = new System.Drawing.Size(200, 328);
             this.fileTreeView.TabIndex = 1;
             // 
             // fileListButtonPanel

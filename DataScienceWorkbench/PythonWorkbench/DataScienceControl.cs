@@ -2926,10 +2926,13 @@ namespace DataScienceWorkbench
             {
                 var node = FindNodeByPath(fileTreeView.Nodes, activeFile.FilePath);
                 if (node != null)
-                {
                     fileTreeView.SelectedNode = node;
-                    node.NodeFont = new Font(fileTreeView.Font, FontStyle.Bold);
-                }
+            }
+            else if (activeFile != null && activeFile.FilePath == null)
+            {
+                var node = FindNodeByPath(fileTreeView.Nodes, "UNSAVED:" + activeFile.FileName);
+                if (node != null)
+                    fileTreeView.SelectedNode = node;
             }
 
             fileTreeView.EndUpdate();
@@ -2942,7 +2945,7 @@ namespace DataScienceWorkbench
                 string dirName = Path.GetFileName(subDir);
                 var dirNode = new TreeNode(dirName);
                 dirNode.Tag = subDir;
-                dirNode.ImageIndex = -1;
+                dirNode.ForeColor = Color.FromArgb(80, 80, 80);
                 parentNodes.Add(dirNode);
                 PopulateTreeNode(dirNode.Nodes, subDir);
             }
@@ -2954,14 +2957,22 @@ namespace DataScienceWorkbench
                     f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase));
 
                 string displayName = fileName;
-                if (fileTab != null && fileTab.IsModified)
+                bool isActive = (fileTab != null && fileTab == activeFile);
+
+                if (isActive)
+                    displayName = "\u25b8 " + fileName;
+                else if (fileTab != null && fileTab.IsModified)
                     displayName = "\u2022 " + fileName;
 
                 var fileNode = new TreeNode(displayName);
                 fileNode.Tag = filePath;
 
-                if (fileTab != null && fileTab == activeFile)
-                    fileNode.NodeFont = new Font(fileTreeView.Font, FontStyle.Bold);
+                if (isActive)
+                    fileNode.ForeColor = Color.FromArgb(0, 90, 180);
+                else if (fileTab != null)
+                    fileNode.ForeColor = Color.FromArgb(30, 30, 30);
+                else
+                    fileNode.ForeColor = Color.FromArgb(100, 100, 100);
 
                 parentNodes.Add(fileNode);
             }
@@ -2970,12 +2981,13 @@ namespace DataScienceWorkbench
             {
                 if (ft.FilePath == null)
                 {
-                    string displayName = ft.IsModified ? "\u2022 " + ft.FileName : ft.FileName;
+                    bool isActive = (ft == activeFile);
+                    string displayName = isActive ? "\u25b8 " + ft.FileName
+                        : ft.IsModified ? "\u2022 " + ft.FileName
+                        : ft.FileName;
                     var node = new TreeNode(displayName);
                     node.Tag = "UNSAVED:" + ft.FileName;
-                    node.ForeColor = Color.FromArgb(128, 128, 128);
-                    if (ft == activeFile)
-                        node.NodeFont = new Font(fileTreeView.Font, FontStyle.Bold);
+                    node.ForeColor = isActive ? Color.FromArgb(0, 90, 180) : Color.FromArgb(128, 128, 128);
                     fileTreeView.Nodes.Add(node);
                 }
             }
