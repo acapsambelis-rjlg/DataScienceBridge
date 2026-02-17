@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Data Science Workbench provides an integrated Python editor designed for data analysis. It combines a full-featured code editor with pre-loaded datasets, making it easy to explore, analyze, and visualize data without any setup.
+The Data Science Workbench provides an integrated Python editor designed for data analysis. It combines a full-featured code editor with datasets available via import, making it easy to explore, analyze, and visualize data without any setup.
 
 This guide covers all three tabs of the workbench: the **Python Editor**, the **Data Reference** browser, and the **Package Manager**.
 
@@ -10,7 +10,7 @@ This guide covers all three tabs of the workbench: the **Python Editor**, the **
 
 ## Getting Started
 
-When you open the workbench, you'll see a Python script editor with some sample code already loaded. Your datasets are pre-loaded as variables and ready to use immediately.
+When you open the workbench, you'll see a Python script editor with some sample code already loaded. Import your datasets with `from DotNetData import customers, employees` and they're ready to use.
 
 To run your first script:
 1. Click in the editor area
@@ -34,14 +34,19 @@ The editor works like a standard code editor with features designed for Python:
 
 ### Using Your Data
 
-Datasets are pre-loaded as variables. You can access them directly:
+Import datasets from the `DotNetData` module, then use them directly:
 
 ```python
+from DotNetData import customers, employees
+
 # See how many records are in a dataset
 print(len(customers))
 
 # Access a specific column
 print(customers.CreditLimit.mean())
+
+# Access a single row by index
+print(customers[0].Name)
 
 # Get the full DataFrame for advanced operations
 print(customers.df.describe())
@@ -53,6 +58,7 @@ print(customers.df.groupby('Region')['CreditLimit'].mean())
 The workbench supports matplotlib plotting. When your script calls `plt.show()`, a viewer window opens with your plot:
 
 ```python
+from DotNetData import customers
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 6))

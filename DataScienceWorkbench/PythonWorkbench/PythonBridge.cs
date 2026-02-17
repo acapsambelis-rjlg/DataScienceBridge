@@ -495,6 +495,10 @@ namespace DataScienceWorkbench.PythonWorkbench
                 sb.AppendLine("    @property");
                 sb.AppendLine("    def df(self):");
                 sb.AppendLine("        return object.__getattribute__(self, '_df')");
+                sb.AppendLine("import types as _types");
+                sb.AppendLine("_dotnet_mod = _types.ModuleType('DotNetData')");
+                sb.AppendLine("_dotnet_mod.__doc__ = 'Datasets piped from the .NET host application.'");
+                sb.AppendLine("sys.modules['DotNetData'] = _dotnet_mod");
                 sb.AppendLine("while True:");
                 sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
                 sb.AppendLine("    if _hdr == '__DONE__': break");
@@ -507,8 +511,8 @@ namespace DataScienceWorkbench.PythonWorkbench
                 sb.AppendLine("            _lines.append(sys.stdin.readline())");
                 sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
                 sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
-                sb.AppendLine("        globals()[_name] = _DotNetDataset(_tmpdf)");
-                sb.AppendLine("del _DatasetRow, _DotNetDataset, _decode_img, _decode_img_columns, _tmpdf");
+                sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
+                sb.AppendLine("del _DatasetRow, _DotNetDataset, _decode_img, _decode_img_columns, _tmpdf, _types, _dotnet_mod");
                 sb.AppendLine();
             }
 

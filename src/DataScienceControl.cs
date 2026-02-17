@@ -1215,13 +1215,14 @@ namespace DataScienceWorkbench
         private void UpdateDynamicSymbols()
         {
             var names = new List<string>();
-            names.AddRange(inMemoryDataTypes.Keys);
             names.AddRange(registeredPythonClasses.Keys);
             names.AddRange(contextVariables.Keys);
             symbolAnalyzer.SetDynamicKnownSymbols(names);
             if (autoComplete != null)
             {
-                autoComplete.SetDynamicSymbols(names);
+                var allNames = new List<string>(names);
+                allNames.AddRange(inMemoryDataTypes.Keys);
+                autoComplete.SetDynamicSymbols(allNames);
 
                 var colMap = new Dictionary<string, List<string>>();
                 foreach (var kvp in inMemoryDataTypes)
@@ -1882,6 +1883,7 @@ namespace DataScienceWorkbench
 
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             string customExample = attr != null ? attr.Example : null;
 
@@ -2009,6 +2011,7 @@ namespace DataScienceWorkbench
             AppendRefText("\n", Color.Black, false, 10);
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             AppendRefText("# Select all " + displayName + " columns\n", Color.FromArgb(0, 128, 0), false, 10);
             AppendRefText(datasetName + "[[c for c in " + datasetName + ".columns if c.startswith('" + prefix + "')]]\n\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -2038,6 +2041,9 @@ namespace DataScienceWorkbench
 
             AppendRefText("Records:   ", Color.FromArgb(100, 100, 100), false, 10);
             AppendRefText(count.ToString("N0") + "\n", Color.FromArgb(0, 0, 0), false, 10);
+
+            AppendRefText("Import:    ", Color.FromArgb(100, 100, 100), false, 10);
+            AppendRefText("from DotNetData import " + tag + "\n", Color.FromArgb(0, 0, 0), false, 10);
 
             AppendRefText("Access:    ", Color.FromArgb(100, 100, 100), false, 10);
             AppendRefText(tag + ".column_name  (e.g. " + tag + ".head())\n\n", Color.FromArgb(0, 0, 0), false, 10);
@@ -2234,11 +2240,11 @@ namespace DataScienceWorkbench
             switch (tag)
             {
                 case "customers":
-                    return "# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
+                    return "from DotNetData import customers\n\n# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
                 case "employees":
-                    return "# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
+                    return "from DotNetData import employees\n\n# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
                 default:
-                    return "print(" + tag + ".head())\nprint(" + tag + ".describe())";
+                    return "from DotNetData import " + tag + "\n\nprint(" + tag + ".head())\nprint(" + tag + ".describe())";
             }
         }
 
@@ -2767,14 +2773,14 @@ namespace DataScienceWorkbench
         {
             string help = @"=== Data Science Workbench - Quick Start ===
 
-AVAILABLE DATASETS (pre-loaded as variables):
+AVAILABLE DATASETS:
   customers        - 150 customers with demographics
   employees        - 100 employees with salary, dept
 
 HOW TO USE:
-  1. Write Python code in the editor
-  2. Press F5 or click Run to execute
-  3. Datasets are pre-loaded as variables
+  1. Import datasets: from DotNetData import customers, employees
+  2. Write Python code in the editor
+  3. Press F5 or click Run to execute
   4. Access columns directly: customers.CreditLimit.mean()
   5. Access rows by index: customers[0].Name
   6. Slice datasets: first_five = customers[0:5]
@@ -2782,9 +2788,9 @@ HOW TO USE:
   8. Install packages via Package Manager tab
 
 EXAMPLE:
+  from DotNetData import customers
   print(customers[0].Name)
   print(customers.CreditLimit.mean())
-  print(employees.df.groupby('Department')['Salary'].mean())
 
 TIPS:
   - Use 'Insert Snippet' for ready-made code
@@ -2843,6 +2849,7 @@ SYNTAX HIGHLIGHTING
 AUTOCOMPLETE
   Displays suggestions as you type, including:
   - Python keywords and built-in functions
+  - Dataset names after 'from DotNetData import'
   - Dataset column names (e.g. customers.CreditLimit)
   - Row indexing (e.g. customers[0].Name, customers[0:5])
   - DataFrame methods (after .df.)
@@ -2918,7 +2925,8 @@ PLOT VIEWER
 
         private string GetDefaultScript()
         {
-            return @"# Datasets are pre-loaded as variables
+            return @"from DotNetData import customers, employees
+
 # Access columns directly: customers.CreditLimit.mean()
 # Access rows by index: customers[0].Name
 # Slice datasets: customers[0:5]
@@ -2940,7 +2948,8 @@ print(customers.df.describe())
         private string GetLoadDataSnippet()
         {
             return @"
-# Datasets are pre-loaded as variables
+from DotNetData import customers, employees
+
 for name, ds in [('customers', customers), ('employees', employees)]:
     print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')
 ";
@@ -2949,6 +2958,8 @@ for name, ds in [('customers', customers), ('employees', employees)]:
         private string GetStatsSnippet()
         {
             return @"
+from DotNetData import customers
+
 print('=== Descriptive Statistics ===')
 print(customers.df.describe())
 print()
@@ -2963,6 +2974,7 @@ print(customers.df.isnull().sum())
         private string GetHistogramSnippet()
         {
             return @"
+from DotNetData import employees
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -2978,6 +2990,7 @@ plt.show()
         private string GetScatterSnippet()
         {
             return @"
+from DotNetData import employees
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -2994,6 +3007,8 @@ plt.show()
         private string GetGroupBySnippet()
         {
             return @"
+from DotNetData import employees
+
 print('=== Average Salary by Department ===')
 group = employees.df.groupby('Department').agg(
     Count=('Id', 'count'),
@@ -3007,6 +3022,7 @@ print(group.sort_values('Avg_Salary', ascending=False))
         private string GetCorrelationSnippet()
         {
             return @"
+from DotNetData import employees
 import matplotlib.pyplot as plt
 
 numeric_cols = employees.df.select_dtypes(include='number')
@@ -3030,6 +3046,7 @@ plt.show()
         private string GetTimeSeriesSnippet()
         {
             return @"
+from DotNetData import customers
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -3051,6 +3068,7 @@ plt.show()
         private string GetImageDisplaySnippet()
         {
             return @"
+from DotNetData import customers
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image

@@ -247,6 +247,32 @@ namespace DataScienceWorkbench
             triggerStart = wordStart;
 
             List<string> matches;
+
+            string lineText = GetCurrentLine(text, pos);
+            var fromImportMatch = Regex.Match(lineText, @"^\s*from\s+DotNetData\s+import\s+(.*)$");
+            if (fromImportMatch.Success)
+            {
+                string afterImport = fromImportMatch.Groups[1].Value;
+                string lastToken = "";
+                int commaIdx = afterImport.LastIndexOf(',');
+                if (commaIdx >= 0)
+                    lastToken = afterImport.Substring(commaIdx + 1).Trim();
+                else
+                    lastToken = afterImport.Trim();
+
+                matches = DatasetColumns.Keys
+                    .Where(k => k.StartsWith(lastToken, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(k => k)
+                    .ToList();
+
+                if (matches.Count > 0)
+                {
+                    triggerStart = pos - lastToken.Length;
+                    Show(matches);
+                    return;
+                }
+            }
+
             int dotIndex = prefix.LastIndexOf('.');
             if (dotIndex >= 0)
             {
@@ -273,6 +299,17 @@ namespace DataScienceWorkbench
             Show(matches);
         }
 
+        private static string GetCurrentLine(string text, int pos)
+        {
+            int lineStart = pos - 1;
+            while (lineStart >= 0 && text[lineStart] != '\n')
+                lineStart--;
+            lineStart++;
+            int lineEnd = text.IndexOf('\n', pos);
+            if (lineEnd < 0) lineEnd = text.Length;
+            return text.Substring(lineStart, lineEnd - lineStart);
+        }
+
         private static readonly Regex BracketIndexRegex = new Regex(@"^(\w+)\[.+\]$", RegexOptions.Compiled);
 
         private List<string> GetDotCompletions(string objectName, string memberPrefix, string code)
@@ -288,7 +325,11 @@ namespace DataScienceWorkbench
                 isRowAccess = true;
             }
 
-            if (isRowAccess && DatasetColumns.ContainsKey(baseName))
+            if (objectName == "DotNetData")
+            {
+                members.AddRange(DatasetColumns.Keys);
+            }
+            else if (isRowAccess && DatasetColumns.ContainsKey(baseName))
             {
                 members.AddRange(DatasetColumns[baseName]);
             }

@@ -82,7 +82,7 @@ namespace DataScienceWorkbench
             "decimal", "fractions", "statistics",
             "calendar", "locale", "gettext",
             "operator", "contextlib",
-            "data_dir",
+            "data_dir", "DotNetData",
             "self", "cls"
         };
 
