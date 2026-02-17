@@ -956,7 +956,11 @@ namespace DataScienceWorkbench
                     foreach (var fp in flatProps)
                     {
                         var val = fp.GetValue(item);
-                        string s = val != null ? val.ToString() : "";
+                        string s;
+                        if (PythonVisibleHelper.IsImageType(fp.LeafType) && val is System.Drawing.Bitmap bmp)
+                            s = PythonVisibleHelper.BitmapToBase64(bmp);
+                        else
+                            s = val != null ? val.ToString() : "";
                         if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
                             s = "\"" + s.Replace("\"", "\"\"") + "\"";
                         vals.Add(s);
@@ -1472,6 +1476,7 @@ namespace DataScienceWorkbench
             insertSnippetBtn.DropDownItems.Add("Group By Analysis", null, (s, e) => InsertSnippet(GetGroupBySnippet()));
             insertSnippetBtn.DropDownItems.Add("Correlation Matrix", null, (s, e) => InsertSnippet(GetCorrelationSnippet()));
             insertSnippetBtn.DropDownItems.Add("Time Series Plot", null, (s, e) => InsertSnippet(GetTimeSeriesSnippet()));
+            insertSnippetBtn.DropDownItems.Add("Display Images", null, (s, e) => InsertSnippet(GetImageDisplaySnippet()));
         }
 
         private void RegisterAllDatasetsInMemory()
@@ -1909,6 +1914,20 @@ namespace DataScienceWorkbench
                 AppendRefText(datasetName + "." + fieldName + ".min(), " + datasetName + "." + fieldName + ".max()\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("# Extract year\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".dt.year\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else if (typeName == "image")
+            {
+                AppendRefText("# Display single image\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("import matplotlib.pyplot as plt\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("import numpy as np\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("img = " + datasetName + "." + fieldName + ".iloc[0]\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("plt.imshow(np.array(img))\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("plt.axis('off')\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("plt.show()\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("# Convert to numpy array for calculations\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("arr = np.array(" + datasetName + "." + fieldName + ".iloc[0])\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(f'Shape: {arr.shape}, dtype: {arr.dtype}')\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(f'Mean pixel: {arr.mean():.1f}')\n", Color.FromArgb(60, 60, 60), false, 10);
             }
             else
             {
@@ -2969,6 +2988,47 @@ ax.set_title('Customer Registrations Over Time')
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.show()
+";
+        }
+
+        private string GetImageDisplaySnippet()
+        {
+            return @"
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
+
+# Display a grid of images from a dataset
+imgs = customers.Logo
+n = min(16, len(imgs))
+cols = 4
+rows = (n + cols - 1) // cols
+
+fig, axes = plt.subplots(rows, cols, figsize=(8, 2 * rows))
+if rows == 1:
+    axes = [axes]
+for idx in range(rows * cols):
+    ax = axes[idx // cols][idx % cols] if cols > 1 else axes[idx // cols]
+    if idx < n:
+        img = imgs.iloc[idx]
+        ax.imshow(np.array(img))
+        ax.set_title(f'#{idx+1}', fontsize=8)
+    ax.axis('off')
+plt.suptitle('Customer Logos')
+plt.tight_layout()
+plt.show()
+
+# Compute average color across all images
+r_avg, g_avg, b_avg = [], [], []
+for img in imgs:
+    arr = np.array(img)
+    r_avg.append(arr[:,:,0].mean())
+    g_avg.append(arr[:,:,1].mean())
+    b_avg.append(arr[:,:,2].mean())
+
+print(f'Average R: {np.mean(r_avg):.1f}')
+print(f'Average G: {np.mean(g_avg):.1f}')
+print(f'Average B: {np.mean(b_avg):.1f}')
 ";
         }
 

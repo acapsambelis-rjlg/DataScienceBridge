@@ -70,7 +70,7 @@ namespace DataScienceWorkbench
             "time", "collections", "itertools", "functools", "pathlib",
             "io", "string", "textwrap", "struct", "copy", "pprint",
             "typing", "abc", "dataclasses", "enum", "warnings",
-            "pandas", "numpy", "matplotlib", "seaborn", "requests",
+            "pandas", "numpy", "matplotlib", "seaborn", "requests", "PIL",
             "subprocess", "threading", "multiprocessing", "logging",
             "unittest", "pytest", "argparse", "configparser",
             "hashlib", "hmac", "secrets", "base64", "pickle",

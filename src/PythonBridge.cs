@@ -442,7 +442,19 @@ namespace DataScienceWorkbench
 
             if (hasMemData)
             {
-                sb.AppendLine("import sys, io, pandas as pd");
+                sb.AppendLine("import sys, io, base64, pandas as pd");
+                sb.AppendLine("import numpy as np");
+                sb.AppendLine("from PIL import Image as _PILImage");
+                sb.AppendLine("def _decode_img(s):");
+                sb.AppendLine("    if not isinstance(s, str) or not s.startswith('__IMG__:'): return s");
+                sb.AppendLine("    b = base64.b64decode(s[7:])");
+                sb.AppendLine("    return _PILImage.open(io.BytesIO(b))");
+                sb.AppendLine("def _decode_img_columns(df):");
+                sb.AppendLine("    for col in df.columns:");
+                sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
+                sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
+                sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
+                sb.AppendLine("    return df");
                 sb.AppendLine("class _DotNetDataset:");
                 sb.AppendLine("    def __init__(self, df):");
                 sb.AppendLine("        object.__setattr__(self, '_df', df)");
@@ -470,8 +482,10 @@ namespace DataScienceWorkbench
                 sb.AppendLine("        _lines = []");
                 sb.AppendLine("        for _ in range(_nlines):");
                 sb.AppendLine("            _lines.append(sys.stdin.readline())");
-                sb.AppendLine("        globals()[_name] = _DotNetDataset(pd.read_csv(io.StringIO(''.join(_lines))))");
-                sb.AppendLine("del _DotNetDataset");
+                sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
+                sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
+                sb.AppendLine("        globals()[_name] = _DotNetDataset(_tmpdf)");
+                sb.AppendLine("del _DotNetDataset, _decode_img, _decode_img_columns, _tmpdf");
                 sb.AppendLine();
             }
 

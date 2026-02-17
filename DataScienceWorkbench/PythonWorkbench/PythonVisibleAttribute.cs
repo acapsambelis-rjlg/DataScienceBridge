@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -148,6 +150,21 @@ namespace DataScienceWorkbench.PythonWorkbench
             return t.IsClass && t != typeof(string) && t.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0;
         }
 
+        public static bool IsImageType(Type t)
+        {
+            return t == typeof(Bitmap) || t == typeof(Image);
+        }
+
+        public static string BitmapToBase64(Bitmap bmp)
+        {
+            if (bmp == null) return "";
+            using (var ms = new System.IO.MemoryStream())
+            {
+                bmp.Save(ms, ImageFormat.Png);
+                return "__IMG__:" + Convert.ToBase64String(ms.ToArray());
+            }
+        }
+
         public static string GetPythonTypeName(Type t)
         {
             if (t == typeof(int) || t == typeof(long) || t == typeof(short) || t == typeof(byte)) return "int";
@@ -155,6 +172,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             if (t == typeof(bool)) return "bool";
             if (t == typeof(string)) return "string";
             if (t == typeof(DateTime)) return "datetime";
+            if (t == typeof(Bitmap) || t == typeof(Image)) return "image";
             return t.Name;
         }
     }

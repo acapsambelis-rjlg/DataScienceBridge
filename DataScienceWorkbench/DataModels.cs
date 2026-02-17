@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using DataScienceWorkbench.PythonWorkbench;
 
@@ -59,6 +61,10 @@ namespace DataScienceWorkbench
 
         [PythonVisible("Customer's mailing address")]
         public Address Address { get; set; }
+
+        [PythonVisible("Customer logo image (32x32 PNG)", Example = "# Display first customer logo\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom PIL import Image\nimg = customers.Logo.iloc[0]\nplt.imshow(img)\nplt.title('Customer Logo')\nplt.axis('off')\nplt.show()")]
+        public Bitmap Logo { get; set; }
+
         public List<Order> Orders { get; set; }
 
         [PythonVisible("Computed full name (FirstName + LastName)")]
@@ -236,6 +242,47 @@ namespace DataScienceWorkbench
 
         private string Pick(string[] arr) { return arr[rng.Next(arr.Length)]; }
         private double RandDouble(double min, double max) { return min + rng.NextDouble() * (max - min); }
+
+        private Bitmap GenerateLogo(int seed)
+        {
+            var logoRng = new Random(seed * 7 + 13);
+            var bmp = new Bitmap(32, 32);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                var bgColor = Color.FromArgb(logoRng.Next(60, 240), logoRng.Next(60, 240), logoRng.Next(60, 240));
+                g.Clear(bgColor);
+                var fgColor = Color.FromArgb(logoRng.Next(60, 240), logoRng.Next(60, 240), logoRng.Next(60, 240));
+                using (var brush = new SolidBrush(fgColor))
+                {
+                    int shapeType = logoRng.Next(4);
+                    int x = logoRng.Next(4, 10);
+                    int y = logoRng.Next(4, 10);
+                    int w = logoRng.Next(12, 24);
+                    int h = logoRng.Next(12, 24);
+                    if (shapeType == 0)
+                        g.FillEllipse(brush, x, y, w, h);
+                    else if (shapeType == 1)
+                        g.FillRectangle(brush, x, y, w, h);
+                    else if (shapeType == 2)
+                    {
+                        var pts = new Point[] {
+                            new Point(16, y),
+                            new Point(x, y + h),
+                            new Point(x + w, y + h)
+                        };
+                        g.FillPolygon(brush, pts);
+                    }
+                    else
+                    {
+                        g.FillEllipse(brush, 4, 4, 24, 24);
+                        using (var innerBrush = new SolidBrush(bgColor))
+                            g.FillEllipse(innerBrush, 8, 8, 16, 16);
+                    }
+                }
+            }
+            return bmp;
+        }
+
         private DateTime RandDate(DateTime min, DateTime max)
         {
             int range = (max - min).Days;
@@ -298,6 +345,7 @@ namespace DataScienceWorkbench
                         Latitude = Math.Round(RandDouble(25, 48), 6),
                         Longitude = Math.Round(RandDouble(-125, -70), 6)
                     },
+                    Logo = GenerateLogo(i),
                     Orders = new List<Order>()
                 };
                 customers.Add(cust);
