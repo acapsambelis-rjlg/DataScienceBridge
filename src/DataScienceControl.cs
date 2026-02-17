@@ -60,6 +60,24 @@ namespace DataScienceWorkbench
             public int CursorPos;
         }
 
+        private class FileTab
+        {
+            public string FilePath;
+            public string FileName;
+            public string Content;
+            public int CursorPosition;
+            public int ScrollPosition;
+            public List<UndoEntry> UndoStack = new List<UndoEntry>();
+            public List<UndoEntry> RedoStack = new List<UndoEntry>();
+            public HashSet<int> Bookmarks = new HashSet<int>();
+            public bool IsModified;
+        }
+
+        private List<FileTab> openFiles = new List<FileTab>();
+        private FileTab activeFile;
+        private string scriptsDir;
+        private int untitledCounter = 0;
+
         public event EventHandler<string> StatusChanged;
 
         private static Font ResolveMonoFont(float size)
@@ -103,6 +121,8 @@ namespace DataScienceWorkbench
 
             outputLabel.Font = uiFontBold;
             pkgListLabel.Font = uiFontBold;
+            fileListBox.Font = ResolveUIFont(9f);
+            fileListLabel.Font = uiFontBold;
         }
 
         public DataScienceControl()
@@ -118,8 +138,10 @@ namespace DataScienceWorkbench
             SetupRefSearch();
             SetupPkgSearch();
             SetupTooltips();
+            InitializeFileSystem();
+            SetupFileListEvents();
             suppressHighlight = true;
-            pythonEditor.Text = GetDefaultScript();
+            pythonEditor.Text = activeFile.Content;
             suppressHighlight = false;
             ResetUndoStack();
             ApplySyntaxHighlighting();
@@ -175,6 +197,16 @@ namespace DataScienceWorkbench
                     }
 
                     pythonEditor.UpdateWordHighlight();
+
+                    if (activeFile != null && !activeFile.IsModified)
+                    {
+                        activeFile.IsModified = true;
+                        int fidx = openFiles.IndexOf(activeFile);
+                        if (fidx >= 0 && fidx < fileListBox.Items.Count)
+                        {
+                            fileListBox.Items[fidx] = "\u2022 " + activeFile.FileName;
+                        }
+                    }
                 }
             };
 
@@ -1176,7 +1208,12 @@ namespace DataScienceWorkbench
         {
             var sb = new System.Text.StringBuilder();
 
-            sb.AppendLine("import os as _os, tempfile as _tempfile, atexit as _atexit");
+            sb.AppendLine("import sys as _sys, os as _os, tempfile as _tempfile, atexit as _atexit");
+            if (scriptsDir != null)
+            {
+                sb.AppendLine("if r'" + scriptsDir.Replace("'", "\\'") + "' not in _sys.path: _sys.path.insert(0, r'" + scriptsDir.Replace("'", "\\'") + "')");
+                sb.AppendLine("__name__ = '__main__'");
+            }
             sb.AppendLine("_plot_counter = [0]");
             sb.AppendLine("_plot_dir = _tempfile.mkdtemp(prefix='dsw_plots_')");
             sb.AppendLine("def _patched_show(*args, **kwargs):");
@@ -1306,8 +1343,23 @@ namespace DataScienceWorkbench
         private void SetupEditorMenuBar()
         {
             var fileMenu = new ToolStripMenuItem("File");
-            fileMenu.DropDownItems.Add("Open Script...", null, OnOpenScript);
-            fileMenu.DropDownItems.Add("Save Script...", null, OnSaveScript);
+
+            var newFileItem = new ToolStripMenuItem("New File", null, OnNewFile);
+            newFileItem.ShortcutKeys = Keys.Control | Keys.N;
+            fileMenu.DropDownItems.Add(newFileItem);
+
+            fileMenu.DropDownItems.Add("Open File...", null, OnOpenFile);
+
+            var saveItem = new ToolStripMenuItem("Save", null, OnSaveFile);
+            saveItem.ShortcutKeys = Keys.Control | Keys.S;
+            fileMenu.DropDownItems.Add(saveItem);
+
+            fileMenu.DropDownItems.Add("Save As...", null, OnSaveFileAs);
+            fileMenu.DropDownItems.Add(new ToolStripSeparator());
+
+            var closeItem = new ToolStripMenuItem("Close File", null, OnCloseFile);
+            closeItem.ShortcutKeys = Keys.Control | Keys.W;
+            fileMenu.DropDownItems.Add(closeItem);
 
             var editMenu = new ToolStripMenuItem("&Edit");
 
@@ -2272,6 +2324,8 @@ namespace DataScienceWorkbench
                 return;
             }
 
+            SaveAllFilesToDisk();
+
             RaiseStatus("Running script...");
             AppendOutput("--- Running script at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
 
@@ -2512,29 +2566,295 @@ namespace DataScienceWorkbench
             RaiseStatus("Replaced " + count + " occurrence(s).");
         }
 
-        private void OnOpenScript(object sender, EventArgs e)
+        private void InitializeFileSystem()
         {
-            using (var dlg = new OpenFileDialog { Filter = "Python files (*.py)|*.py|All files (*.*)|*.*" })
+            scriptsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "python", "scripts");
+            if (!Directory.Exists(scriptsDir))
+                Directory.CreateDirectory(scriptsDir);
+
+            var existingFiles = Directory.GetFiles(scriptsDir, "*.py");
+
+            if (existingFiles.Length == 0)
+            {
+                var mainTab = new FileTab
+                {
+                    FilePath = Path.Combine(scriptsDir, "main.py"),
+                    FileName = "main.py",
+                    Content = GetDefaultScript(),
+                    CursorPosition = 0,
+                    IsModified = false
+                };
+                openFiles.Add(mainTab);
+                File.WriteAllText(mainTab.FilePath, mainTab.Content);
+            }
+            else
+            {
+                foreach (var fp in existingFiles.OrderBy(f => f))
+                {
+                    var tab = new FileTab
+                    {
+                        FilePath = fp,
+                        FileName = Path.GetFileName(fp),
+                        Content = File.ReadAllText(fp),
+                        CursorPosition = 0,
+                        IsModified = false
+                    };
+                    openFiles.Add(tab);
+                }
+            }
+
+            activeFile = openFiles[0];
+            RefreshFileList();
+        }
+
+        private void SetupFileListEvents()
+        {
+            fileListBox.SelectedIndexChanged += OnFileListSelectionChanged;
+            fileListBox.DrawItem += OnFileListDrawItem;
+            fileNewBtn.Click += OnNewFile;
+            fileOpenBtn.Click += OnOpenFile;
+            fileCloseBtn.Click += OnCloseFile;
+        }
+
+        private void OnFileListDrawItem(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0 || e.Index >= openFiles.Count) return;
+
+            var ft = openFiles[e.Index];
+            bool isActive = (ft == activeFile);
+
+            Color bgColor = isActive ? Color.FromArgb(210, 230, 255) : Color.FromArgb(245, 245, 245);
+            using (var bg = new SolidBrush(bgColor))
+                e.Graphics.FillRectangle(bg, e.Bounds);
+
+            var font = isActive ? new Font(fileListBox.Font, FontStyle.Bold) : fileListBox.Font;
+            string text = ft.IsModified ? "\u2022 " + ft.FileName : "  " + ft.FileName;
+            Color textColor = Color.FromArgb(30, 30, 30);
+
+            using (var tb = new SolidBrush(textColor))
+                e.Graphics.DrawString(text, font, tb, e.Bounds.X + 4, e.Bounds.Y + 2);
+
+            if (isActive) font.Dispose();
+        }
+
+        private void RefreshFileList()
+        {
+            fileListBox.Items.Clear();
+            foreach (var ft in openFiles)
+            {
+                string display = ft.IsModified ? "\u2022 " + ft.FileName : "  " + ft.FileName;
+                fileListBox.Items.Add(display);
+            }
+
+            int idx = openFiles.IndexOf(activeFile);
+            if (idx >= 0 && idx < fileListBox.Items.Count)
+                fileListBox.SelectedIndex = idx;
+        }
+
+        private void SaveCurrentFileState()
+        {
+            if (activeFile == null) return;
+            activeFile.Content = pythonEditor.Text;
+            activeFile.CursorPosition = pythonEditor.SelectionStart;
+            activeFile.ScrollPosition = pythonEditor.GetCharIndexFromPosition(new Point(0, 0));
+            activeFile.UndoStack = new List<UndoEntry>(undoStack);
+            activeFile.RedoStack = new List<UndoEntry>(redoStack);
+            activeFile.Bookmarks = new HashSet<int>(bookmarks);
+        }
+
+        private void LoadFileIntoEditor(FileTab tab)
+        {
+            suppressHighlight = true;
+            suppressAutoComplete = true;
+
+            pythonEditor.Text = tab.Content;
+            pythonEditor.SelectionStart = Math.Min(tab.CursorPosition, pythonEditor.Text.Length);
+            pythonEditor.SelectionLength = 0;
+
+            undoStack = new List<UndoEntry>(tab.UndoStack);
+            redoStack = new List<UndoEntry>(tab.RedoStack);
+            if (undoStack.Count == 0)
+                undoStack.Add(new UndoEntry { Text = tab.Content, CursorPos = 0 });
+
+            bookmarks = new HashSet<int>(tab.Bookmarks);
+            lineNumberPanel.SetBookmarks(bookmarks);
+
+            suppressHighlight = false;
+            suppressAutoComplete = false;
+            ApplySyntaxHighlighting();
+
+            if (tab.ScrollPosition > 0 && tab.ScrollPosition < pythonEditor.Text.Length)
+                pythonEditor.SelectionStart = tab.ScrollPosition;
+            pythonEditor.ScrollToCaret();
+            pythonEditor.SelectionStart = Math.Min(tab.CursorPosition, pythonEditor.Text.Length);
+
+            activeFile = tab;
+        }
+
+        private void SwitchToFile(FileTab tab)
+        {
+            if (tab == activeFile) return;
+            SaveCurrentFileState();
+            LoadFileIntoEditor(tab);
+            RefreshFileList();
+            RaiseStatus("Editing: " + tab.FileName);
+        }
+
+        private void OnFileListSelectionChanged(object sender, EventArgs e)
+        {
+            int idx = fileListBox.SelectedIndex;
+            if (idx < 0 || idx >= openFiles.Count) return;
+            var selected = openFiles[idx];
+            if (selected != activeFile)
+                SwitchToFile(selected);
+        }
+
+        private void OnNewFile(object sender, EventArgs e)
+        {
+            untitledCounter++;
+            string name = "untitled" + untitledCounter + ".py";
+            var tab = new FileTab
+            {
+                FilePath = null,
+                FileName = name,
+                Content = "",
+                CursorPosition = 0,
+                IsModified = true
+            };
+            openFiles.Add(tab);
+            SwitchToFile(tab);
+            RefreshFileList();
+            RaiseStatus("New file: " + name);
+        }
+
+        private void OnOpenFile(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog
+            {
+                Filter = "Python files (*.py)|*.py|All files (*.*)|*.*",
+                InitialDirectory = scriptsDir
+            })
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    pythonEditor.Text = File.ReadAllText(dlg.FileName);
-                    ResetUndoStack();
-                    RaiseStatus("Loaded: " + dlg.FileName);
+                    string fileName = Path.GetFileName(dlg.FileName);
+                    var existing = openFiles.Find(f => f.FileName == fileName);
+                    if (existing != null)
+                    {
+                        SwitchToFile(existing);
+                        return;
+                    }
+
+                    string targetPath = Path.Combine(scriptsDir, fileName);
+                    if (!dlg.FileName.Equals(targetPath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        File.Copy(dlg.FileName, targetPath, true);
+                    }
+
+                    var tab = new FileTab
+                    {
+                        FilePath = targetPath,
+                        FileName = fileName,
+                        Content = File.ReadAllText(targetPath),
+                        CursorPosition = 0,
+                        IsModified = false
+                    };
+                    openFiles.Add(tab);
+                    SwitchToFile(tab);
+                    RaiseStatus("Opened: " + fileName);
                 }
             }
         }
 
-        private void OnSaveScript(object sender, EventArgs e)
+        private void OnSaveFile(object sender, EventArgs e)
         {
-            using (var dlg = new SaveFileDialog { Filter = "Python files (*.py)|*.py|All files (*.*)|*.*", DefaultExt = "py" })
+            if (activeFile == null) return;
+
+            activeFile.Content = pythonEditor.Text;
+
+            if (activeFile.FilePath == null)
+            {
+                OnSaveFileAs(sender, e);
+                return;
+            }
+
+            File.WriteAllText(activeFile.FilePath, activeFile.Content);
+            activeFile.IsModified = false;
+            RefreshFileList();
+            RaiseStatus("Saved: " + activeFile.FileName);
+        }
+
+        private void OnSaveFileAs(object sender, EventArgs e)
+        {
+            if (activeFile == null) return;
+
+            using (var dlg = new SaveFileDialog
+            {
+                Filter = "Python files (*.py)|*.py|All files (*.*)|*.*",
+                DefaultExt = "py",
+                InitialDirectory = scriptsDir,
+                FileName = activeFile.FileName
+            })
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    File.WriteAllText(dlg.FileName, pythonEditor.Text);
-                    RaiseStatus("Saved: " + dlg.FileName);
+                    string fileName = Path.GetFileName(dlg.FileName);
+                    string targetPath = Path.Combine(scriptsDir, fileName);
+
+                    activeFile.Content = pythonEditor.Text;
+                    File.WriteAllText(targetPath, activeFile.Content);
+                    activeFile.FilePath = targetPath;
+                    activeFile.FileName = fileName;
+                    activeFile.IsModified = false;
+                    RefreshFileList();
+                    RaiseStatus("Saved: " + fileName);
                 }
             }
+        }
+
+        private void OnCloseFile(object sender, EventArgs e)
+        {
+            if (activeFile == null || openFiles.Count <= 1)
+            {
+                RaiseStatus("Cannot close the last file.");
+                return;
+            }
+
+            if (activeFile.IsModified)
+            {
+                var result = MessageBox.Show(
+                    "Save changes to " + activeFile.FileName + "?",
+                    "Unsaved Changes",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Cancel) return;
+                if (result == DialogResult.Yes) OnSaveFile(sender, e);
+            }
+
+            int idx = openFiles.IndexOf(activeFile);
+            openFiles.Remove(activeFile);
+
+            int newIdx = Math.Min(idx, openFiles.Count - 1);
+            LoadFileIntoEditor(openFiles[newIdx]);
+            RefreshFileList();
+        }
+
+        private void SaveAllFilesToDisk()
+        {
+            foreach (var ft in openFiles)
+            {
+                if (ft == activeFile)
+                    ft.Content = pythonEditor.Text;
+
+                if (ft.FilePath == null)
+                {
+                    ft.FilePath = Path.Combine(scriptsDir, ft.FileName);
+                }
+                File.WriteAllText(ft.FilePath, ft.Content);
+                ft.IsModified = false;
+            }
+            RefreshFileList();
         }
 
         private void OnInstallPackage(object sender, EventArgs e)

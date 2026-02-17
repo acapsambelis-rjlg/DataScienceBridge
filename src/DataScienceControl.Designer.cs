@@ -20,6 +20,13 @@ namespace DataScienceWorkbench
             this.mainTabs = new System.Windows.Forms.TabControl();
             this.editorTab = new System.Windows.Forms.TabPage();
             this.mainSplit = new System.Windows.Forms.SplitContainer();
+            this.fileListPanel = new System.Windows.Forms.Panel();
+            this.fileListBox = new System.Windows.Forms.ListBox();
+            this.fileListLabel = new System.Windows.Forms.Label();
+            this.fileListButtonPanel = new System.Windows.Forms.Panel();
+            this.fileNewBtn = new System.Windows.Forms.Button();
+            this.fileOpenBtn = new System.Windows.Forms.Button();
+            this.fileCloseBtn = new System.Windows.Forms.Button();
             this.editorPanel = new System.Windows.Forms.Panel();
             this.pythonEditor = new DataScienceWorkbench.SquiggleRichTextBox();
             this.lineNumberPanel = new DataScienceWorkbench.LineNumberPanel();
@@ -101,6 +108,7 @@ namespace DataScienceWorkbench
             // mainSplit.Panel1
             // 
             this.mainSplit.Panel1.Controls.Add(this.editorPanel);
+            this.mainSplit.Panel1.Controls.Add(this.fileListPanel);
             // 
             // mainSplit.Panel2
             // 
@@ -109,6 +117,92 @@ namespace DataScienceWorkbench
             this.mainSplit.SplitterDistance = 380;
             this.mainSplit.SplitterWidth = 6;
             this.mainSplit.TabIndex = 0;
+            // 
+            // fileListPanel
+            // 
+            this.fileListSeparator = new System.Windows.Forms.Panel();
+            this.fileListSeparator.Dock = System.Windows.Forms.DockStyle.Right;
+            this.fileListSeparator.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
+            this.fileListSeparator.Size = new System.Drawing.Size(1, 380);
+            this.fileListSeparator.Name = "fileListSeparator";
+            this.fileListPanel.Controls.Add(this.fileListBox);
+            this.fileListPanel.Controls.Add(this.fileListSeparator);
+            this.fileListPanel.Controls.Add(this.fileListButtonPanel);
+            this.fileListPanel.Controls.Add(this.fileListLabel);
+            this.fileListPanel.Dock = System.Windows.Forms.DockStyle.Left;
+            this.fileListPanel.Location = new System.Drawing.Point(0, 0);
+            this.fileListPanel.Name = "fileListPanel";
+            this.fileListPanel.Size = new System.Drawing.Size(160, 380);
+            this.fileListPanel.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
+            this.fileListPanel.TabIndex = 3;
+            // 
+            // fileListLabel
+            // 
+            this.fileListLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.fileListLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.fileListLabel.Location = new System.Drawing.Point(0, 0);
+            this.fileListLabel.Name = "fileListLabel";
+            this.fileListLabel.Padding = new System.Windows.Forms.Padding(6, 4, 0, 0);
+            this.fileListLabel.Size = new System.Drawing.Size(160, 24);
+            this.fileListLabel.TabIndex = 0;
+            this.fileListLabel.Text = "Files";
+            // 
+            // fileListBox
+            // 
+            this.fileListBox.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
+            this.fileListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.fileListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.fileListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.fileListBox.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.fileListBox.ItemHeight = 22;
+            this.fileListBox.Location = new System.Drawing.Point(0, 24);
+            this.fileListBox.Name = "fileListBox";
+            this.fileListBox.Size = new System.Drawing.Size(160, 328);
+            this.fileListBox.TabIndex = 1;
+            // 
+            // fileListButtonPanel
+            // 
+            this.fileListButtonPanel.Controls.Add(this.fileNewBtn);
+            this.fileListButtonPanel.Controls.Add(this.fileOpenBtn);
+            this.fileListButtonPanel.Controls.Add(this.fileCloseBtn);
+            this.fileListButtonPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.fileListButtonPanel.Location = new System.Drawing.Point(0, 352);
+            this.fileListButtonPanel.Name = "fileListButtonPanel";
+            this.fileListButtonPanel.Size = new System.Drawing.Size(160, 28);
+            this.fileListButtonPanel.TabIndex = 2;
+            // 
+            // fileNewBtn
+            // 
+            this.fileNewBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.fileNewBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.fileNewBtn.Location = new System.Drawing.Point(4, 2);
+            this.fileNewBtn.Name = "fileNewBtn";
+            this.fileNewBtn.Size = new System.Drawing.Size(44, 24);
+            this.fileNewBtn.TabIndex = 0;
+            this.fileNewBtn.Text = "+";
+            this.fileNewBtn.UseVisualStyleBackColor = true;
+            // 
+            // fileOpenBtn
+            // 
+            this.fileOpenBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.fileOpenBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.fileOpenBtn.Location = new System.Drawing.Point(52, 2);
+            this.fileOpenBtn.Name = "fileOpenBtn";
+            this.fileOpenBtn.Size = new System.Drawing.Size(55, 24);
+            this.fileOpenBtn.TabIndex = 1;
+            this.fileOpenBtn.Text = "Open";
+            this.fileOpenBtn.UseVisualStyleBackColor = true;
+            // 
+            // fileCloseBtn
+            // 
+            this.fileCloseBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.fileCloseBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.fileCloseBtn.Location = new System.Drawing.Point(111, 2);
+            this.fileCloseBtn.Name = "fileCloseBtn";
+            this.fileCloseBtn.Size = new System.Drawing.Size(44, 24);
+            this.fileCloseBtn.TabIndex = 2;
+            this.fileCloseBtn.Text = "\u00d7";
+            this.fileCloseBtn.UseVisualStyleBackColor = true;
             // 
             // editorPanel
             // 
@@ -493,5 +587,13 @@ namespace DataScienceWorkbench
         private System.Windows.Forms.TextBox packageNameBox;
         private System.Windows.Forms.Label pkgLabel;
         private System.Windows.Forms.TextBox pkgSearchBox;
+        private System.Windows.Forms.Panel fileListPanel;
+        private System.Windows.Forms.ListBox fileListBox;
+        private System.Windows.Forms.Label fileListLabel;
+        private System.Windows.Forms.Panel fileListButtonPanel;
+        private System.Windows.Forms.Button fileNewBtn;
+        private System.Windows.Forms.Button fileOpenBtn;
+        private System.Windows.Forms.Button fileCloseBtn;
+        private System.Windows.Forms.Panel fileListSeparator;
     }
 }
