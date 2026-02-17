@@ -141,11 +141,27 @@ namespace DataScienceWorkbench
             SetupTooltips();
             InitializeFileSystem();
             SetupFileListEvents();
-            suppressHighlight = true;
-            pythonEditor.Text = activeFile.Content;
-            suppressHighlight = false;
-            ResetUndoStack();
-            ApplySyntaxHighlighting();
+
+            this.HandleCreated += (s, e) =>
+            {
+                BeginInvoke((Action)(() =>
+                {
+                    if (activeFile != null && !string.IsNullOrEmpty(activeFile.Content))
+                    {
+                        suppressHighlight = true;
+                        suppressAutoComplete = true;
+                        pythonEditor.Text = activeFile.Content;
+                        pythonEditor.SelectionStart = 0;
+                        pythonEditor.SelectionLength = 0;
+                        suppressHighlight = false;
+                        suppressAutoComplete = false;
+                        ResetUndoStack();
+                        ApplySyntaxHighlighting();
+                        activeFile.IsModified = false;
+                        RefreshFileList();
+                    }
+                }));
+            };
         }
 
         private void SetupSyntaxHighlighting()
@@ -2621,7 +2637,6 @@ namespace DataScienceWorkbench
             }
 
             activeFile = openFiles[0];
-            LoadFileIntoEditor(activeFile);
             RefreshFileList();
         }
 
