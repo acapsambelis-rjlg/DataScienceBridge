@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace DataScienceWorkbench.PythonWorkbench
+namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     public class SymbolError
     {

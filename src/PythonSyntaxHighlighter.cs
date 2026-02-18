@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace DataScienceWorkbench.PythonWorkbench
+namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     public class PythonSyntaxHighlighter
     {

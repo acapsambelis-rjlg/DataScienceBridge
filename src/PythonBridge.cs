@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace DataScienceWorkbench.PythonWorkbench
+namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     public class PythonRunner
     {

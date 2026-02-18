@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 
-namespace DataScienceWorkbench
+namespace RJLG.IntelliSEM.Data.PythonDataScience
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class PythonVisibleAttribute : Attribute

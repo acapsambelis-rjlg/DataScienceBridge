@@ -4,7 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
-namespace DataScienceWorkbench.PythonWorkbench
+namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     public class PlotViewerForm : Form
     {

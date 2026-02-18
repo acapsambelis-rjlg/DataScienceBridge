@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace DataScienceWorkbench
+namespace RJLG.IntelliSEM.Data.PythonDataScience
 {
     public static class SimpleJson
     {

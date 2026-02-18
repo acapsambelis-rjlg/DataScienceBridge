@@ -17,7 +17,7 @@ namespace DataScienceWorkbench
 
         private void InitializeComponent()
         {
-            this.dataScienceControl = new DataScienceWorkbench.DataScienceControl();
+            this.dataScienceControl = new RJLG.IntelliSEM.UI.Controls.PythonDataScience.DataScienceControl();
             this.statusBar = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusBar.SuspendLayout();
@@ -66,7 +66,7 @@ namespace DataScienceWorkbench
 
         #endregion
 
-        private DataScienceWorkbench.DataScienceControl dataScienceControl;
+        private RJLG.IntelliSEM.UI.Controls.PythonDataScience.DataScienceControl dataScienceControl;
         private System.Windows.Forms.StatusStrip statusBar;
         private System.Windows.Forms.ToolStripStatusLabel statusLabel;
     }

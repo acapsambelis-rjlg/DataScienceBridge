@@ -4,17 +4,19 @@
 The Data Science Workbench is a Windows Forms application developed with Mono (.NET Framework) that provides an integrated Python editor for data science tasks. It offers a robust, embeddable environment for data analysis and scripting, encapsulated within a reusable `DataScienceControl` UserControl. The application serves as a comprehensive demonstration of these capabilities, featuring dummy data and a fully functional UI, with a vision to enhance data analysis workflows and support complex data science projects.
 
 ## User Preferences
-- The DataScienceControl is designed for eventual integration into a larger project
+- The DataScienceControl is designed for integration into a larger Telerik-based application (RJLG IntelliSEM)
 - Current form and data are dummy/demo content
+- Namespaces are intentionally decoupled from file structure to match the host application's namespace hierarchy
 
 ## System Architecture
 The application uses Mono (C# / .NET Framework 4.7.2 compatible) for cross-platform execution on Linux. Python integration occurs via subprocess-based execution, streaming data in-memory directly to Python variables. The UI is built with Windows Forms, and `DataScienceControl` is a self-contained, reusable component.
 
-**Namespace Structure (aligned between `src/` and `DataScienceWorkbench/PythonWorkbench/`):**
-- `DataScienceWorkbench` — DataScienceControl, AutoCompletePopup, MainForm, Program, DataModels, JsonHelper
-- `DataScienceWorkbench.PythonWorkbench` — PythonBridge, PythonSyntaxHighlighter, PythonSymbolAnalyzer, LineNumberPanel, SquiggleRichTextBox (ErrorSquiggleOverlay), PlotViewerForm, PythonVisibleAttribute
+**Namespace Structure (decoupled from file paths — do not change):**
+- `RJLG.IntelliSEM.UI.Controls.PythonDataScience` — DataScienceControl, AutoCompletePopup, ErrorSquiggleOverlay (SquiggleRichTextBox), LineNumberPanel, PlotViewerForm, PythonBridge, PythonSyntaxHighlighter, PythonSymbolAnalyzer
+- `RJLG.IntelliSEM.Data.PythonDataScience` — DataModels (PythonVisibleAttribute, SampleDataItem, etc.), JsonHelper
+- `DataScienceWorkbench` — MainForm, Program (demo app only, not part of reusable control)
 
-Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` without namespace adjustments. The Designer.cs uses fully-qualified `DataScienceWorkbench.PythonWorkbench.` references for custom controls.
+Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` without namespace adjustments. The Designer.cs uses fully-qualified `RJLG.IntelliSEM.UI.Controls.PythonDataScience.` references for custom controls.
 
 **Key Features:**
 - **Multi-File Editor:** Supports multiple Python files with a TreeView-based file explorer panel showing the full directory hierarchy of `python/scripts/`. Features persistent storage, per-file state preservation (undo/redo, bookmarks, cursor/scroll position), and cross-file imports. Includes right-click context menu for file operations: New File, New Folder, Rename (inline label editing with validation), Delete (with confirmation), and folder/subfolder creation. Files in subdirectories are fully supported.

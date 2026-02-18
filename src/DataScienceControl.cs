@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using DataScienceWorkbench.PythonWorkbench;
+using RJLG.IntelliSEM.Data.PythonDataScience;
 
-namespace DataScienceWorkbench
+namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     public partial class DataScienceControl : UserControl
     {
