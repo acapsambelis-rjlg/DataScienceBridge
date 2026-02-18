@@ -514,7 +514,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
                 sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
                 sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
-                sb.AppendLine("del _DatasetRow, _DotNetDataset, _decode_img, _decode_img_columns, _tmpdf, _types, _dotnet_mod");
+                sb.AppendLine("del _decode_img, _decode_img_columns, _tmpdf, _types, _dotnet_mod");
                 sb.AppendLine();
             }
 
