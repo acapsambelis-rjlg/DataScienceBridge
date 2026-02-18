@@ -1,4 +1,4 @@
-using DataScienceWorkbench.PythonWorkbench;
+using RJLG.IntelliSEM.UI.Controls.PythonDataScience;
 
 namespace DataScienceWorkbench
 {

@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
-using DataScienceWorkbench.PythonWorkbench;
+using RJLG.IntelliSEM.Data.PythonDataScience;
 
-namespace DataScienceWorkbench
+namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     public partial class DataScienceControl : UserControl
     {
@@ -19,7 +18,7 @@ namespace DataScienceWorkbench
         private bool packagesLoading;
         private List<string> allPackageItems = new List<string>();
         private PythonSyntaxHighlighter syntaxHighlighter;
-        private System.Windows.Forms.Timer highlightTimer;
+        private Timer highlightTimer;
         private bool suppressHighlight;
         private bool textDirty;
 
@@ -186,7 +185,7 @@ namespace DataScienceWorkbench
             autoComplete = new AutoCompletePopup(pythonEditor);
             UpdateDynamicSymbols();
 
-            highlightTimer = new System.Windows.Forms.Timer();
+            highlightTimer = new Timer();
             highlightTimer.Interval = 500;
             highlightTimer.Tick += (s, e) =>
             {
@@ -928,7 +927,7 @@ namespace DataScienceWorkbench
 
         private void RunLiveSyntaxCheck()
         {
-            if (venvInitializing || !pythonRunner.PythonAvailable) return;
+            if (!pythonRunner.PythonAvailable) return;
 
             string script = pythonEditor.Text;
             if (string.IsNullOrWhiteSpace(script))
@@ -1339,13 +1338,9 @@ namespace DataScienceWorkbench
 
         private void OnPythonSetupProgress(string message)
         {
-            if (InvokeRequired)
-            {
-                try { BeginInvoke((Action)(() => OnPythonSetupProgress(message))); } catch { }
-                return;
-            }
             AppendOutput(message + "\n", Color.FromArgb(100, 100, 100));
             RaiseStatus(message);
+            Application.DoEvents();
         }
 
         public string ScriptText
@@ -1512,8 +1507,6 @@ namespace DataScienceWorkbench
             return false;
         }
 
-        private volatile bool venvInitializing;
-
         private void InitializeData()
         {
             var dataGen = new DataGenerator(42);
@@ -1532,37 +1525,20 @@ namespace DataScienceWorkbench
             }
             else
             {
-                venvInitializing = true;
-                RaiseStatus("Setting up Python environment...");
                 pythonRunner.SetupProgress += OnPythonSetupProgress;
+                pythonRunner.EnsureVenv();
+                pythonRunner.SetupProgress -= OnPythonSetupProgress;
 
-                var venvThread = new Thread(() =>
+                if (pythonRunner.VenvReady)
+                    RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
+                else
                 {
-                    pythonRunner.EnsureVenv();
+                    AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
+                    AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
+                    RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
+                }
 
-                    try
-                    {
-                        BeginInvoke((Action)(() =>
-                        {
-                            pythonRunner.SetupProgress -= OnPythonSetupProgress;
-                            venvInitializing = false;
-
-                            if (pythonRunner.VenvReady)
-                                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
-                            else
-                            {
-                                AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
-                                AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
-                                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
-                            }
-
-                            LoadPackagesAsync();
-                        }));
-                    }
-                    catch { }
-                });
-                venvThread.IsBackground = true;
-                venvThread.Start();
+                LoadPackagesAsync();
             }
         }
 
@@ -2357,13 +2333,6 @@ namespace DataScienceWorkbench
             if (string.IsNullOrWhiteSpace(script))
             {
                 AppendOutput("No script to run.\n", Color.FromArgb(180, 140, 0));
-                return;
-            }
-
-            if (venvInitializing)
-            {
-                AppendOutput("Python environment is still being set up. Please wait...\n", Color.FromArgb(180, 140, 0));
-                RaiseStatus("Environment setup in progress...");
                 return;
             }
 
@@ -3289,12 +3258,6 @@ namespace DataScienceWorkbench
             string pkg = packageNameBox.Text.Trim();
             if (string.IsNullOrEmpty(pkg)) return;
 
-            if (venvInitializing)
-            {
-                AppendOutput("Python environment is still being set up. Please wait...\n", Color.FromArgb(180, 140, 0));
-                return;
-            }
-
             if (!pythonRunner.PythonAvailable)
             {
                 AppendOutput("Cannot install packages: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
@@ -3325,12 +3288,6 @@ namespace DataScienceWorkbench
         {
             string pkg = packageNameBox.Text.Trim();
             if (string.IsNullOrEmpty(pkg)) return;
-
-            if (venvInitializing)
-            {
-                AppendOutput("Python environment is still being set up. Please wait...\n", Color.FromArgb(180, 140, 0));
-                return;
-            }
 
             var confirm = MessageBox.Show("Uninstall " + pkg + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirm != DialogResult.Yes) return;

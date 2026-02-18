@@ -43,7 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataModels.cs" />
+    <Compile Include="PythonWorkbenchData\DataModels.cs" />
     <Compile Include="PythonWorkbench\ErrorSquiggleOverlay.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -73,7 +73,7 @@
     <Compile Include="PythonWorkbench\PythonSymbolAnalyzer.cs" />
     <Compile Include="PythonWorkbench\PythonSyntaxHighlighter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PythonWorkbench\PythonVisibleAttribute.cs" />
+    <Compile Include="PythonWorkbenchData\PythonVisibleAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.manifest" />

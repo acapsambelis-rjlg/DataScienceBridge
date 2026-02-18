@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataScienceWorkbench.PythonWorkbench
+namespace RJLG.IntelliSEM.Data.PythonDataScience
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class PythonVisibleAttribute : Attribute
@@ -160,7 +160,7 @@ namespace DataScienceWorkbench.PythonWorkbench
             if (bmp == null) return "";
             using (var ms = new System.IO.MemoryStream())
             {
-                bmp.Save(ms, ImageFormat.Png);
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                 return "__IMG__:" + Convert.ToBase64String(ms.ToArray());
             }
         }

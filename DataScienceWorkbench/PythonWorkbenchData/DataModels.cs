@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-using DataScienceWorkbench.PythonWorkbench;
 
-namespace DataScienceWorkbench
+namespace RJLG.IntelliSEM.Data.PythonDataScience
 {
 
     [PythonVisible("Customer mailing address")]
