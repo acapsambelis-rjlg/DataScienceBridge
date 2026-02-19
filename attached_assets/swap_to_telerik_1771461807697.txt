@@ -1,0 +1,34 @@
+Scope of the swap:
+
+Every standard WinForms control in DataScienceControl would get its Telerik equivalent:
+
+Current Control	Telerik Replacement
+SplitContainer	RadSplitContainer + SplitPanel
+TabControl	RadPageView (Strip mode)
+TreeView (file explorer)	RadTreeView
+TreeView (data reference)	RadTreeView
+RichTextBox (editor)	RadSyntaxEditor
+RichTextBox (output)	RadTextBoxControl or RadRichTextEditor
+TextBox (various)	RadTextBox
+Button	RadButton
+Label	RadLabel
+MenuStrip	RadMenu
+ContextMenuStrip	RadContextMenu
+Panel	RadPanel
+ListBox (package list)	RadListView or RadListControl
+ComboBox (if any)	RadDropDownList
+How I'd approach it:
+
+Work only in the VS project (DataScienceWorkbench/PythonWorkbench/) — the src/ folder stays as-is for Mono compatibility
+Start with the Designer file — swap all control declarations, types, and initialization
+Update the code-behind — adjust event signatures, property names, and API calls (Telerik controls use slightly different APIs, e.g., SelectedNode vs SelectedItem, RadTreeNode vs TreeNode, etc.)
+Handle the syntax editor specially — RadSyntaxEditor has a fundamentally different API from RichTextBox (uses Taggers for highlighting, Document model for text). The custom SquiggleRichTextBox and LineNumberPanel would be retired since RadSyntaxEditor has those features built in.
+Add Telerik theming — a single RadThemeManager call to apply a consistent theme across all controls
+Add the assembly references to the .csproj file
+The big consideration: RadSyntaxEditor is architecturally very different from a RichTextBox. It has its own document model, tagger system for syntax highlighting, folding regions, and intellisense hooks. This means much of the custom syntax highlighting, bracket matching, and autocomplete code would need to be adapted to Telerik's APIs — though the logic stays the same, the integration points change significantly.
+
+My recommendation: Do this in phases rather than all at once:
+
+Phase 1: Swap the simpler layout/container controls (panels, tabs, buttons, labels, menus)
+Phase 2: Swap the TreeViews and list controls
+Phase 3: Swap the editor (biggest change, most rewiring needed)

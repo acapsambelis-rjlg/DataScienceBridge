@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using Telerik.WinControls;
+using Telerik.WinControls.UI;
 using RJLG.IntelliSEM.Data.PythonDataScience;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
@@ -35,7 +37,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, PythonClassInfo> registeredPythonClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
-        private ContextMenuStrip fileContextMenu;
+        private RadContextMenu fileContextMenu;
         private float editorFontSize = 10f;
         private const float MinFontSize = 6f;
         private const float MaxFontSize = 28f;
@@ -1368,95 +1370,121 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SetupEditorMenuBar()
         {
-            var fileMenu = new ToolStripMenuItem("File");
+            var fileMenu = new RadMenuItem("File");
 
-            var newFileItem = new ToolStripMenuItem("New File", null, OnNewFile);
-            newFileItem.ShortcutKeys = Keys.Control | Keys.N;
-            fileMenu.DropDownItems.Add(newFileItem);
+            var newFileItem = new RadMenuItem("New File");
+            newFileItem.Click += OnNewFile;
+            newFileItem.HintText = "Ctrl+N";
+            newFileItem.Shortcuts.Add(new RadShortcut(Keys.Control, Keys.N));
+            fileMenu.Items.Add(newFileItem);
 
-            fileMenu.DropDownItems.Add("Open File...", null, OnOpenFile);
+            var openFileItem = new RadMenuItem("Open File...");
+            openFileItem.Click += OnOpenFile;
+            fileMenu.Items.Add(openFileItem);
 
-            var saveItem = new ToolStripMenuItem("Save", null, OnSaveFile);
-            saveItem.ShortcutKeys = Keys.Control | Keys.S;
-            fileMenu.DropDownItems.Add(saveItem);
+            var saveItem = new RadMenuItem("Save");
+            saveItem.Click += OnSaveFile;
+            saveItem.HintText = "Ctrl+S";
+            saveItem.Shortcuts.Add(new RadShortcut(Keys.Control, Keys.S));
+            fileMenu.Items.Add(saveItem);
 
-            fileMenu.DropDownItems.Add("Save As...", null, OnSaveFileAs);
-            fileMenu.DropDownItems.Add(new ToolStripSeparator());
+            var saveAsItem = new RadMenuItem("Save As...");
+            saveAsItem.Click += OnSaveFileAs;
+            fileMenu.Items.Add(saveAsItem);
+            fileMenu.Items.Add(new RadMenuSeparatorItem());
 
-            var closeItem = new ToolStripMenuItem("Close File", null, OnCloseFile);
-            closeItem.ShortcutKeys = Keys.Control | Keys.W;
-            fileMenu.DropDownItems.Add(closeItem);
+            var closeItem = new RadMenuItem("Close File");
+            closeItem.Click += OnCloseFile;
+            closeItem.HintText = "Ctrl+W";
+            closeItem.Shortcuts.Add(new RadShortcut(Keys.Control, Keys.W));
+            fileMenu.Items.Add(closeItem);
 
-            var editMenu = new ToolStripMenuItem("&Edit");
+            var editMenu = new RadMenuItem("&Edit");
 
-            var undoItem = new ToolStripMenuItem("Undo", null, (s, e) => { if (pythonEditor.Focused) PerformUndo(); });
-            undoItem.ShortcutKeyDisplayString = "Ctrl+Z";
-            editMenu.DropDownItems.Add(undoItem);
+            var undoItem = new RadMenuItem("Undo");
+            undoItem.Click += (s, e) => { if (pythonEditor.Focused) PerformUndo(); };
+            undoItem.HintText = "Ctrl+Z";
+            editMenu.Items.Add(undoItem);
 
-            var redoItem = new ToolStripMenuItem("Redo", null, (s, e) => { if (pythonEditor.Focused) PerformRedo(); });
-            redoItem.ShortcutKeyDisplayString = "Ctrl+Y";
-            editMenu.DropDownItems.Add(redoItem);
+            var redoItem = new RadMenuItem("Redo");
+            redoItem.Click += (s, e) => { if (pythonEditor.Focused) PerformRedo(); };
+            redoItem.HintText = "Ctrl+Y";
+            editMenu.Items.Add(redoItem);
 
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
+            editMenu.Items.Add(new RadMenuSeparatorItem());
 
-            var cutItem = new ToolStripMenuItem("Cut", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Cut(); });
-            cutItem.ShortcutKeyDisplayString = "Ctrl+X";
-            editMenu.DropDownItems.Add(cutItem);
+            var cutItem = new RadMenuItem("Cut");
+            cutItem.Click += (s, e) => { if (pythonEditor.Focused) pythonEditor.Cut(); };
+            cutItem.HintText = "Ctrl+X";
+            editMenu.Items.Add(cutItem);
 
-            var copyItem = new ToolStripMenuItem("Copy", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Copy(); });
-            copyItem.ShortcutKeyDisplayString = "Ctrl+C";
-            editMenu.DropDownItems.Add(copyItem);
+            var copyItem = new RadMenuItem("Copy");
+            copyItem.Click += (s, e) => { if (pythonEditor.Focused) pythonEditor.Copy(); };
+            copyItem.HintText = "Ctrl+C";
+            editMenu.Items.Add(copyItem);
 
-            var pasteItem = new ToolStripMenuItem("Paste", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.Paste(); });
-            pasteItem.ShortcutKeyDisplayString = "Ctrl+V";
-            editMenu.DropDownItems.Add(pasteItem);
+            var pasteItem = new RadMenuItem("Paste");
+            pasteItem.Click += (s, e) => { if (pythonEditor.Focused) pythonEditor.Paste(); };
+            pasteItem.HintText = "Ctrl+V";
+            editMenu.Items.Add(pasteItem);
 
-            var deleteItem = new ToolStripMenuItem("Delete", null, (s, e) => { if (pythonEditor.Focused && pythonEditor.SelectionLength > 0) pythonEditor.SelectedText = ""; });
-            deleteItem.ShortcutKeyDisplayString = "Del";
-            editMenu.DropDownItems.Add(deleteItem);
+            var deleteItem = new RadMenuItem("Delete");
+            deleteItem.Click += (s, e) => { if (pythonEditor.Focused && pythonEditor.SelectionLength > 0) pythonEditor.SelectedText = ""; };
+            deleteItem.HintText = "Del";
+            editMenu.Items.Add(deleteItem);
 
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
+            editMenu.Items.Add(new RadMenuSeparatorItem());
 
-            var selectAllItem = new ToolStripMenuItem("Select All", null, (s, e) => { if (pythonEditor.Focused) pythonEditor.SelectAll(); });
-            selectAllItem.ShortcutKeyDisplayString = "Ctrl+A";
-            editMenu.DropDownItems.Add(selectAllItem);
+            var selectAllItem = new RadMenuItem("Select All");
+            selectAllItem.Click += (s, e) => { if (pythonEditor.Focused) pythonEditor.SelectAll(); };
+            selectAllItem.HintText = "Ctrl+A";
+            editMenu.Items.Add(selectAllItem);
 
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
+            editMenu.Items.Add(new RadMenuSeparatorItem());
 
-            var findItem = new ToolStripMenuItem("Find && Replace...", null, (s, e) => ShowFindReplace());
-            findItem.ShortcutKeyDisplayString = "Ctrl+H";
-            editMenu.DropDownItems.Add(findItem);
+            var findItem = new RadMenuItem("Find && Replace...");
+            findItem.Click += (s, e) => ShowFindReplace();
+            findItem.HintText = "Ctrl+H";
+            editMenu.Items.Add(findItem);
 
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
+            editMenu.Items.Add(new RadMenuSeparatorItem());
 
-            var dupLineItem = new ToolStripMenuItem("Duplicate Line", null, (s, e) => { if (pythonEditor.Focused) DuplicateLine(); });
-            dupLineItem.ShortcutKeyDisplayString = "Ctrl+D";
-            editMenu.DropDownItems.Add(dupLineItem);
+            var dupLineItem = new RadMenuItem("Duplicate Line");
+            dupLineItem.Click += (s, e) => { if (pythonEditor.Focused) DuplicateLine(); };
+            dupLineItem.HintText = "Ctrl+D";
+            editMenu.Items.Add(dupLineItem);
 
-            var moveUpItem = new ToolStripMenuItem("Move Line Up", null, (s, e) => { if (pythonEditor.Focused) MoveLine(true); });
-            moveUpItem.ShortcutKeyDisplayString = "Alt+Up";
-            editMenu.DropDownItems.Add(moveUpItem);
+            var moveUpItem = new RadMenuItem("Move Line Up");
+            moveUpItem.Click += (s, e) => { if (pythonEditor.Focused) MoveLine(true); };
+            moveUpItem.HintText = "Alt+Up";
+            editMenu.Items.Add(moveUpItem);
 
-            var moveDownItem = new ToolStripMenuItem("Move Line Down", null, (s, e) => { if (pythonEditor.Focused) MoveLine(false); });
-            moveDownItem.ShortcutKeyDisplayString = "Alt+Down";
-            editMenu.DropDownItems.Add(moveDownItem);
+            var moveDownItem = new RadMenuItem("Move Line Down");
+            moveDownItem.Click += (s, e) => { if (pythonEditor.Focused) MoveLine(false); };
+            moveDownItem.HintText = "Alt+Down";
+            editMenu.Items.Add(moveDownItem);
 
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
+            editMenu.Items.Add(new RadMenuSeparatorItem());
 
-            var toggleBookmarkItem = new ToolStripMenuItem("Toggle Bookmark", null, (s, e) => { if (pythonEditor.Focused) ToggleBookmarkAtCursor(); });
-            toggleBookmarkItem.ShortcutKeyDisplayString = "Ctrl+B";
-            editMenu.DropDownItems.Add(toggleBookmarkItem);
+            var toggleBookmarkItem = new RadMenuItem("Toggle Bookmark");
+            toggleBookmarkItem.Click += (s, e) => { if (pythonEditor.Focused) ToggleBookmarkAtCursor(); };
+            toggleBookmarkItem.HintText = "Ctrl+B";
+            editMenu.Items.Add(toggleBookmarkItem);
 
-            var nextBookmarkItem = new ToolStripMenuItem("Next Bookmark", null, (s, e) => GoToNextBookmark());
-            nextBookmarkItem.ShortcutKeyDisplayString = "F2";
-            editMenu.DropDownItems.Add(nextBookmarkItem);
+            var nextBookmarkItem = new RadMenuItem("Next Bookmark");
+            nextBookmarkItem.Click += (s, e) => GoToNextBookmark();
+            nextBookmarkItem.HintText = "F2";
+            editMenu.Items.Add(nextBookmarkItem);
 
-            var prevBookmarkItem = new ToolStripMenuItem("Previous Bookmark", null, (s, e) => GoToPreviousBookmark());
-            prevBookmarkItem.ShortcutKeyDisplayString = "Shift+F2";
-            editMenu.DropDownItems.Add(prevBookmarkItem);
+            var prevBookmarkItem = new RadMenuItem("Previous Bookmark");
+            prevBookmarkItem.Click += (s, e) => GoToPreviousBookmark();
+            prevBookmarkItem.HintText = "Shift+F2";
+            editMenu.Items.Add(prevBookmarkItem);
 
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
-            editMenu.DropDownItems.Add("Clear Output", null, (s, e) => outputBox.Clear());
+            editMenu.Items.Add(new RadMenuSeparatorItem());
+            var clearOutputItem = new RadMenuItem("Clear Output");
+            clearOutputItem.Click += (s, e) => outputBox.Clear();
+            editMenu.Items.Add(clearOutputItem);
 
             editMenu.DropDownOpening += (s, e) =>
             {
@@ -1468,30 +1496,44 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 deleteItem.Enabled = hasSelection;
             };
 
-            var runMenu = new ToolStripMenuItem("Run");
-            runMenu.DropDownItems.Add("Execute Script (F5)", null, OnRunScript);
-            runMenu.DropDownItems.Add("Check Syntax", null, OnCheckSyntax);
-            runMenu.DropDownItems.Add(new ToolStripSeparator());
-            runMenu.DropDownItems.Add("Reset Python Environment", null, (s, e) =>
+            var runMenu = new RadMenuItem("Run");
+            var executeItem = new RadMenuItem("Execute Script (F5)");
+            executeItem.Click += OnRunScript;
+            runMenu.Items.Add(executeItem);
+            var checkSyntaxItem = new RadMenuItem("Check Syntax");
+            checkSyntaxItem.Click += OnCheckSyntax;
+            runMenu.Items.Add(checkSyntaxItem);
+            runMenu.Items.Add(new RadMenuSeparatorItem());
+            var resetEnvItem = new RadMenuItem("Reset Python Environment");
+            resetEnvItem.Click += (s, e) =>
             {
                 var confirm = MessageBox.Show(
                     "This will delete the virtual environment and recreate it.\nAll installed packages will need to be reinstalled.\n\nContinue?",
                     "Reset Python Environment", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                 if (confirm == DialogResult.Yes)
                     ResetPythonEnvironment();
-            });
+            };
+            runMenu.Items.Add(resetEnvItem);
 
-            var helpMenu = new ToolStripMenuItem("Help");
-            helpMenu.DropDownItems.Add("Quick Start Guide", null, OnShowHelp);
-            helpMenu.DropDownItems.Add("Keyboard Shortcuts", null, OnShowKeyboardShortcuts);
-            helpMenu.DropDownItems.Add("Editor Features", null, OnShowEditorFeatures);
-            helpMenu.DropDownItems.Add(new ToolStripSeparator());
-            helpMenu.DropDownItems.Add("About", null, (s, e) => MessageBox.Show(
+            var helpMenu = new RadMenuItem("Help");
+            var quickStartItem = new RadMenuItem("Quick Start Guide");
+            quickStartItem.Click += OnShowHelp;
+            helpMenu.Items.Add(quickStartItem);
+            var shortcutsItem = new RadMenuItem("Keyboard Shortcuts");
+            shortcutsItem.Click += OnShowKeyboardShortcuts;
+            helpMenu.Items.Add(shortcutsItem);
+            var editorFeaturesItem = new RadMenuItem("Editor Features");
+            editorFeaturesItem.Click += OnShowEditorFeatures;
+            helpMenu.Items.Add(editorFeaturesItem);
+            helpMenu.Items.Add(new RadMenuSeparatorItem());
+            var aboutItem = new RadMenuItem("About");
+            aboutItem.Click += (s, e) => MessageBox.Show(
                 "Data Science Workbench v1.0\n\n" +
                 "A .NET Windows Forms control with\n" +
                 "integrated Python scripting for data analysis.\n\n" +
                 "Built with Mono + Python 3",
-                "About", MessageBoxButtons.OK, MessageBoxIcon.Information));
+                "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            helpMenu.Items.Add(aboutItem);
 
             editorMenuBar.Items.Insert(0, fileMenu);
             editorMenuBar.Items.Insert(1, editMenu);
@@ -1499,7 +1541,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editorMenuBar.Items.Add(helpMenu);
         }
 
-        public MenuStrip CreateMenuStrip()
+        public RadMenu CreateMenuStrip()
         {
             return editorMenuBar;
         }
@@ -2345,9 +2387,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
-        private void mainTabs_SelectedIndexChanged(object sender, EventArgs e)
+        private void mainTabs_SelectedPageChanged(object sender, EventArgs e)
         {
-            if (mainTabs.SelectedIndex == 2 && !packagesLoaded && !packagesLoading)
+            if (mainTabs.SelectedPage == packagesTab && !packagesLoaded && !packagesLoading)
             {
                 LoadPackagesAsync();
             }
@@ -2683,7 +2725,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             fileOpenBtn.Click += OnOpenFile;
             fileCloseBtn.Click += OnCloseFile;
 
-            fileContextMenu = new ContextMenuStrip();
+            fileContextMenu = new RadContextMenu();
             fileTreeView.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtons.Right)
@@ -2691,7 +2733,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     var node = fileTreeView.GetNodeAt(e.X, e.Y);
                     fileTreeView.SelectedNode = node;
                     BuildFileContextMenu(node);
-                    fileContextMenu.Show(fileTreeView, e.Location);
+                    fileContextMenu.Show(fileTreeView.PointToScreen(e.Location));
                 }
             };
         }
@@ -2700,25 +2742,33 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             fileContextMenu.Items.Clear();
 
-            fileContextMenu.Items.Add("New File", null, OnNewFile);
-            fileContextMenu.Items.Add("New Folder", null, OnNewFolder);
+            var newFileCtx = new RadMenuItem("New File");
+            newFileCtx.Click += OnNewFile;
+            fileContextMenu.Items.Add(newFileCtx);
+            var newFolderCtx = new RadMenuItem("New Folder");
+            newFolderCtx.Click += OnNewFolder;
+            fileContextMenu.Items.Add(newFolderCtx);
 
             if (node != null)
             {
                 string path = (string)node.Tag;
                 bool isFolder = Directory.Exists(path);
 
-                fileContextMenu.Items.Add(new ToolStripSeparator());
+                fileContextMenu.Items.Add(new RadMenuSeparatorItem());
 
                 if (!isFolder)
                 {
-                    fileContextMenu.Items.Add("Open", null, (s, e) => OpenFileFromTree(node));
+                    var openItem = new RadMenuItem("Open");
+                    openItem.Click += (s, e) => OpenFileFromTree(node);
+                    fileContextMenu.Items.Add(openItem);
                 }
 
-                var renameItem = new ToolStripMenuItem("Rename", null, (s, e) => { node.BeginEdit(); });
+                var renameItem = new RadMenuItem("Rename");
+                renameItem.Click += (s, e) => { node.BeginEdit(); };
                 fileContextMenu.Items.Add(renameItem);
 
-                var deleteItem = new ToolStripMenuItem("Delete", null, (s, e) => OnDeleteFileOrFolder(node));
+                var deleteItem = new RadMenuItem("Delete");
+                deleteItem.Click += (s, e) => OnDeleteFileOrFolder(node);
                 fileContextMenu.Items.Add(deleteItem);
             }
         }
@@ -3319,7 +3369,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 RaiseStatus("Installation failed for " + pkg);
             }
 
-            mainTabs.SelectedIndex = 0;
+            mainTabs.SelectedPage = editorTab;
             OnRefreshPackages(null, null);
         }
 
@@ -3365,7 +3415,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (quickCombo.SelectedItem != null)
             {
-                packageNameBox.Text = quickCombo.SelectedItem.ToString();
+                packageNameBox.Text = quickCombo.SelectedItem.Text;
                 OnInstallPackage(sender, e);
             }
         }

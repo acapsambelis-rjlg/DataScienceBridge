@@ -11,12 +11,21 @@ The Data Science Workbench is a Windows Forms application developed with Mono (.
 ## System Architecture
 The application uses Mono (C# / .NET Framework 4.7.2 compatible) for cross-platform execution on Linux. Python integration occurs via subprocess-based execution, streaming data in-memory directly to Python variables. The UI is built with Windows Forms, and `DataScienceControl` is a self-contained, reusable component.
 
+**Dual-Project Structure:**
+- `src/` — Mono project, stays with standard WinForms controls for Linux/Replit execution
+- `DataScienceWorkbench/PythonWorkbench/` — Visual Studio project, migrating to Telerik UI for WinForms controls
+
+**Telerik Migration Status (VS project only):**
+- **Phase 1 COMPLETE:** Basic layout/container controls swapped — TabControl→RadPageView, SplitContainer→RadSplitContainer+SplitPanel, Panel→RadPanel, Button→RadButton, Label→RadLabel, MenuStrip→RadMenu, ToolStripMenuItem→RadMenuItem, ContextMenuStrip→RadContextMenu, GroupBox→RadGroupBox, TextBox→RadTextBox, ComboBox→RadDropDownList
+- **Phase 2 PENDING:** TreeView→RadTreeView, ListBox→RadListControl
+- **Phase 3 PENDING:** RichTextBox migration, SquiggleRichTextBox adaptation
+
 **Namespace Structure (decoupled from file paths — do not change):**
 - `RJLG.IntelliSEM.UI.Controls.PythonDataScience` — DataScienceControl, AutoCompletePopup, ErrorSquiggleOverlay (SquiggleRichTextBox), LineNumberPanel, PlotViewerForm, PythonBridge, PythonSyntaxHighlighter, PythonSymbolAnalyzer
 - `RJLG.IntelliSEM.Data.PythonDataScience` — DataModels (PythonVisibleAttribute, SampleDataItem, etc.), JsonHelper
 - `DataScienceWorkbench` — MainForm, Program (demo app only, not part of reusable control)
 
-Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` without namespace adjustments. The Designer.cs uses fully-qualified `RJLG.IntelliSEM.UI.Controls.PythonDataScience.` references for custom controls.
+Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` for non-Telerik files without namespace adjustments. The VS Designer.cs now uses fully-qualified Telerik types (e.g., `Telerik.WinControls.UI.RadPageView`). The `CreateMenuStrip()` public API now returns `RadMenu` in the VS project (was `MenuStrip`).
 
 **Key Features:**
 - **Multi-File Editor:** Supports multiple Python files with a TreeView-based file explorer panel showing the full directory hierarchy of `python/scripts/`. Features persistent storage, per-file state preservation (undo/redo, bookmarks, cursor/scroll position), and cross-file imports. Includes right-click context menu for file operations: New File, New Folder, Rename (inline label editing with validation), Delete (with confirmation), and folder/subfolder creation. Files in subdirectories are fully supported.

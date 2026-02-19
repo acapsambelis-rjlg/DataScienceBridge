@@ -17,62 +17,53 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void InitializeComponent()
         {
-            this.mainTabs = new System.Windows.Forms.TabControl();
-            this.editorTab = new System.Windows.Forms.TabPage();
-            this.mainSplit = new System.Windows.Forms.SplitContainer();
-            this.fileListPanel = new System.Windows.Forms.Panel();
+            this.mainTabs = new Telerik.WinControls.UI.RadPageView();
+            this.editorTab = new Telerik.WinControls.UI.RadPageViewPage();
+            this.mainSplit = new Telerik.WinControls.UI.RadSplitContainer();
+            this.mainSplitEditorPanel = new Telerik.WinControls.UI.SplitPanel();
+            this.mainSplitOutputPanel = new Telerik.WinControls.UI.SplitPanel();
+            this.fileListPanel = new Telerik.WinControls.UI.RadPanel();
             this.fileTreeView = new System.Windows.Forms.TreeView();
-            this.fileListLabel = new System.Windows.Forms.Label();
-            this.fileListButtonPanel = new System.Windows.Forms.Panel();
-            this.fileNewBtn = new System.Windows.Forms.Button();
-            this.fileOpenBtn = new System.Windows.Forms.Button();
-            this.fileCloseBtn = new System.Windows.Forms.Button();
-            this.fileListSeparator = new System.Windows.Forms.Panel();
-            this.editorPanel = new System.Windows.Forms.Panel();
+            this.fileListLabel = new Telerik.WinControls.UI.RadLabel();
+            this.fileListButtonPanel = new Telerik.WinControls.UI.RadPanel();
+            this.fileNewBtn = new Telerik.WinControls.UI.RadButton();
+            this.fileOpenBtn = new Telerik.WinControls.UI.RadButton();
+            this.fileCloseBtn = new Telerik.WinControls.UI.RadButton();
+            this.fileListSeparator = new Telerik.WinControls.UI.RadPanel();
+            this.editorPanel = new Telerik.WinControls.UI.RadPanel();
             this.pythonEditor = new RJLG.IntelliSEM.UI.Controls.PythonDataScience.SquiggleRichTextBox();
             this.lineNumberPanel = new RJLG.IntelliSEM.UI.Controls.PythonDataScience.LineNumberPanel();
-            this.editorMenuBar = new System.Windows.Forms.MenuStrip();
-            this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
-            this.outputPanel = new System.Windows.Forms.Panel();
+            this.editorMenuBar = new Telerik.WinControls.UI.RadMenu();
+            this.insertSnippetBtn = new Telerik.WinControls.UI.RadMenuItem();
+            this.outputPanel = new Telerik.WinControls.UI.RadPanel();
             this.outputBox = new System.Windows.Forms.RichTextBox();
-            this.outputLabel = new System.Windows.Forms.Label();
-            this.referenceTab = new System.Windows.Forms.TabPage();
-            this.refSplit = new System.Windows.Forms.SplitContainer();
+            this.outputLabel = new Telerik.WinControls.UI.RadLabel();
+            this.referenceTab = new Telerik.WinControls.UI.RadPageViewPage();
+            this.refSplit = new Telerik.WinControls.UI.RadSplitContainer();
+            this.refSplitTreePanel = new Telerik.WinControls.UI.SplitPanel();
+            this.refSplitDetailPanel = new Telerik.WinControls.UI.SplitPanel();
             this.refTreeView = new System.Windows.Forms.TreeView();
-            this.refSearchBox = new System.Windows.Forms.TextBox();
+            this.refSearchBox = new Telerik.WinControls.UI.RadTextBox();
             this.refDetailBox = new System.Windows.Forms.RichTextBox();
-            this.packagesTab = new System.Windows.Forms.TabPage();
-            this.pkgRightPanel = new System.Windows.Forms.Panel();
+            this.packagesTab = new Telerik.WinControls.UI.RadPageViewPage();
+            this.pkgRightPanel = new Telerik.WinControls.UI.RadPanel();
             this.packageListBox = new System.Windows.Forms.ListBox();
-            this.pkgListLabel = new System.Windows.Forms.Label();
-            this.pkgSearchBox = new System.Windows.Forms.TextBox();
-            this.pkgLeftPanel = new System.Windows.Forms.Panel();
-            this.refreshBtn = new System.Windows.Forms.Button();
-            this.installGroup = new System.Windows.Forms.GroupBox();
-            this.quickInstallBtn = new System.Windows.Forms.Button();
-            this.quickCombo = new System.Windows.Forms.ComboBox();
-            this.quickInstallLabel = new System.Windows.Forms.Label();
-            this.uninstallBtn = new System.Windows.Forms.Button();
-            this.installBtn = new System.Windows.Forms.Button();
-            this.packageNameBox = new System.Windows.Forms.TextBox();
-            this.pkgLabel = new System.Windows.Forms.Label();
-            this.mainTabs.SuspendLayout();
-            this.editorTab.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.mainSplit)).BeginInit();
-            this.mainSplit.Panel1.SuspendLayout();
-            this.mainSplit.Panel2.SuspendLayout();
-            this.mainSplit.SuspendLayout();
+            this.pkgListLabel = new Telerik.WinControls.UI.RadLabel();
+            this.pkgSearchBox = new Telerik.WinControls.UI.RadTextBox();
+            this.pkgLeftPanel = new Telerik.WinControls.UI.RadPanel();
+            this.refreshBtn = new Telerik.WinControls.UI.RadButton();
+            this.installGroup = new Telerik.WinControls.UI.RadGroupBox();
+            this.quickInstallBtn = new Telerik.WinControls.UI.RadButton();
+            this.quickCombo = new Telerik.WinControls.UI.RadDropDownList();
+            this.quickInstallLabel = new Telerik.WinControls.UI.RadLabel();
+            this.uninstallBtn = new Telerik.WinControls.UI.RadButton();
+            this.installBtn = new Telerik.WinControls.UI.RadButton();
+            this.packageNameBox = new Telerik.WinControls.UI.RadTextBox();
+            this.pkgLabel = new Telerik.WinControls.UI.RadLabel();
             this.fileListPanel.SuspendLayout();
             this.fileListButtonPanel.SuspendLayout();
             this.editorPanel.SuspendLayout();
-            this.editorMenuBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
-            this.referenceTab.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.refSplit)).BeginInit();
-            this.refSplit.Panel1.SuspendLayout();
-            this.refSplit.Panel2.SuspendLayout();
-            this.refSplit.SuspendLayout();
-            this.packagesTab.SuspendLayout();
             this.pkgRightPanel.SuspendLayout();
             this.pkgLeftPanel.SuspendLayout();
             this.installGroup.SuspendLayout();
@@ -80,16 +71,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // mainTabs
             // 
-            this.mainTabs.Controls.Add(this.editorTab);
-            this.mainTabs.Controls.Add(this.referenceTab);
-            this.mainTabs.Controls.Add(this.packagesTab);
+            this.mainTabs.ViewMode = Telerik.WinControls.UI.PageViewMode.Strip;
+            this.mainTabs.Pages.Add(this.editorTab);
+            this.mainTabs.Pages.Add(this.referenceTab);
+            this.mainTabs.Pages.Add(this.packagesTab);
             this.mainTabs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainTabs.Location = new System.Drawing.Point(0, 0);
             this.mainTabs.Name = "mainTabs";
-            this.mainTabs.SelectedIndex = 0;
             this.mainTabs.Size = new System.Drawing.Size(800, 600);
             this.mainTabs.TabIndex = 0;
-            this.mainTabs.SelectedIndexChanged += new System.EventHandler(this.mainTabs_SelectedIndexChanged);
+            this.mainTabs.SelectedPageChanged += new System.EventHandler(this.mainTabs_SelectedPageChanged);
             // 
             // editorTab
             // 
@@ -99,7 +90,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.editorTab.Size = new System.Drawing.Size(792, 574);
             this.editorTab.TabIndex = 0;
             this.editorTab.Text = "Python Editor";
-            this.editorTab.UseVisualStyleBackColor = true;
             // 
             // mainSplit
             // 
@@ -107,19 +97,27 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.mainSplit.Location = new System.Drawing.Point(0, 0);
             this.mainSplit.Name = "mainSplit";
             this.mainSplit.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // mainSplit.Panel1
-            // 
-            this.mainSplit.Panel1.Controls.Add(this.editorPanel);
-            this.mainSplit.Panel1.Controls.Add(this.fileListPanel);
-            // 
-            // mainSplit.Panel2
-            // 
-            this.mainSplit.Panel2.Controls.Add(this.outputPanel);
             this.mainSplit.Size = new System.Drawing.Size(792, 574);
-            this.mainSplit.SplitterDistance = 380;
-            this.mainSplit.SplitterWidth = 6;
             this.mainSplit.TabIndex = 0;
+            // 
+            // mainSplitEditorPanel
+            // 
+            this.mainSplitEditorPanel.Controls.Add(this.editorPanel);
+            this.mainSplitEditorPanel.Controls.Add(this.fileListPanel);
+            this.mainSplitEditorPanel.SizeInfo.SizeMode = Telerik.WinControls.UI.Docking.SplitPanelSizeMode.Absolute;
+            this.mainSplitEditorPanel.SizeInfo.AbsoluteSize = new System.Drawing.Size(792, 380);
+            this.mainSplitEditorPanel.Name = "mainSplitEditorPanel";
+            this.mainSplitEditorPanel.TabIndex = 0;
+            // 
+            // mainSplitOutputPanel
+            // 
+            this.mainSplitOutputPanel.Controls.Add(this.outputPanel);
+            this.mainSplitOutputPanel.Name = "mainSplitOutputPanel";
+            this.mainSplitOutputPanel.TabIndex = 1;
+            // 
+            // mainSplit.SplitPanels
+            // 
+            this.mainSplit.SplitPanels.AddRange(new Telerik.WinControls.UI.SplitPanel[] { this.mainSplitEditorPanel, this.mainSplitOutputPanel });
             // 
             // fileListSeparator
             // 
@@ -185,36 +183,30 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // fileNewBtn
             // 
-            this.fileNewBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.fileNewBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileNewBtn.Location = new System.Drawing.Point(4, 2);
             this.fileNewBtn.Name = "fileNewBtn";
             this.fileNewBtn.Size = new System.Drawing.Size(44, 24);
             this.fileNewBtn.TabIndex = 0;
             this.fileNewBtn.Text = "+";
-            this.fileNewBtn.UseVisualStyleBackColor = true;
             // 
             // fileOpenBtn
             // 
-            this.fileOpenBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.fileOpenBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileOpenBtn.Location = new System.Drawing.Point(52, 2);
             this.fileOpenBtn.Name = "fileOpenBtn";
             this.fileOpenBtn.Size = new System.Drawing.Size(55, 24);
             this.fileOpenBtn.TabIndex = 1;
             this.fileOpenBtn.Text = "Open";
-            this.fileOpenBtn.UseVisualStyleBackColor = true;
             // 
             // fileCloseBtn
             // 
-            this.fileCloseBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.fileCloseBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileCloseBtn.Location = new System.Drawing.Point(111, 2);
             this.fileCloseBtn.Name = "fileCloseBtn";
             this.fileCloseBtn.Size = new System.Drawing.Size(44, 24);
             this.fileCloseBtn.TabIndex = 2;
             this.fileCloseBtn.Text = "\u00d7";
-            this.fileCloseBtn.UseVisualStyleBackColor = true;
             // 
             // editorPanel
             // 
@@ -252,7 +244,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // editorMenuBar
             // 
-            this.editorMenuBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.editorMenuBar.Items.AddRange(new Telerik.WinControls.UI.RadItem[] {
             this.insertSnippetBtn});
             this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
             this.editorMenuBar.Location = new System.Drawing.Point(0, 0);
@@ -310,26 +302,33 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.referenceTab.Size = new System.Drawing.Size(792, 574);
             this.referenceTab.TabIndex = 1;
             this.referenceTab.Text = "Data Reference";
-            this.referenceTab.UseVisualStyleBackColor = true;
             // 
             // refSplit
             // 
             this.refSplit.Dock = System.Windows.Forms.DockStyle.Fill;
             this.refSplit.Location = new System.Drawing.Point(0, 0);
             this.refSplit.Name = "refSplit";
-            // 
-            // refSplit.Panel1
-            // 
-            this.refSplit.Panel1.Controls.Add(this.refTreeView);
-            this.refSplit.Panel1.Controls.Add(this.refSearchBox);
-            // 
-            // refSplit.Panel2
-            // 
-            this.refSplit.Panel2.Controls.Add(this.refDetailBox);
             this.refSplit.Size = new System.Drawing.Size(792, 574);
-            this.refSplit.SplitterDistance = 260;
-            this.refSplit.SplitterWidth = 6;
             this.refSplit.TabIndex = 0;
+            // 
+            // refSplitTreePanel
+            // 
+            this.refSplitTreePanel.Controls.Add(this.refTreeView);
+            this.refSplitTreePanel.Controls.Add(this.refSearchBox);
+            this.refSplitTreePanel.SizeInfo.SizeMode = Telerik.WinControls.UI.Docking.SplitPanelSizeMode.Absolute;
+            this.refSplitTreePanel.SizeInfo.AbsoluteSize = new System.Drawing.Size(260, 574);
+            this.refSplitTreePanel.Name = "refSplitTreePanel";
+            this.refSplitTreePanel.TabIndex = 0;
+            // 
+            // refSplitDetailPanel
+            // 
+            this.refSplitDetailPanel.Controls.Add(this.refDetailBox);
+            this.refSplitDetailPanel.Name = "refSplitDetailPanel";
+            this.refSplitDetailPanel.TabIndex = 1;
+            // 
+            // refSplit.SplitPanels
+            // 
+            this.refSplit.SplitPanels.AddRange(new Telerik.WinControls.UI.SplitPanel[] { this.refSplitTreePanel, this.refSplitDetailPanel });
             // 
             // refSearchBox
             // 
@@ -375,7 +374,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.packagesTab.Size = new System.Drawing.Size(792, 574);
             this.packagesTab.TabIndex = 2;
             this.packagesTab.Text = "Package Manager";
-            this.packagesTab.UseVisualStyleBackColor = true;
             // 
             // pkgRightPanel
             // 
@@ -438,7 +436,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.refreshBtn.Size = new System.Drawing.Size(330, 30);
             this.refreshBtn.TabIndex = 1;
             this.refreshBtn.Text = "Refresh Installed Packages";
-            this.refreshBtn.UseVisualStyleBackColor = true;
             this.refreshBtn.Click += new System.EventHandler(this.OnRefreshPackages);
             // 
             // installGroup
@@ -456,7 +453,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.installGroup.Padding = new System.Windows.Forms.Padding(10);
             this.installGroup.Size = new System.Drawing.Size(330, 160);
             this.installGroup.TabIndex = 0;
-            this.installGroup.TabStop = false;
             this.installGroup.Text = "Install / Uninstall Packages";
             // 
             // quickInstallBtn
@@ -466,25 +462,23 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.quickInstallBtn.Size = new System.Drawing.Size(90, 23);
             this.quickInstallBtn.TabIndex = 6;
             this.quickInstallBtn.Text = "Install";
-            this.quickInstallBtn.UseVisualStyleBackColor = true;
             this.quickInstallBtn.Click += new System.EventHandler(this.OnQuickInstall);
             // 
             // quickCombo
             // 
-            this.quickCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.quickCombo.Items.AddRange(new object[] {
-            "scipy",
-            "scikit-learn",
-            "seaborn",
-            "statsmodels",
-            "plotly",
-            "bokeh",
-            "pillow",
-            "openpyxl",
-            "requests",
-            "beautifulsoup4",
-            "sympy",
-            "networkx"});
+            this.quickCombo.DropDownStyle = Telerik.WinControls.UI.RadDropDownStyle.DropDownList;
+            this.quickCombo.Items.Add("scipy");
+            this.quickCombo.Items.Add("scikit-learn");
+            this.quickCombo.Items.Add("seaborn");
+            this.quickCombo.Items.Add("statsmodels");
+            this.quickCombo.Items.Add("plotly");
+            this.quickCombo.Items.Add("bokeh");
+            this.quickCombo.Items.Add("pillow");
+            this.quickCombo.Items.Add("openpyxl");
+            this.quickCombo.Items.Add("requests");
+            this.quickCombo.Items.Add("beautifulsoup4");
+            this.quickCombo.Items.Add("sympy");
+            this.quickCombo.Items.Add("networkx");
             this.quickCombo.Location = new System.Drawing.Point(15, 100);
             this.quickCombo.Name = "quickCombo";
             this.quickCombo.Size = new System.Drawing.Size(200, 21);
@@ -506,7 +500,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.uninstallBtn.Size = new System.Drawing.Size(90, 23);
             this.uninstallBtn.TabIndex = 3;
             this.uninstallBtn.Text = "Uninstall";
-            this.uninstallBtn.UseVisualStyleBackColor = true;
             this.uninstallBtn.Click += new System.EventHandler(this.OnUninstallPackage);
             // 
             // installBtn
@@ -516,7 +509,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.installBtn.Size = new System.Drawing.Size(90, 23);
             this.installBtn.TabIndex = 2;
             this.installBtn.Text = "Install";
-            this.installBtn.UseVisualStyleBackColor = true;
             this.installBtn.Click += new System.EventHandler(this.OnInstallPackage);
             // 
             // packageNameBox
@@ -542,25 +534,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.Controls.Add(this.mainTabs);
             this.Name = "DataScienceControl";
             this.Size = new System.Drawing.Size(800, 600);
-            this.mainTabs.ResumeLayout(false);
-            this.editorTab.ResumeLayout(false);
-            this.mainSplit.Panel1.ResumeLayout(false);
-            this.mainSplit.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.mainSplit)).EndInit();
-            this.mainSplit.ResumeLayout(false);
             this.fileListButtonPanel.ResumeLayout(false);
             this.fileListPanel.ResumeLayout(false);
             this.editorPanel.ResumeLayout(false);
             this.editorPanel.PerformLayout();
-            this.editorMenuBar.ResumeLayout(false);
-            this.editorMenuBar.PerformLayout();
             this.outputPanel.ResumeLayout(false);
-            this.referenceTab.ResumeLayout(false);
-            this.refSplit.Panel1.ResumeLayout(false);
-            this.refSplit.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.refSplit)).EndInit();
-            this.refSplit.ResumeLayout(false);
-            this.packagesTab.ResumeLayout(false);
             this.pkgRightPanel.ResumeLayout(false);
             this.pkgLeftPanel.ResumeLayout(false);
             this.installGroup.ResumeLayout(false);
@@ -570,44 +548,48 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         #endregion
 
-        private System.Windows.Forms.TabControl mainTabs;
-        private System.Windows.Forms.TabPage editorTab;
-        private System.Windows.Forms.SplitContainer mainSplit;
-        private System.Windows.Forms.Panel editorPanel;
+        private Telerik.WinControls.UI.RadPageView mainTabs;
+        private Telerik.WinControls.UI.RadPageViewPage editorTab;
+        private Telerik.WinControls.UI.RadSplitContainer mainSplit;
+        private Telerik.WinControls.UI.SplitPanel mainSplitEditorPanel;
+        private Telerik.WinControls.UI.SplitPanel mainSplitOutputPanel;
+        private Telerik.WinControls.UI.RadPanel editorPanel;
         private RJLG.IntelliSEM.UI.Controls.PythonDataScience.SquiggleRichTextBox pythonEditor;
         private RJLG.IntelliSEM.UI.Controls.PythonDataScience.LineNumberPanel lineNumberPanel;
-        private System.Windows.Forms.MenuStrip editorMenuBar;
-        private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
-        private System.Windows.Forms.Panel outputPanel;
+        private Telerik.WinControls.UI.RadMenu editorMenuBar;
+        private Telerik.WinControls.UI.RadMenuItem insertSnippetBtn;
+        private Telerik.WinControls.UI.RadPanel outputPanel;
         private System.Windows.Forms.RichTextBox outputBox;
-        private System.Windows.Forms.Label outputLabel;
-        private System.Windows.Forms.TabPage referenceTab;
-        private System.Windows.Forms.SplitContainer refSplit;
+        private Telerik.WinControls.UI.RadLabel outputLabel;
+        private Telerik.WinControls.UI.RadPageViewPage referenceTab;
+        private Telerik.WinControls.UI.RadSplitContainer refSplit;
+        private Telerik.WinControls.UI.SplitPanel refSplitTreePanel;
+        private Telerik.WinControls.UI.SplitPanel refSplitDetailPanel;
         private System.Windows.Forms.TreeView refTreeView;
-        private System.Windows.Forms.TextBox refSearchBox;
+        private Telerik.WinControls.UI.RadTextBox refSearchBox;
         private System.Windows.Forms.RichTextBox refDetailBox;
-        private System.Windows.Forms.TabPage packagesTab;
-        private System.Windows.Forms.Panel pkgRightPanel;
+        private Telerik.WinControls.UI.RadPageViewPage packagesTab;
+        private Telerik.WinControls.UI.RadPanel pkgRightPanel;
         private System.Windows.Forms.ListBox packageListBox;
-        private System.Windows.Forms.Label pkgListLabel;
-        private System.Windows.Forms.Panel pkgLeftPanel;
-        private System.Windows.Forms.Button refreshBtn;
-        private System.Windows.Forms.GroupBox installGroup;
-        private System.Windows.Forms.Button quickInstallBtn;
-        private System.Windows.Forms.ComboBox quickCombo;
-        private System.Windows.Forms.Label quickInstallLabel;
-        private System.Windows.Forms.Button uninstallBtn;
-        private System.Windows.Forms.Button installBtn;
-        private System.Windows.Forms.TextBox packageNameBox;
-        private System.Windows.Forms.Label pkgLabel;
-        private System.Windows.Forms.TextBox pkgSearchBox;
-        private System.Windows.Forms.Panel fileListPanel;
+        private Telerik.WinControls.UI.RadLabel pkgListLabel;
+        private Telerik.WinControls.UI.RadPanel pkgLeftPanel;
+        private Telerik.WinControls.UI.RadButton refreshBtn;
+        private Telerik.WinControls.UI.RadGroupBox installGroup;
+        private Telerik.WinControls.UI.RadButton quickInstallBtn;
+        private Telerik.WinControls.UI.RadDropDownList quickCombo;
+        private Telerik.WinControls.UI.RadLabel quickInstallLabel;
+        private Telerik.WinControls.UI.RadButton uninstallBtn;
+        private Telerik.WinControls.UI.RadButton installBtn;
+        private Telerik.WinControls.UI.RadTextBox packageNameBox;
+        private Telerik.WinControls.UI.RadLabel pkgLabel;
+        private Telerik.WinControls.UI.RadTextBox pkgSearchBox;
+        private Telerik.WinControls.UI.RadPanel fileListPanel;
         private System.Windows.Forms.TreeView fileTreeView;
-        private System.Windows.Forms.Label fileListLabel;
-        private System.Windows.Forms.Panel fileListButtonPanel;
-        private System.Windows.Forms.Button fileNewBtn;
-        private System.Windows.Forms.Button fileOpenBtn;
-        private System.Windows.Forms.Button fileCloseBtn;
-        private System.Windows.Forms.Panel fileListSeparator;
+        private Telerik.WinControls.UI.RadLabel fileListLabel;
+        private Telerik.WinControls.UI.RadPanel fileListButtonPanel;
+        private Telerik.WinControls.UI.RadButton fileNewBtn;
+        private Telerik.WinControls.UI.RadButton fileOpenBtn;
+        private Telerik.WinControls.UI.RadButton fileCloseBtn;
+        private Telerik.WinControls.UI.RadPanel fileListSeparator;
     }
 }
