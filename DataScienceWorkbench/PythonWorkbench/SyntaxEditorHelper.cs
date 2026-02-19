@@ -204,7 +204,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             int lineNumber = lineInfo.LineNumber;
             int column = charIndex - lineInfo.Start;
 
-            float fontSize = editor.EditorFontSize;
+            float fontSize = editor.SyntaxEditorElement.EditorFontSize;
             float lineHeight = fontSize * 1.6f;
             float charWidth = fontSize * 0.6f;
 

@@ -112,11 +112,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public override IEnumerable<TagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
+            if (spans == null || spans.Count == 0)
+                yield break;
+
+            var snapshot = spans[0].Snapshot;
+
             foreach (var diag in diagnostics)
             {
+                if (diag.StartIndex + diag.Length > snapshot.Length)
+                    continue;
+
                 var type = diag.Severity == DiagnosticSeverity.Error ? ErrorType : WarningType;
-                var span = new Span(diag.StartIndex, diag.Length);
-                yield return new TagSpan<ClassificationTag>(span, new ClassificationTag(type));
+                var snapshotSpan = new TextSnapshotSpan(snapshot, new Span(diag.StartIndex, diag.Length));
+                yield return new TagSpan<ClassificationTag>(snapshotSpan, new ClassificationTag(type));
             }
         }
 
