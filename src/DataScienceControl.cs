@@ -1275,21 +1275,23 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             names.AddRange(registeredPythonClasses.Keys);
             names.AddRange(contextVariables.Keys);
             symbolAnalyzer.SetDynamicKnownSymbols(names);
+
+            var colMap = new Dictionary<string, List<string>>();
+            foreach (var kvp in inMemoryDataTypes)
+            {
+                var flatProps = PythonVisibleHelper.GetFlattenedProperties(kvp.Value);
+                var colNames = new List<string>();
+                foreach (var fp in flatProps)
+                    colNames.Add(fp.ColumnName);
+                colMap[kvp.Key] = colNames;
+            }
+            symbolAnalyzer.SetDatasetColumns(colMap);
+
             if (autoComplete != null)
             {
                 var allNames = new List<string>(names);
                 allNames.AddRange(inMemoryDataTypes.Keys);
                 autoComplete.SetDynamicSymbols(allNames);
-
-                var colMap = new Dictionary<string, List<string>>();
-                foreach (var kvp in inMemoryDataTypes)
-                {
-                    var flatProps = PythonVisibleHelper.GetFlattenedProperties(kvp.Value);
-                    var colNames = new List<string>();
-                    foreach (var fp in flatProps)
-                        colNames.Add(fp.ColumnName);
-                    colMap[kvp.Key] = colNames;
-                }
                 autoComplete.SetDatasetColumns(colMap);
             }
         }
@@ -3541,14 +3543,14 @@ HOW TO USE:
   2. Write Python code in the editor
   3. Press F5 or click Run to execute
   4. Access columns directly: customers.CreditLimit.mean()
-  5. Access rows by index: customers[0].Name
+  5. Access rows by index: customers[0].FullName
   6. Slice datasets: first_five = customers[0:5]
   7. Use .df for full DataFrame: customers.df.describe()
   8. Install packages via Package Manager tab
 
 EXAMPLE:
   from DotNetData import customers
-  print(customers[0].Name)
+  print(customers[0].FullName)
   print(customers.CreditLimit.mean())
 
 TIPS:
@@ -3610,7 +3612,7 @@ AUTOCOMPLETE
   - Python keywords and built-in functions
   - Dataset names after 'from DotNetData import'
   - Dataset column names (e.g. customers.CreditLimit)
-  - Row indexing (e.g. customers[0].Name, customers[0:5])
+  - Row indexing (e.g. customers[0].FullName, customers[0:5])
   - DataFrame methods (after .df.)
   - Registered class members and context variables
   Press Tab or Enter to accept, Escape to dismiss.
@@ -3687,7 +3689,7 @@ PLOT VIEWER
             return @"from DotNetData import customers, employees
 
 # Access columns directly: customers.CreditLimit.mean()
-# Access rows by index: customers[0].Name
+# Access rows by index: customers[0].FullName
 # Slice datasets: customers[0:5]
 # Use .df for full DataFrame: customers.df.describe()
 
@@ -3696,7 +3698,7 @@ print()
 
 # Quick look at customers
 print(f'Customers: {len(customers)} records')
-print(f'First customer: {customers[0].Name}')
+print(f'First customer: {customers[0].FullName}')
 print(f'Average credit limit: ${customers.CreditLimit.mean():.2f}')
 print()
 print('=== Customer Summary ===')

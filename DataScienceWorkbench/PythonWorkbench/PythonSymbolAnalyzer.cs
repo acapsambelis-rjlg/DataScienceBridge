@@ -9,16 +9,50 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public int StartIndex { get; set; }
         public int Length { get; set; }
         public string Name { get; set; }
-        public string Message { get { return "Undefined name '" + Name + "'"; } }
+        public string CustomMessage { get; set; }
+        public string Message { get { return CustomMessage ?? ("Undefined name '" + Name + "'"); } }
     }
 
     public class PythonSymbolAnalyzer
     {
         private HashSet<string> dynamicKnownSymbols = new HashSet<string>();
+        private Dictionary<string, HashSet<string>> datasetColumns = new Dictionary<string, HashSet<string>>();
+
+        private static readonly HashSet<string> DataFrameBuiltins = new HashSet<string> {
+            "df", "head", "tail", "describe", "info", "shape", "dtypes", "columns",
+            "index", "values", "iloc", "loc", "at", "iat", "T",
+            "mean", "sum", "min", "max", "std", "var", "median", "count",
+            "sort_values", "sort_index", "reset_index", "set_index",
+            "groupby", "merge", "join", "concat", "append", "drop", "dropna", "fillna",
+            "apply", "map", "applymap", "transform", "agg", "aggregate",
+            "filter", "query", "where", "mask", "clip",
+            "astype", "copy", "rename", "replace", "sample",
+            "to_csv", "to_json", "to_excel", "to_dict", "to_numpy", "to_list",
+            "plot", "hist", "corr", "cov", "unique", "nunique", "value_counts",
+            "isnull", "notnull", "isna", "notna", "any", "all", "empty", "size",
+            "iterrows", "itertuples", "items",
+            "str", "dt", "cat", "sparse",
+            "rolling", "expanding", "ewm", "resample", "pipe",
+            "assign", "eval", "melt", "pivot", "pivot_table", "stack", "unstack",
+            "nlargest", "nsmallest", "idxmin", "idxmax", "pct_change", "diff", "shift",
+            "cumsum", "cumprod", "cummin", "cummax",
+            "between", "isin", "duplicated", "drop_duplicates",
+            "add_prefix", "add_suffix", "equals", "abs", "round",
+            "to_string", "to_markdown", "to_frame",
+            "name", "dtype", "ndim", "nbytes"
+        };
 
         public void SetDynamicKnownSymbols(IEnumerable<string> symbols)
         {
             dynamicKnownSymbols = new HashSet<string>(symbols);
+        }
+
+        public void SetDatasetColumns(Dictionary<string, List<string>> columns)
+        {
+            datasetColumns.Clear();
+            if (columns == null) return;
+            foreach (var kvp in columns)
+                datasetColumns[kvp.Key] = new HashSet<string>(kvp.Value);
         }
 
         private static readonly HashSet<string> Builtins = new HashSet<string> {
@@ -112,7 +146,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             var masked = MaskStringsAndComments(code);
             var defined = CollectDefinitions(code, masked);
-            return FindUndefinedReferences(code, masked, defined);
+            var errors = FindUndefinedReferences(code, masked, defined);
+            if (datasetColumns.Count > 0)
+                errors.AddRange(FindColumnErrors(code, masked, defined));
+            return errors;
         }
 
         private string MaskStringsAndComments(string code)
@@ -390,6 +427,136 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             return errors;
+        }
+
+        private List<SymbolError> FindColumnErrors(string code, string masked, HashSet<string> defined)
+        {
+            var errors = new List<SymbolError>();
+            var reported = new HashSet<string>();
+
+            var localAliases = new Dictionary<string, string>();
+            foreach (var kvp in datasetColumns)
+                localAliases[kvp.Key] = kvp.Key;
+
+            string[] maskedLines = masked.Split('\n');
+            string[] codeLines = code.Split('\n');
+            for (int i = 0; i < maskedLines.Length; i++)
+            {
+                string cl = i < codeLines.Length ? codeLines[i] : "";
+
+                var fromImport = Regex.Match(cl, @"^\s*from\s+DotNetData\s+import\s+(.+)$");
+                if (fromImport.Success)
+                {
+                    foreach (string part in fromImport.Groups[1].Value.Split(','))
+                    {
+                        string item = part.Trim();
+                        var asMatch = Regex.Match(item, @"^(\w+)\s+as\s+(\w+)$");
+                        if (asMatch.Success)
+                        {
+                            string orig = asMatch.Groups[1].Value;
+                            string alias = asMatch.Groups[2].Value;
+                            if (datasetColumns.ContainsKey(orig))
+                                localAliases[alias] = orig;
+                        }
+                    }
+                }
+
+                var assignMatch = Regex.Match(cl, @"^\s*(\w+)\s*=\s*(\w+)\s*$");
+                if (assignMatch.Success)
+                {
+                    string target = assignMatch.Groups[1].Value;
+                    string source = assignMatch.Groups[2].Value;
+                    if (localAliases.ContainsKey(source))
+                        localAliases[target] = localAliases[source];
+                }
+            }
+
+            var attrPattern = new Regex(@"\b(\w+)\s*(?:\[[^\]]*\]\s*)?\.(\w+)\b", RegexOptions.Compiled);
+
+            foreach (Match m in attrPattern.Matches(masked))
+            {
+                if (masked[m.Index] == '\x01') continue;
+                for (int i = m.Index; i < m.Index + m.Length && i < masked.Length; i++)
+                {
+                    if (masked[i] == '\x01') goto nextMatch;
+                }
+
+                string varName = m.Groups[1].Value;
+                string attrName = m.Groups[2].Value;
+
+                if (!localAliases.ContainsKey(varName)) continue;
+
+                string datasetName = localAliases[varName];
+                if (!datasetColumns.ContainsKey(datasetName)) continue;
+
+                var columns = datasetColumns[datasetName];
+
+                if (columns.Contains(attrName)) continue;
+                if (DataFrameBuiltins.Contains(attrName)) continue;
+                if (attrName.StartsWith("_")) continue;
+
+                int attrStart = m.Groups[2].Index;
+                string key = attrName + ":" + attrStart;
+                if (reported.Contains(key)) continue;
+                reported.Add(key);
+
+                var suggestion = FindClosestColumn(attrName, columns);
+                string msg = "'" + varName + "' has no column '" + attrName + "'";
+                if (suggestion != null)
+                    msg += ". Did you mean '" + suggestion + "'?";
+
+                errors.Add(new SymbolError
+                {
+                    StartIndex = attrStart,
+                    Length = attrName.Length,
+                    Name = attrName,
+                    CustomMessage = msg
+                });
+
+                nextMatch:;
+            }
+
+            return errors;
+        }
+
+        private string FindClosestColumn(string input, HashSet<string> columns)
+        {
+            string best = null;
+            int bestDist = int.MaxValue;
+            string inputLower = input.ToLowerInvariant();
+
+            foreach (var col in columns)
+            {
+                string colLower = col.ToLowerInvariant();
+                if (colLower.Contains(inputLower) || inputLower.Contains(colLower))
+                    return col;
+            }
+
+            foreach (var col in columns)
+            {
+                int dist = LevenshteinDistance(input.ToLowerInvariant(), col.ToLowerInvariant());
+                if (dist < bestDist && dist <= Math.Max(input.Length, col.Length) / 2)
+                {
+                    bestDist = dist;
+                    best = col;
+                }
+            }
+
+            return best;
+        }
+
+        private static int LevenshteinDistance(string a, string b)
+        {
+            int[,] d = new int[a.Length + 1, b.Length + 1];
+            for (int i = 0; i <= a.Length; i++) d[i, 0] = i;
+            for (int j = 0; j <= b.Length; j++) d[0, j] = j;
+            for (int i = 1; i <= a.Length; i++)
+                for (int j = 1; j <= b.Length; j++)
+                {
+                    int cost = a[i - 1] == b[j - 1] ? 0 : 1;
+                    d[i, j] = Math.Min(Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost);
+                }
+            return d[a.Length, b.Length];
         }
     }
 }
