@@ -61,7 +61,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (spans == null || spans.Count == 0)
                 yield break;
 
-            string fullText = spans[0].Snapshot.GetText();
+            var snapshot = spans[0].Snapshot;
+            string fullText = snapshot.GetText(snapshot.Span);
             var painted = new bool[fullText.Length];
 
             foreach (var tag in EmitPatternTags(fullText, painted, TripleDoubleQuoteRegex, StringType)) yield return tag;
