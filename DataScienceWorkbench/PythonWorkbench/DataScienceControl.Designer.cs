@@ -31,8 +31,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileCloseBtn = new Telerik.WinControls.UI.RadButton();
             this.fileListSeparator = new Telerik.WinControls.UI.RadPanel();
             this.editorPanel = new Telerik.WinControls.UI.RadPanel();
-            this.pythonEditor = new RJLG.IntelliSEM.UI.Controls.PythonDataScience.SquiggleRichTextBox();
-            this.lineNumberPanel = new RJLG.IntelliSEM.UI.Controls.PythonDataScience.LineNumberPanel();
+            this.pythonEditor = new Telerik.WinControls.UI.RadSyntaxEditor();
             this.editorMenuBar = new Telerik.WinControls.UI.RadMenu();
             this.insertSnippetBtn = new Telerik.WinControls.UI.RadMenuItem();
             this.outputPanel = new Telerik.WinControls.UI.RadPanel();
@@ -211,7 +210,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // editorPanel
             // 
             this.editorPanel.Controls.Add(this.pythonEditor);
-            this.editorPanel.Controls.Add(this.lineNumberPanel);
             this.editorPanel.Controls.Add(this.editorMenuBar);
             this.editorPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.editorPanel.Location = new System.Drawing.Point(0, 0);
@@ -221,26 +219,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // pythonEditor
             // 
-            this.pythonEditor.AcceptsTab = true;
-            this.pythonEditor.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.pythonEditor.DetectUrls = false;
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pythonEditor.Font = new System.Drawing.Font("Consolas", 10F);
-            this.pythonEditor.HideSelection = false;
-            this.pythonEditor.Location = new System.Drawing.Point(60, 24);
+            this.pythonEditor.Location = new System.Drawing.Point(0, 24);
             this.pythonEditor.Name = "pythonEditor";
-            this.pythonEditor.Size = new System.Drawing.Size(732, 355);
+            this.pythonEditor.Size = new System.Drawing.Size(792, 355);
             this.pythonEditor.TabIndex = 0;
-            this.pythonEditor.Text = "";
-            this.pythonEditor.WordWrap = false;
-            // 
-            // lineNumberPanel
-            // 
-            this.lineNumberPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.lineNumberPanel.Location = new System.Drawing.Point(0, 24);
-            this.lineNumberPanel.Name = "lineNumberPanel";
-            this.lineNumberPanel.Size = new System.Drawing.Size(60, 355);
-            this.lineNumberPanel.TabIndex = 1;
+            this.pythonEditor.IsLineNumberMarginVisible = true;
             // 
             // editorMenuBar
             // 
@@ -554,8 +538,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.SplitPanel mainSplitEditorPanel;
         private Telerik.WinControls.UI.SplitPanel mainSplitOutputPanel;
         private Telerik.WinControls.UI.RadPanel editorPanel;
-        private RJLG.IntelliSEM.UI.Controls.PythonDataScience.SquiggleRichTextBox pythonEditor;
-        private RJLG.IntelliSEM.UI.Controls.PythonDataScience.LineNumberPanel lineNumberPanel;
+        private Telerik.WinControls.UI.RadSyntaxEditor pythonEditor;
         private Telerik.WinControls.UI.RadMenu editorMenuBar;
         private Telerik.WinControls.UI.RadMenuItem insertSnippetBtn;
         private Telerik.WinControls.UI.RadPanel outputPanel;
