@@ -9,7 +9,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
     {
         public static string GetText(this RadSyntaxEditor editor)
         {
-            return editor.Document.CurrentSnapshot.GetText();
+            var snapshot = editor.Document.CurrentSnapshot;
+            return snapshot.GetText(snapshot.Span);
         }
 
         public static void SetText(this RadSyntaxEditor editor, string text)
@@ -19,7 +20,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public static int GetCaretIndex(this RadSyntaxEditor editor)
         {
-            return editor.SyntaxEditorElement.CaretPosition.Index;
+            var caret = editor.SyntaxEditorElement.CaretPosition;
+            var snapshot = editor.Document.CurrentSnapshot;
+            int lineNumber = caret.LineNumber;
+            if (lineNumber < 0 || lineNumber >= snapshot.LineCount) return 0;
+            var lineInfo = snapshot.GetLineFromLineNumber(lineNumber);
+            return lineInfo.Start + caret.Index;
         }
 
         public static void SetCaretIndex(this RadSyntaxEditor editor, int index)
@@ -39,7 +45,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             var sel = editor.SyntaxEditorElement.Selection;
             if (sel.IsEmpty) return 0;
-            return sel.GetSelectionSpan().Length;
+            var spans = sel.GetSelectedSpans();
+            if (spans == null || spans.Count == 0) return 0;
+            int total = 0;
+            foreach (var s in spans)
+                total += s.Length;
+            return total;
         }
 
         public static string GetSelectedText(this RadSyntaxEditor editor)
@@ -54,15 +65,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var sel = editor.SyntaxEditorElement.Selection;
             if (!sel.IsEmpty)
             {
-                var span = sel.GetSelectionSpan();
-                editor.Document.Remove(span);
-                editor.Document.Insert(span.Start, text);
+                editor.Commands.DeleteCommand.Execute(null);
             }
-            else
-            {
-                int pos = editor.SyntaxEditorElement.CaretPosition.Index;
-                editor.Document.Insert(pos, text);
-            }
+            int pos = GetCaretIndex(editor);
+            editor.Document.Insert(pos, text);
         }
 
         public static void ReplaceSelection(this RadSyntaxEditor editor, string text)
@@ -136,22 +142,22 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public static void ScrollToCaretPosition(this RadSyntaxEditor editor)
         {
-            editor.SyntaxEditorElement.InvalidateUI();
+            editor.MoveCurrentLineToTop();
         }
 
         public static void PerformCut(this RadSyntaxEditor editor)
         {
-            editor.Commands.CutCommand.Execute();
+            editor.Commands.CutCommand.Execute(null);
         }
 
         public static void PerformCopy(this RadSyntaxEditor editor)
         {
-            editor.Commands.CopyCommand.Execute();
+            editor.Copy();
         }
 
         public static void PerformPaste(this RadSyntaxEditor editor)
         {
-            editor.Commands.PasteCommand.Execute();
+            editor.Commands.PasteCommand.Execute(null);
         }
 
         public static void PerformSelectAll(this RadSyntaxEditor editor)
@@ -161,12 +167,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public static void PerformUndo(this RadSyntaxEditor editor)
         {
-            editor.Commands.UndoCommand.Execute();
+            editor.Commands.UndoCommand.Execute(null);
         }
 
         public static void PerformRedo(this RadSyntaxEditor editor)
         {
-            editor.Commands.RedoCommand.Execute();
+            editor.Commands.RedoCommand.Execute(null);
         }
 
         public static void DeleteSelection(this RadSyntaxEditor editor)
@@ -174,8 +180,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var sel = editor.SyntaxEditorElement.Selection;
             if (!sel.IsEmpty)
             {
-                var span = sel.GetSelectionSpan();
-                editor.Document.Remove(span);
+                editor.Commands.DeleteCommand.Execute(null);
             }
         }
 
@@ -199,11 +204,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             int lineNumber = lineInfo.LineNumber;
             int column = charIndex - lineInfo.Start;
 
-            float fontSize = editor.Font.Size;
+            float fontSize = editor.EditorFontSize;
             float lineHeight = fontSize * 1.6f;
             float charWidth = fontSize * 0.6f;
 
-            int lineMarginWidth = editor.IsLineNumberMarginVisible ? 55 : 0;
+            int lineMarginWidth = editor.ShowLineNumbers ? 55 : 0;
             int x = (int)(column * charWidth) + lineMarginWidth;
             int y = (int)(lineNumber * lineHeight);
 

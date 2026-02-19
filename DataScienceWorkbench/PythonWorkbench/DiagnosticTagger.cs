@@ -19,14 +19,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             diagnostics.Clear();
             if (newDiagnostics != null)
                 diagnostics.AddRange(newDiagnostics);
-            this.CallOnTagsChanged();
+            NotifyTagsChanged();
         }
 
         public void ClearDiagnostics()
         {
             if (diagnostics.Count == 0) return;
             diagnostics.Clear();
-            this.CallOnTagsChanged();
+            NotifyTagsChanged();
         }
 
         public void SetErrorLine(int lineNumber, string message, ITextDocument document)
@@ -53,7 +53,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                 }
             }
-            this.CallOnTagsChanged();
+            NotifyTagsChanged();
         }
 
         public void ClearErrorLine()
@@ -68,7 +68,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
             if (hadErrors)
-                this.CallOnTagsChanged();
+                NotifyTagsChanged();
         }
 
         public void SetSymbolErrors(List<SymbolError> symbolErrors)
@@ -92,7 +92,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     });
                 }
             }
-            this.CallOnTagsChanged();
+            NotifyTagsChanged();
         }
 
         public void ClearSymbolErrors()
@@ -107,7 +107,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
             if (hadWarnings)
-                this.CallOnTagsChanged();
+                NotifyTagsChanged();
         }
 
         public override IEnumerable<TagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
@@ -125,9 +125,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             get { return new List<DiagnosticSpan>(diagnostics); }
         }
 
-        private void CallOnTagsChanged()
+        private void NotifyTagsChanged()
         {
-            this.InvalidateTags();
+            if (this.Document != null && this.Document.CurrentSnapshot != null)
+                this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
         }
     }
 
