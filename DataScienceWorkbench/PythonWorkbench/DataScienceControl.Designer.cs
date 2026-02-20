@@ -228,8 +228,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // editorMenuBar
             // 
-            this.editorMenuBar.Items.AddRange(new Telerik.WinControls.UI.RadItem[] {
-            this.insertSnippetBtn});
+            this.editorMenuBar.Items.AddRange(new[] { this.insertSnippetBtn });
             this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
             this.editorMenuBar.Location = new System.Drawing.Point(0, 0);
             this.editorMenuBar.Name = "editorMenuBar";
