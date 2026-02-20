@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Telerik.WinForms.Controls.SyntaxEditor.UI;
-using Telerik.WinForms.SyntaxEditor.Core.Tagging;
-using Telerik.WinForms.SyntaxEditor.Core.Text;
+using Telerik.WinForms.Documents.Model.Code;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {

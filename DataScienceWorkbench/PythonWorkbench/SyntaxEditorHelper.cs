@@ -2,8 +2,6 @@ using System;
 using System.Drawing;
 using System.IO;
 using Telerik.WinControls.UI;
-using Telerik.WinForms.Controls.SyntaxEditor.UI;
-using Telerik.WinForms.SyntaxEditor.Core.Text;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
