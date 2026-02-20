@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Telerik.WinForms.Documents.Model.Code;
+using Telerik.WinForms.SyntaxEditor.Core.Editor;
+using Telerik.WinForms.SyntaxEditor.Core.Tagging;
+using Telerik.WinForms.SyntaxEditor.Core.Text;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
@@ -210,7 +212,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private TagSpan<ClassificationTag> MakeTag(TextSnapshot snapshot, int start, int length, ClassificationType type)
         {
-            var span = new Span(start, length);
+            var span = new TextSnapshotSpan(start, length);
             return new TagSpan<ClassificationTag>(span, new ClassificationTag(type));
         }
 
