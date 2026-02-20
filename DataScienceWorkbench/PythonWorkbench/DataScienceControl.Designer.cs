@@ -224,7 +224,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.pythonEditor.Name = "pythonEditor";
             this.pythonEditor.Size = new System.Drawing.Size(792, 355);
             this.pythonEditor.TabIndex = 0;
-            this.pythonEditor.IsLineNumberMarginVisible = true;
+            this.pythonEditor.ShowLineNumbers = true;
             // 
             // editorMenuBar
             // 

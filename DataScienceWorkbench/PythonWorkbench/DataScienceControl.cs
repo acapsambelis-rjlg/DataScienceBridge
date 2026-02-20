@@ -7,6 +7,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Telerik.WinControls;
 using Telerik.WinControls.UI;
+using Telerik.WinForms.Controls.SyntaxEditor.UI;
 using Telerik.WinForms.SyntaxEditor.Core.Text;
 using RJLG.IntelliSEM.Data.PythonDataScience;
 
@@ -107,7 +108,24 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var monoFont9 = ResolveMonoFont(9f);
             var uiFontBold = ResolveUIFont(9f, FontStyle.Bold);
 
-            pythonEditor.Font = monoFont10;
+            pythonEditor.SyntaxEditorElement.EditorFontSize = 10f;
+            try
+            {
+                var monoFamilies = new[] { "Consolas", "DejaVu Sans Mono", "Courier New" };
+                foreach (var name in monoFamilies)
+                {
+                    using (var testFont = new Font(name, 10f))
+                    {
+                        if (testFont.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            pythonEditor.SyntaxEditorElement.EditorFontFamily =
+                                new Telerik.WinForms.Controls.SyntaxEditor.UI.FontFamily(name);
+                            break;
+                        }
+                    }
+                }
+            }
+            catch { }
             outputBox.Font = monoFont9;
             packageListBox.Font = monoFont9;
 
@@ -156,7 +174,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SetupSyntaxHighlighting()
         {
-            pythonEditor.IsLineNumberMarginVisible = true;
+            pythonEditor.ShowLineNumbers = true;
 
             pythonTagger = new PythonTagger(pythonEditor.SyntaxEditorElement);
             diagnosticTagger = new DiagnosticTagger(pythonEditor.SyntaxEditorElement);
@@ -206,7 +224,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             };
 
-            pythonEditor.SyntaxEditorElement.CaretPositionChanged += (s, e) =>
+            pythonEditor.SelectionChanged += (s, e) =>
             {
                 if (!suppressHighlight)
                 {
@@ -355,55 +373,49 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             var defs = pythonEditor.TextFormatDefinitions;
 
-            var kwDef = new TextFormatDefinition();
-            kwDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(0, 0, 200));
-            defs.AddLast(PythonTagger.KeywordType, kwDef);
+            defs.AddLast(PythonTagger.KeywordType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 0, 200))));
 
-            var builtinDef = new TextFormatDefinition();
-            builtinDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(0, 128, 128));
-            defs.AddLast(PythonTagger.BuiltinType, builtinDef);
+            defs.AddLast(PythonTagger.BuiltinType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 128, 128))));
 
-            var stringDef = new TextFormatDefinition();
-            stringDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(163, 21, 21));
-            defs.AddLast(PythonTagger.StringType, stringDef);
+            defs.AddLast(PythonTagger.StringType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(163, 21, 21))));
 
-            var commentDef = new TextFormatDefinition();
-            commentDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(0, 128, 0));
-            defs.AddLast(PythonTagger.CommentType, commentDef);
+            defs.AddLast(PythonTagger.CommentType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 128, 0))));
 
-            var numberDef = new TextFormatDefinition();
-            numberDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(9, 136, 90));
-            defs.AddLast(PythonTagger.NumberType, numberDef);
+            defs.AddLast(PythonTagger.NumberType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(9, 136, 90))));
 
-            var decoratorDef = new TextFormatDefinition();
-            decoratorDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(128, 0, 128));
-            defs.AddLast(PythonTagger.DecoratorType, decoratorDef);
+            defs.AddLast(PythonTagger.DecoratorType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(128, 0, 128))));
 
-            var selfDef = new TextFormatDefinition();
-            selfDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(148, 85, 141));
-            defs.AddLast(PythonTagger.SelfType, selfDef);
+            defs.AddLast(PythonTagger.SelfType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(148, 85, 141))));
 
-            var funcDefDef = new TextFormatDefinition();
-            funcDefDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(0, 100, 180));
-            defs.AddLast(PythonTagger.FunctionDefType, funcDefDef);
+            defs.AddLast(PythonTagger.FunctionDefType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 100, 180))));
 
-            var classDefDef = new TextFormatDefinition();
-            classDefDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(43, 145, 175));
-            defs.AddLast(PythonTagger.ClassDefType, classDefDef);
+            defs.AddLast(PythonTagger.ClassDefType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(43, 145, 175))));
 
-            var fstringDef = new TextFormatDefinition();
-            fstringDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(200, 140, 0));
-            defs.AddLast(PythonTagger.FStringBraceType, fstringDef);
+            defs.AddLast(PythonTagger.FStringBraceType,
+                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(200, 140, 0))));
 
-            var errorDef = new TextFormatDefinition();
-            errorDef.Underline = true;
-            errorDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(255, 0, 0));
-            defs.AddLast(DiagnosticTagger.ErrorType, errorDef);
+            defs.AddLast(DiagnosticTagger.ErrorType,
+                new TextFormatDefinition(
+                    new System.Drawing.SolidBrush(Color.FromArgb(255, 0, 0)),
+                    null,
+                    new UnderlineInfo(new System.Drawing.SolidBrush(Color.FromArgb(255, 0, 0)), UnderlineDecorations.Line),
+                    null));
 
-            var warningDef = new TextFormatDefinition();
-            warningDef.Underline = true;
-            warningDef.Foreground = new Telerik.WinForms.Documents.Model.SolidFill(Color.FromArgb(0, 100, 200));
-            defs.AddLast(DiagnosticTagger.WarningType, warningDef);
+            defs.AddLast(DiagnosticTagger.WarningType,
+                new TextFormatDefinition(
+                    new System.Drawing.SolidBrush(Color.FromArgb(0, 100, 200)),
+                    null,
+                    new UnderlineInfo(new System.Drawing.SolidBrush(Color.FromArgb(0, 100, 200)), UnderlineDecorations.Line),
+                    null));
         }
 
         private bool HandleBracketAutoClose(char typed)
@@ -725,8 +737,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             editorFontSize = newSize;
 
-            var newFont = ResolveMonoFont(editorFontSize);
-            pythonEditor.Font = newFont;
+            pythonEditor.SyntaxEditorElement.EditorFontSize = editorFontSize;
 
             pythonEditor.ScrollToCaretPosition();
 

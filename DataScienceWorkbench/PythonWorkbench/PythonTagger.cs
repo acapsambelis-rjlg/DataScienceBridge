@@ -63,11 +63,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (spans == null || spans.Count == 0)
                 yield break;
 
-            string fullText = spans[0].Snapshot.GetText();
+            var snapshot = spans[0].Snapshot;
+            string fullText = snapshot.GetText(snapshot.Span);
             var painted = new bool[fullText.Length];
 
-            foreach (var tag in EmitPatternTags(fullText, painted, TripleDoubleQuoteRegex, StringType)) yield return tag;
-            foreach (var tag in EmitPatternTags(fullText, painted, TripleSingleQuoteRegex, StringType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, TripleDoubleQuoteRegex, StringType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, TripleSingleQuoteRegex, StringType)) yield return tag;
 
             var fstringMatches = new List<Match>();
             CollectFStringMatches(fullText, painted, FStringTripleDoubleRegex, fstringMatches);
@@ -77,23 +78,23 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             foreach (var m in fstringMatches)
             {
-                yield return MakeTag(spans[0].Snapshot, m.Index, m.Length, StringType);
+                yield return MakeTag(snapshot, m.Index, m.Length, StringType);
                 MarkPainted(painted, m.Index, m.Length);
             }
 
             foreach (var m in fstringMatches)
             {
-                foreach (var tag in EmitFStringExpressionTags(spans[0].Snapshot, fullText, painted, m))
+                foreach (var tag in EmitFStringExpressionTags(snapshot, fullText, painted, m))
                     yield return tag;
             }
 
-            foreach (var tag in EmitPatternTags(fullText, painted, PrefixedStringRegex, StringType)) yield return tag;
-            foreach (var tag in EmitPatternTags(fullText, painted, PrefixedSingleRegex, StringType)) yield return tag;
-            foreach (var tag in EmitPatternTags(fullText, painted, DoubleQuoteRegex, StringType)) yield return tag;
-            foreach (var tag in EmitPatternTags(fullText, painted, SingleQuoteRegex, StringType)) yield return tag;
-            foreach (var tag in EmitPatternTags(fullText, painted, CommentRegex, CommentType)) yield return tag;
-            foreach (var tag in EmitPatternTags(fullText, painted, DecoratorRegex, DecoratorType)) yield return tag;
-            foreach (var tag in EmitPatternTags(fullText, painted, NumberRegex, NumberType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, PrefixedStringRegex, StringType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, PrefixedSingleRegex, StringType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, DoubleQuoteRegex, StringType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, SingleQuoteRegex, StringType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, CommentRegex, CommentType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, DecoratorRegex, DecoratorType)) yield return tag;
+            foreach (var tag in EmitPatternTags(snapshot, fullText, painted, NumberRegex, NumberType)) yield return tag;
 
             var wordMatches = WordRegex.Matches(fullText);
             foreach (Match m in wordMatches)
@@ -111,7 +112,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     type = BuiltinType;
 
                 if (type != null)
-                    yield return MakeTag(spans[0].Snapshot, m.Index, m.Length, type);
+                    yield return MakeTag(snapshot, m.Index, m.Length, type);
 
                 if ((word == "def" || word == "class") && m.Index + m.Length < fullText.Length)
                 {
@@ -126,20 +127,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         if (onlySpaces && nameMatch.Index - (m.Index + m.Length) > 0)
                         {
                             var defType = word == "def" ? FunctionDefType : ClassDefType;
-                            yield return MakeTag(spans[0].Snapshot, nameMatch.Index, nameMatch.Length, defType);
+                            yield return MakeTag(snapshot, nameMatch.Index, nameMatch.Length, defType);
                         }
                     }
                 }
             }
         }
 
-        private IEnumerable<TagSpan<ClassificationTag>> EmitPatternTags(string text, bool[] painted, Regex pattern, ClassificationType type)
+        private IEnumerable<TagSpan<ClassificationTag>> EmitPatternTags(TextSnapshot snapshot, string text, bool[] painted, Regex pattern, ClassificationType type)
         {
             var matches = pattern.Matches(text);
             foreach (Match m in matches)
             {
                 if (IsStartPainted(painted, m.Index)) continue;
-                yield return MakeTag(null, m.Index, m.Length, type);
+                yield return MakeTag(snapshot, m.Index, m.Length, type);
                 MarkPainted(painted, m.Index, m.Length);
             }
         }
