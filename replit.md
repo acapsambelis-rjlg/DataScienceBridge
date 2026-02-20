@@ -27,9 +27,15 @@ The application uses Mono (C# / .NET Framework 4.7.2 compatible) for cross-platf
   - `SyntaxEditorElement.CaretPositionChanged` → `RadSyntaxEditor.SelectionChanged`
   - `pythonEditor.Font = ...` → `SyntaxEditorElement.EditorFontSize` + `SyntaxEditorElement.EditorFontFamily`
   - `CaretPosition.Index` fixed: now correctly calculates absolute position as `lineStart + column`
-  - `InvalidateTags()` → `CallOnTagsChanged(this.Document.CurrentSnapshot.Span)`
+  - `InvalidateTags()` → `CallOnTagsChanged(this.Document.CurrentSnapshot.Span)` (protected base method)
   - `TagSpan<T>(Span, tag)` → `TagSpan<T>(TextSnapshotSpan, tag)` with proper snapshot reference
   - `snapshot.GetText()` → `snapshot.GetText(snapshot.Span)` (explicit Span overload)
+  - `TextSnapshotLine.Start` → `TextSnapshotLine.Span.Start` (TextSnapshotLine does NOT have direct .Start property)
+  - `TextDocument.Remove(Span)` → SelectRange() + DeleteCommand.Execute(null) (TextDocument has no Remove/Delete)
+  - `Selection.GetSelectedSpans()` / `Selection.GetSelectionSpan()` → `Selection.GetSelectedText().Length` (not available in WinForms)
+  - `SyntaxEditorCommandBase.Execute()` → `.Execute(null)` (Execute(object) requires parameter)
+  - `TextSnapshotSpan(int, int)` → `TextSnapshotSpan(TextSnapshot, Span)` (requires snapshot reference)
+  - `RadSyntaxEditorElement.InvalidateUI()` → does not exist, not needed
 
 **Namespace Structure (decoupled from file paths — do not change):**
 - `RJLG.IntelliSEM.UI.Controls.PythonDataScience` — DataScienceControl, AutoCompletePopup, PythonTagger, DiagnosticTagger, SyntaxEditorHelper, PlotViewerForm, PythonBridge, PythonSymbolAnalyzer

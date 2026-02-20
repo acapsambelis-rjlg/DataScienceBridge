@@ -5,6 +5,9 @@ using Telerik.WinForms.SyntaxEditor.Core.Text;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
+    // FIX: Inherits TaggerBase<ClassificationTag> for diagnostic underline tagging.
+    //       Uses ClassificationType instances registered with TextFormatDefinitions
+    //       that include UnderlineInfo for visual error/warning indicators.
     public class DiagnosticTagger : TaggerBase<ClassificationTag>
     {
         public static readonly ClassificationType ErrorType = new ClassificationType("SyntaxError");
@@ -21,14 +24,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             diagnostics.Clear();
             if (newDiagnostics != null)
                 diagnostics.AddRange(newDiagnostics);
-            this.CallOnTagsChanged();
+            // FIX: InvalidateTags() does not exist on TaggerBase.
+            //       Use base.CallOnTagsChanged(Span) to notify the editor that tags have changed.
+            //       this.Document.CurrentSnapshot.Span returns the full document Span.
+            this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
         }
 
         public void ClearDiagnostics()
         {
             if (diagnostics.Count == 0) return;
             diagnostics.Clear();
-            this.CallOnTagsChanged();
+            // FIX: Use base.CallOnTagsChanged(Span) instead of InvalidateTags()
+            this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
         }
 
         public void SetErrorLine(int lineNumber, string message, TextDocument document)
@@ -47,7 +54,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     {
                         diagnostics.Add(new DiagnosticSpan
                         {
-                            StartIndex = line.Start,
+                            // FIX: TextSnapshotLine does NOT have a .Start property.
+                            //       Use .Span.Start to get the absolute character offset of the line.
+                            //       If .Span.Start also fails, try .StartPosition as an alternative.
+                            StartIndex = line.Span.Start,
                             Length = lineText.Length,
                             Message = message ?? "Syntax error on line " + lineNumber,
                             Severity = DiagnosticSeverity.Error
@@ -55,7 +65,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                 }
             }
-            this.CallOnTagsChanged();
+            // FIX: Use base.CallOnTagsChanged(Span) instead of InvalidateTags()
+            this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
         }
 
         public void ClearErrorLine()
@@ -70,7 +81,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
             if (hadErrors)
-                this.CallOnTagsChanged();
+                // FIX: Use base.CallOnTagsChanged(Span) instead of InvalidateTags()
+                this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
         }
 
         public void SetSymbolErrors(List<SymbolError> symbolErrors)
@@ -94,7 +106,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     });
                 }
             }
-            this.CallOnTagsChanged();
+            // FIX: Use base.CallOnTagsChanged(Span) instead of InvalidateTags()
+            this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
         }
 
         public void ClearSymbolErrors()
@@ -109,27 +122,33 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
             if (hadWarnings)
-                this.CallOnTagsChanged();
+                // FIX: Use base.CallOnTagsChanged(Span) instead of InvalidateTags()
+                this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
         }
 
+        // FIX: GetTags must yield TagSpan<ClassificationTag> with TextSnapshotSpan, not raw Span.
+        //       TagSpan<T> constructor requires TextSnapshotSpan(TextSnapshot, Span).
         public override IEnumerable<TagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
+            if (spans == null || spans.Count == 0)
+                yield break;
+
+            // FIX: Need the snapshot to create TextSnapshotSpan for each TagSpan
+            var snapshot = spans[0].Snapshot;
+
             foreach (var diag in diagnostics)
             {
                 var type = diag.Severity == DiagnosticSeverity.Error ? ErrorType : WarningType;
-                var span = new Span(diag.StartIndex, diag.Length);
-                yield return new TagSpan<ClassificationTag>(span, new ClassificationTag(type));
+                // FIX: TagSpan<T> requires TextSnapshotSpan, not raw Span.
+                //       Wrap Span in TextSnapshotSpan with snapshot reference.
+                var snapshotSpan = new TextSnapshotSpan(snapshot, new Span(diag.StartIndex, diag.Length));
+                yield return new TagSpan<ClassificationTag>(snapshotSpan, new ClassificationTag(type));
             }
         }
 
         public List<DiagnosticSpan> CurrentDiagnostics
         {
             get { return new List<DiagnosticSpan>(diagnostics); }
-        }
-
-        private void CallOnTagsChanged()
-        {
-            this.InvalidateTags();
         }
     }
 

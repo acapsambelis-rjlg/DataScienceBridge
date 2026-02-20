@@ -6,6 +6,8 @@ using Telerik.WinForms.SyntaxEditor.Core.Text;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
+    // FIX: Inherits TaggerBase<ClassificationTag> from Telerik.WinForms.SyntaxEditor.Core.Tagging
+    //       Constructor takes ITextDocumentEditor from Telerik.WinForms.SyntaxEditor.Core.Editor
     public class PythonTagger : TaggerBase<ClassificationTag>
     {
         public static readonly ClassificationType KeywordType = new ClassificationType("PythonKeyword");
@@ -58,12 +60,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
         }
 
+        // FIX: GetTags receives NormalizedSnapshotSpanCollection from the framework.
+        //       We extract the full document text from the first span's snapshot,
+        //       then yield TagSpan<ClassificationTag> for each token found.
         public override IEnumerable<TagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
             if (spans == null || spans.Count == 0)
                 yield break;
 
+            // FIX: spans[0].Snapshot gives us the TextSnapshot for creating TextSnapshotSpan objects
             var snapshot = spans[0].Snapshot;
+            // FIX: snapshot.GetText(snapshot.Span) — must use explicit Span overload
             string fullText = snapshot.GetText(snapshot.Span);
             var painted = new bool[fullText.Length];
 
@@ -211,10 +218,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
+        // FIX: TagSpan<T> requires TextSnapshotSpan, not raw Span.
+        //       TextSnapshotSpan constructor: new TextSnapshotSpan(TextSnapshot, Span)
+        //       The snapshot parameter ties the span to a specific document version.
         private TagSpan<ClassificationTag> MakeTag(TextSnapshot snapshot, int start, int length, ClassificationType type)
         {
-            var span = new TextSnapshotSpan(start, length);
-            return new TagSpan<ClassificationTag>(span, new ClassificationTag(type));
+            // FIX: Must wrap Span in TextSnapshotSpan with snapshot reference
+            var snapshotSpan = new TextSnapshotSpan(snapshot, new Span(start, length));
+            return new TagSpan<ClassificationTag>(snapshotSpan, new ClassificationTag(type));
         }
 
         private void CollectFStringMatches(string text, bool[] painted, Regex pattern, List<Match> results)
