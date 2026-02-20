@@ -1,5 +1,7 @@
 using System.Collections.Generic;
-using Telerik.WinForms.Documents.Model.Code;
+using Telerik.WinForms.SyntaxEditor.Core.Editor;
+using Telerik.WinForms.SyntaxEditor.Core.Tagging;
+using Telerik.WinForms.SyntaxEditor.Core.Text;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
@@ -19,14 +21,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             diagnostics.Clear();
             if (newDiagnostics != null)
                 diagnostics.AddRange(newDiagnostics);
-            NotifyTagsChanged();
+            this.CallOnTagsChanged();
         }
 
         public void ClearDiagnostics()
         {
             if (diagnostics.Count == 0) return;
             diagnostics.Clear();
-            NotifyTagsChanged();
+            this.CallOnTagsChanged();
         }
 
         public void SetErrorLine(int lineNumber, string message, ITextDocument document)
@@ -53,7 +55,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                 }
             }
-            NotifyTagsChanged();
+            this.CallOnTagsChanged();
         }
 
         public void ClearErrorLine()
@@ -68,7 +70,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
             if (hadErrors)
-                NotifyTagsChanged();
+                this.CallOnTagsChanged();
         }
 
         public void SetSymbolErrors(List<SymbolError> symbolErrors)
@@ -92,7 +94,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     });
                 }
             }
-            NotifyTagsChanged();
+            this.CallOnTagsChanged();
         }
 
         public void ClearSymbolErrors()
@@ -107,24 +109,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
             if (hadWarnings)
-                NotifyTagsChanged();
+                this.CallOnTagsChanged();
         }
 
         public override IEnumerable<TagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
         {
-            if (spans == null || spans.Count == 0)
-                yield break;
-
-            var snapshot = spans[0].Snapshot;
-
             foreach (var diag in diagnostics)
             {
-                if (diag.StartIndex + diag.Length > snapshot.Length)
-                    continue;
-
                 var type = diag.Severity == DiagnosticSeverity.Error ? ErrorType : WarningType;
-                var snapshotSpan = new TextSnapshotSpan(snapshot, new Span(diag.StartIndex, diag.Length));
-                yield return new TagSpan<ClassificationTag>(snapshotSpan, new ClassificationTag(type));
+                var span = new Span(diag.StartIndex, diag.Length);
+                yield return new TagSpan<ClassificationTag>(span, new ClassificationTag(type));
             }
         }
 
@@ -133,10 +127,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             get { return new List<DiagnosticSpan>(diagnostics); }
         }
 
-        private void NotifyTagsChanged()
+        private void CallOnTagsChanged()
         {
-            if (this.Document != null && this.Document.CurrentSnapshot != null)
-                this.CallOnTagsChanged(this.Document.CurrentSnapshot.Span);
+            this.InvalidateTags();
         }
     }
 
