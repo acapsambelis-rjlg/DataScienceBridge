@@ -450,7 +450,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // quickCombo
             // 
-            this.quickCombo.DropDownStyle = Telerik.WinControls.UI.RadDropDownStyle.DropDownList;
+            this.quickCombo.DropDownStyle = Telerik.WinControls.RadDropDownStyle.DropDownList;
             this.quickCombo.Items.Add("scipy");
             this.quickCombo.Items.Add("scikit-learn");
             this.quickCombo.Items.Add("seaborn");
