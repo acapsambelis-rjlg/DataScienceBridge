@@ -31,7 +31,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.CallOnTagsChanged();
         }
 
-        public void SetErrorLine(int lineNumber, string message, ITextDocument document)
+        public void SetErrorLine(int lineNumber, string message, TextDocument document)
         {
             diagnostics.Clear();
 
