@@ -1358,14 +1358,38 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             set { pythonEditor.Text = value; ResetUndoStack(); }
         }
 
-        public string OutputText
-        {
-            get { return outputBox.Text; }
-        }
-
         public void ClearOutput()
         {
+            if (outputBox.InvokeRequired)
+            {
+                outputBox.Invoke(new Action(ClearOutput));
+                return;
+            }
             outputBox.Clear();
+        }
+
+        private void OnClearOutput(object sender, EventArgs e)
+        {
+            if (outputBox.InvokeRequired)
+            {
+                outputBox.Invoke(new Action(() => OnClearOutput(sender, e)));
+                return;
+            }
+            outputBox.Clear();
+        }
+
+        public string OutputText
+        {
+            get
+            {
+                if (outputBox.InvokeRequired)
+                {
+                    string result = null;
+                    outputBox.Invoke(new Action(() => result = outputBox.Text));
+                    return result;
+                }
+                return outputBox.Text;
+            }
         }
 
         private void SetupEditorMenuBar()
@@ -1612,14 +1636,37 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SetupSnippetMenu()
         {
-            insertSnippetBtn.DropDownItems.Add("List Datasets", null, (s, e) => InsertSnippet(GetLoadDataSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Basic Statistics", null, (s, e) => InsertSnippet(GetStatsSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Plot Histogram", null, (s, e) => InsertSnippet(GetHistogramSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Scatter Plot", null, (s, e) => InsertSnippet(GetScatterSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Group By Analysis", null, (s, e) => InsertSnippet(GetGroupBySnippet()));
-            insertSnippetBtn.DropDownItems.Add("Correlation Matrix", null, (s, e) => InsertSnippet(GetCorrelationSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Time Series Plot", null, (s, e) => InsertSnippet(GetTimeSeriesSnippet()));
-            insertSnippetBtn.DropDownItems.Add("Display Images", null, (s, e) => InsertSnippet(GetImageDisplaySnippet()));
+            var item = new RadMenuItem("List Datasets");
+            item.Click += (s, e) => InsertSnippet(GetLoadDataSnippet());
+            insertSnippetBtn.Items.Add(item);
+
+            item = new RadMenuItem("Basic Statistics");
+            item.Click += (s, e) => InsertSnippet(GetStatsSnippet());
+            insertSnippetBtn.Items.Add(item);
+
+            item = new RadMenuItem("Plot Histogram");
+            item.Click += (s, e) => InsertSnippet(GetHistogramSnippet());
+            insertSnippetBtn.Items.Add(item);
+
+            item = new RadMenuItem("Scatter Plot");
+            item.Click += (s, e) => InsertSnippet(GetScatterSnippet());
+            insertSnippetBtn.Items.Add(item);
+
+            item = new RadMenuItem("Group By Analysis");
+            item.Click += (s, e) => InsertSnippet(GetGroupBySnippet());
+            insertSnippetBtn.Items.Add(item);
+
+            item = new RadMenuItem("Correlation Matrix");
+            item.Click += (s, e) => InsertSnippet(GetCorrelationSnippet());
+            insertSnippetBtn.Items.Add(item);
+
+            item = new RadMenuItem("Time Series Plot");
+            item.Click += (s, e) => InsertSnippet(GetTimeSeriesSnippet());
+            insertSnippetBtn.Items.Add(item);
+
+            item = new RadMenuItem("Display Images");
+            item.Click += (s, e) => InsertSnippet(GetImageDisplaySnippet());
+            insertSnippetBtn.Items.Add(item);
         }
 
         private void RegisterAllDatasetsInMemory()
@@ -2452,11 +2499,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.FromArgb(0, 100, 180));
             RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
-        }
-
-        private void OnClearOutput(object sender, EventArgs e)
-        {
-            outputBox.Clear();
         }
 
         private void OnCheckSyntax(object sender, EventArgs e)
@@ -3707,6 +3749,11 @@ PLOT VIEWER
 
         public void AppendOutput(string text, Color color)
         {
+            if (outputBox.InvokeRequired)
+            {
+                outputBox.Invoke(new Action(() => AppendOutput(text, color)));
+                return;
+            }
             outputBox.SelectionStart = outputBox.TextLength;
             outputBox.SelectionLength = 0;
             outputBox.SelectionColor = color;

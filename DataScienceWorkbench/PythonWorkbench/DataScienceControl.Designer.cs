@@ -1,3 +1,5 @@
+using Telerik.WinControls;
+
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     partial class DataScienceControl
@@ -244,7 +246,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // editorMenuBar
             // 
-            this.editorMenuBar.Items.AddRange(new Telerik.WinControls.UI.RadItem[] {
+            this.editorMenuBar.Items.AddRange(new Telerik.WinControls.UI.RadMenuItem[] {
             this.insertSnippetBtn});
             this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
             this.editorMenuBar.Location = new System.Drawing.Point(0, 0);
@@ -466,7 +468,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // quickCombo
             // 
-            this.quickCombo.DropDownStyle = Telerik.WinControls.UI.RadDropDownStyle.DropDownList;
+            this.quickCombo.DropDownStyle = RadDropDownStyle.DropDownList;
             this.quickCombo.Items.Add("scipy");
             this.quickCombo.Items.Add("scikit-learn");
             this.quickCombo.Items.Add("seaborn");

@@ -18,7 +18,11 @@ namespace DataScienceWorkbench
             dataScienceControl.StatusChanged += (s, msg) => SetStatus(msg);
 
             var menuBar = dataScienceControl.CreateMenuStrip();
-            this.MainMenuStrip = menuBar;
+            if (menuBar is Telerik.WinControls.UI.RadMenu radMenu)
+            {
+                radMenu.Dock = DockStyle.Top;
+                this.Controls.Add(radMenu);
+            }
 
             this.KeyDown += (s, e) =>
             {
