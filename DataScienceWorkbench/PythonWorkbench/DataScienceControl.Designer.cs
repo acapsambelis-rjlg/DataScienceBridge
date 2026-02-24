@@ -1,3 +1,5 @@
+using Telerik.WinControls;
+
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     partial class DataScienceControl
@@ -449,7 +451,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             // quickCombo
             // 
-            this.quickCombo.DropDownStyle = Telerik.WinControls.RadDropDownStyle.DropDownList;
+            this.quickCombo.DropDownStyle = RadDropDownStyle.DropDownList;
             this.quickCombo.Items.Add("scipy");
             this.quickCombo.Items.Add("scikit-learn");
             this.quickCombo.Items.Add("seaborn");
