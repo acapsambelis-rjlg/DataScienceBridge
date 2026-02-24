@@ -38,12 +38,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private const float DefaultFontSize = 10f;
         private HashSet<int> bookmarks = new HashSet<int>();
 
-        private class UndoEntry
-        {
-            public string Text;
-            public int CursorPos;
-        }
-
         private class FileTab
         {
             public string FilePath;
@@ -51,8 +45,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             public string Content;
             public int CursorPosition;
             public int ScrollPosition;
-            public List<UndoEntry> UndoStack = new List<UndoEntry>();
-            public List<UndoEntry> RedoStack = new List<UndoEntry>();
             public HashSet<int> Bookmarks = new HashSet<int>();
             public bool IsModified;
         }
