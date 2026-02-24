@@ -33,7 +33,7 @@ Both projects now use `CodeEditor.CodeTextBox` as the Python editor, replacing t
 
 **Telerik Migration Status (VS project only):**
 - **Phase 1 COMPLETE:** Basic layout/container controls swapped — TabControl→RadPageView, SplitContainer→RadSplitContainer+SplitPanel, Panel→RadPanel, Button→RadButton, Label→RadLabel, MenuStrip→RadMenu, ToolStripMenuItem→RadMenuItem, ContextMenuStrip→RadContextMenu, GroupBox→RadGroupBox, TextBox→RadTextBox, ComboBox→RadDropDownList
-- **Phase 2 PENDING:** TreeView→RadTreeView, ListBox→RadListControl
+- **Phase 2 PARTIAL:** TreeView→RadTreeView COMPLETE (both fileTreeView and refTreeView migrated with NodeFormatting-based styling, ValueValidating for inline rename, RadTreeViewEventArgs for click/double-click events, SelectedNodeChanged for selection). ListBox→RadListControl PENDING.
 - **Phase 3 COMPLETE — CodeTextBox Migration:** Replaced RadSyntaxEditor with CodeTextBox from `extern/SyntaxEditorControl`. Eliminated PythonTagger.cs, DiagnosticTagger.cs, AutoCompletePopup.cs, PythonSyntaxHighlighter.cs, ErrorSquiggleOverlay.cs, LineNumberPanel.cs. Custom undo/redo stack removed. SyntaxEditorHelper.cs rewritten as CodeTextBox extension methods. DataSciencePythonCompletionProvider.cs created implementing `ICompletionProvider`.
 
 **Namespace Structure (decoupled from file paths — do not change):**

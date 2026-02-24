@@ -26,7 +26,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.mainSplitEditorPanel = new Telerik.WinControls.UI.SplitPanel();
             this.mainSplitOutputPanel = new Telerik.WinControls.UI.SplitPanel();
             this.fileListPanel = new Telerik.WinControls.UI.RadPanel();
-            this.fileTreeView = new System.Windows.Forms.TreeView();
+            this.fileTreeView = new Telerik.WinControls.UI.RadTreeView();
             this.fileListLabel = new Telerik.WinControls.UI.RadLabel();
             this.fileListButtonPanel = new Telerik.WinControls.UI.RadPanel();
             this.fileNewBtn = new Telerik.WinControls.UI.RadButton();
@@ -44,7 +44,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.refSplit = new Telerik.WinControls.UI.RadSplitContainer();
             this.refSplitTreePanel = new Telerik.WinControls.UI.SplitPanel();
             this.refSplitDetailPanel = new Telerik.WinControls.UI.SplitPanel();
-            this.refTreeView = new System.Windows.Forms.TreeView();
+            this.refTreeView = new Telerik.WinControls.UI.RadTreeView();
             this.refSearchBox = new Telerik.WinControls.UI.RadTextBox();
             this.refDetailBox = new System.Windows.Forms.RichTextBox();
             this.packagesTab = new Telerik.WinControls.UI.RadPageViewPage();
@@ -156,17 +156,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // fileTreeView
             // 
             this.fileTreeView.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
-            this.fileTreeView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.fileTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fileTreeView.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileTreeView.FullRowSelect = true;
-            this.fileTreeView.HideSelection = false;
             this.fileTreeView.ShowLines = true;
-            this.fileTreeView.ShowPlusMinus = true;
-            this.fileTreeView.ShowRootLines = true;
-            this.fileTreeView.LabelEdit = true;
-            this.fileTreeView.Indent = 16;
-            this.fileTreeView.Scrollable = true;
+            this.fileTreeView.AllowEdit = true;
+            this.fileTreeView.TreeIndent = 16;
             this.fileTreeView.Location = new System.Drawing.Point(0, 24);
             this.fileTreeView.Name = "fileTreeView";
             this.fileTreeView.Size = new System.Drawing.Size(200, 328);
@@ -334,7 +329,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.refTreeView.Name = "refTreeView";
             this.refTreeView.Size = new System.Drawing.Size(260, 550);
             this.refTreeView.TabIndex = 0;
-            this.refTreeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.OnRefTreeSelect);
+            this.refTreeView.SelectedNodeChanged += new System.EventHandler(this.OnRefTreeSelect);
             // 
             // refDetailBox
             // 
@@ -549,7 +544,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadSplitContainer refSplit;
         private Telerik.WinControls.UI.SplitPanel refSplitTreePanel;
         private Telerik.WinControls.UI.SplitPanel refSplitDetailPanel;
-        private System.Windows.Forms.TreeView refTreeView;
+        private Telerik.WinControls.UI.RadTreeView refTreeView;
         private Telerik.WinControls.UI.RadTextBox refSearchBox;
         private System.Windows.Forms.RichTextBox refDetailBox;
         private Telerik.WinControls.UI.RadPageViewPage packagesTab;
@@ -568,7 +563,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadLabel pkgLabel;
         private Telerik.WinControls.UI.RadTextBox pkgSearchBox;
         private Telerik.WinControls.UI.RadPanel fileListPanel;
-        private System.Windows.Forms.TreeView fileTreeView;
+        private Telerik.WinControls.UI.RadTreeView fileTreeView;
         private Telerik.WinControls.UI.RadLabel fileListLabel;
         private Telerik.WinControls.UI.RadPanel fileListButtonPanel;
         private Telerik.WinControls.UI.RadButton fileNewBtn;
