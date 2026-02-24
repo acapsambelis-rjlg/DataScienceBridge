@@ -160,7 +160,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileTreeView.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileTreeView.FullRowSelect = true;
             this.fileTreeView.ShowLines = true;
-            this.fileTreeView.AllowEdit = true;
+            this.fileTreeView.AllowEdit = false;
             this.fileTreeView.TreeIndent = 16;
             this.fileTreeView.Location = new System.Drawing.Point(0, 24);
             this.fileTreeView.Name = "fileTreeView";

@@ -163,7 +163,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileTreeView.ShowLines = true;
             this.fileTreeView.ShowPlusMinus = true;
             this.fileTreeView.ShowRootLines = true;
-            this.fileTreeView.LabelEdit = true;
+            this.fileTreeView.LabelEdit = false;
             this.fileTreeView.Indent = 16;
             this.fileTreeView.Scrollable = true;
             this.fileTreeView.Location = new System.Drawing.Point(0, 24);

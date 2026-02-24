@@ -2207,6 +2207,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
         }
 
+        private void BeginNodeRename(RadTreeNode node)
+        {
+            if (node == null) return;
+            fileTreeView.AllowEdit = true;
+            fileTreeView.SelectedNode = node;
+            fileTreeView.BeginEdit();
+        }
+
         private void BuildFileContextMenu(RadTreeNode node)
         {
             fileContextMenu.Items.Clear();
@@ -2233,7 +2241,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
 
                 var renameItem = new RadMenuItem("Rename");
-                renameItem.Click += (s, e) => { fileTreeView.SelectedNode = node; fileTreeView.BeginEdit(); };
+                renameItem.Click += (s, e) => { BeginNodeRename(node); };
                 fileContextMenu.Items.Add(renameItem);
 
                 var deleteItem = new RadMenuItem("Delete");
@@ -2319,10 +2327,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             var node = FindNodeByPath(fileTreeView.Nodes, folderPath);
             if (node != null)
-            {
-                fileTreeView.SelectedNode = node;
-                fileTreeView.BeginEdit();
-            }
+                BeginNodeRename(node);
 
             RaiseStatus("Created folder: " + Path.GetFileName(folderPath));
         }
@@ -2390,6 +2395,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void OnFileTreeValueValidating(object sender, TreeNodeValidatingEventArgs e)
         {
+            fileTreeView.AllowEdit = false;
+
             string newLabel = e.NewValue as string;
             if (string.IsNullOrEmpty(newLabel) || string.IsNullOrEmpty(newLabel.Trim()))
             {
@@ -2643,10 +2650,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             var node = FindNodeByPath(fileTreeView.Nodes, filePath);
             if (node != null)
-            {
-                fileTreeView.SelectedNode = node;
-                fileTreeView.BeginEdit();
-            }
+                BeginNodeRename(node);
 
             RaiseStatus("New file: " + name);
         }

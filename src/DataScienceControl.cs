@@ -2138,6 +2138,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
         }
 
+        private void BeginNodeRename(TreeNode node)
+        {
+            if (node == null) return;
+            fileTreeView.LabelEdit = true;
+            node.BeginEdit();
+        }
+
         private void BuildFileContextMenu(TreeNode node)
         {
             fileContextMenu.Items.Clear();
@@ -2164,7 +2171,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
 
                 var renameItem = new ToolStripMenuItem("Rename");
-                renameItem.Click += (s, e) => { node.BeginEdit(); };
+                renameItem.Click += (s, e) => { BeginNodeRename(node); };
                 fileContextMenu.Items.Add(renameItem);
 
                 var deleteItem = new ToolStripMenuItem("Delete");
@@ -2252,7 +2259,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (node != null)
             {
                 fileTreeView.SelectedNode = node;
-                node.BeginEdit();
+                BeginNodeRename(node);
             }
 
             RaiseStatus("Created folder: " + Path.GetFileName(folderPath));
@@ -2321,6 +2328,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void OnFileTreeAfterLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
+            fileTreeView.LabelEdit = false;
+
             if (e.Label == null)
             {
                 e.CancelEdit = true;
@@ -2577,7 +2586,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (node != null)
             {
                 fileTreeView.SelectedNode = node;
-                node.BeginEdit();
+                BeginNodeRename(node);
             }
 
             RaiseStatus("New file: " + name);
