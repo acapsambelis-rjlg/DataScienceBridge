@@ -1236,6 +1236,25 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             item = new ToolStripMenuItem("Display Images");
             item.Click += (s, e) => InsertSnippet(GetImageDisplaySnippet());
             insertSnippetBtn.DropDownItems.Add(item);
+
+            var mlSeparator = new ToolStripSeparator();
+            insertSnippetBtn.DropDownItems.Add(mlSeparator);
+
+            item = new ToolStripMenuItem("ML: Salary Prediction (Linear Regression)");
+            item.Click += (s, e) => InsertSnippet(GetLinearRegressionSnippet());
+            insertSnippetBtn.DropDownItems.Add(item);
+
+            item = new ToolStripMenuItem("ML: Department Classifier (Random Forest)");
+            item.Click += (s, e) => InsertSnippet(GetClassificationSnippet());
+            insertSnippetBtn.DropDownItems.Add(item);
+
+            item = new ToolStripMenuItem("ML: Employee Clustering (K-Means)");
+            item.Click += (s, e) => InsertSnippet(GetClusteringSnippet());
+            insertSnippetBtn.DropDownItems.Add(item);
+
+            item = new ToolStripMenuItem("ML: Customer Segmentation (PCA)");
+            item.Click += (s, e) => InsertSnippet(GetPCASnippet());
+            insertSnippetBtn.DropDownItems.Add(item);
         }
 
         private void RegisterAllDatasetsInMemory()
@@ -3401,6 +3420,264 @@ else:
     print(f'Average R: {np.mean(r_avg):.1f}')
     print(f'Average G: {np.mean(g_avg):.1f}')
     print(f'Average B: {np.mean(b_avg):.1f}')
+";
+        }
+
+        private string GetLinearRegressionSnippet()
+        {
+            return @"
+from DotNetData import employees
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, r2_score
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+df = employees.df.copy()
+
+features = pd.get_dummies(df[['YearsEmployed', 'PerformanceScore', 'IsRemote', 'Department']], drop_first=True)
+target = df['Salary']
+
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.25, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+print('=== Salary Prediction — Linear Regression ===')
+print(f'R² Score:           {r2_score(y_test, y_pred):.4f}')
+print(f'Mean Absolute Error: ${mean_absolute_error(y_test, y_pred):,.2f}')
+print()
+
+coefs = pd.Series(model.coef_, index=features.columns).sort_values()
+print('Feature Coefficients (impact on salary):')
+for name, val in coefs.items():
+    print(f'  {name:30s} {val:+,.2f}')
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+axes[0].scatter(y_test, y_pred, alpha=0.5, edgecolors='black', linewidth=0.5)
+mn, mx = min(y_test.min(), y_pred.min()), max(y_test.max(), y_pred.max())
+axes[0].plot([mn, mx], [mn, mx], 'r--', linewidth=1)
+axes[0].set_xlabel('Actual Salary ($)')
+axes[0].set_ylabel('Predicted Salary ($)')
+axes[0].set_title('Actual vs Predicted')
+
+coefs.plot.barh(ax=axes[1], color=['#d9534f' if v < 0 else '#5cb85c' for v in coefs])
+axes[1].set_xlabel('Coefficient Value')
+axes[1].set_title('Feature Importance')
+
+plt.tight_layout()
+plt.show()
+";
+        }
+
+        private string GetClassificationSnippet()
+        {
+            return @"
+from DotNetData import employees
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+df = employees.df.copy()
+
+feature_cols = ['Salary', 'PerformanceScore', 'YearsEmployed', 'IsRemote']
+X = df[feature_cols].copy()
+X['IsRemote'] = X['IsRemote'].astype(int)
+y = df['Department']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
+
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+
+print('=== Department Classification — Random Forest ===')
+print(f'Accuracy: {model.score(X_test, y_test):.2%}')
+print()
+print(classification_report(y_test, y_pred, zero_division=0))
+
+importances = pd.Series(model.feature_importances_, index=feature_cols).sort_values()
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+importances.plot.barh(ax=axes[0], color='steelblue')
+axes[0].set_xlabel('Importance')
+axes[0].set_title('Feature Importance')
+
+labels = sorted(y.unique())
+cm = confusion_matrix(y_test, y_pred, labels=labels)
+im = axes[1].imshow(cm, cmap='Blues')
+axes[1].set_xticks(range(len(labels)))
+axes[1].set_yticks(range(len(labels)))
+axes[1].set_xticklabels(labels, rotation=45, ha='right', fontsize=7)
+axes[1].set_yticklabels(labels, fontsize=7)
+axes[1].set_xlabel('Predicted')
+axes[1].set_ylabel('Actual')
+axes[1].set_title('Confusion Matrix')
+for i in range(len(labels)):
+    for j in range(len(labels)):
+        axes[1].text(j, i, str(cm[i, j]), ha='center', va='center',
+                     color='white' if cm[i, j] > cm.max() / 2 else 'black', fontsize=7)
+
+plt.tight_layout()
+plt.show()
+";
+        }
+
+        private string GetClusteringSnippet()
+        {
+            return @"
+from DotNetData import employees
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+df = employees.df.copy()
+
+cluster_features = ['Salary', 'PerformanceScore', 'YearsEmployed']
+X = df[cluster_features].dropna()
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+inertias = []
+K_range = range(2, 9)
+for k in K_range:
+    km = KMeans(n_clusters=k, random_state=42, n_init=10)
+    km.fit(X_scaled)
+    inertias.append(km.inertia_)
+
+n_clusters = 4
+kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+df.loc[X.index, 'Cluster'] = kmeans.fit_predict(X_scaled)
+
+print('=== Employee Clustering — K-Means ===')
+print(f'Number of clusters: {n_clusters}')
+print()
+for c in range(n_clusters):
+    subset = df[df['Cluster'] == c]
+    print(f'Cluster {c} ({len(subset)} employees):')
+    print(f'  Avg Salary:      ${subset[""Salary""].mean():,.0f}')
+    print(f'  Avg Performance:  {subset[""PerformanceScore""].mean():.2f}')
+    print(f'  Avg Tenure:       {subset[""YearsEmployed""].mean():.1f} years')
+    print(f'  Top Departments:  {"", "".join(subset[""Department""].value_counts().head(3).index)}')
+    print()
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+axes[0].plot(list(K_range), inertias, 'bo-')
+axes[0].axvline(x=n_clusters, color='r', linestyle='--', alpha=0.7)
+axes[0].set_xlabel('Number of Clusters (k)')
+axes[0].set_ylabel('Inertia')
+axes[0].set_title('Elbow Method')
+
+colors = plt.cm.Set2(np.linspace(0, 1, n_clusters))
+for c in range(n_clusters):
+    mask = df['Cluster'] == c
+    axes[1].scatter(df.loc[mask, 'Salary'], df.loc[mask, 'PerformanceScore'],
+                    c=[colors[c]], label=f'Cluster {c}', alpha=0.6, edgecolors='black', linewidth=0.3)
+axes[1].set_xlabel('Salary ($)')
+axes[1].set_ylabel('Performance Score')
+axes[1].set_title('Clusters: Salary vs Performance')
+axes[1].legend()
+
+for c in range(n_clusters):
+    mask = df['Cluster'] == c
+    axes[2].scatter(df.loc[mask, 'YearsEmployed'], df.loc[mask, 'Salary'],
+                    c=[colors[c]], label=f'Cluster {c}', alpha=0.6, edgecolors='black', linewidth=0.3)
+axes[2].set_xlabel('Years Employed')
+axes[2].set_ylabel('Salary ($)')
+axes[2].set_title('Clusters: Tenure vs Salary')
+axes[2].legend()
+
+plt.tight_layout()
+plt.show()
+";
+        }
+
+        private string GetPCASnippet()
+        {
+            return @"
+from DotNetData import customers
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+df = customers.df.copy()
+
+tier_enc = LabelEncoder()
+df['TierEncoded'] = tier_enc.fit_transform(df['Tier'])
+
+feature_cols = ['Age', 'CreditLimit', 'TierEncoded', 'IsActive']
+X = df[feature_cols].copy()
+X['IsActive'] = X['IsActive'].astype(int)
+X = X.dropna()
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+pca = PCA()
+X_pca = pca.fit_transform(X_scaled)
+
+print('=== Customer Segmentation — PCA ===')
+print()
+print('Explained Variance Ratio:')
+for i, var in enumerate(pca.explained_variance_ratio_):
+    cumulative = sum(pca.explained_variance_ratio_[:i+1])
+    bar = '#' * int(var * 50)
+    print(f'  PC{i+1}: {var:.3f} (cumulative: {cumulative:.3f})  {bar}')
+print()
+
+print('Principal Component Loadings:')
+loadings = pd.DataFrame(pca.components_.T, index=feature_cols,
+                         columns=[f'PC{i+1}' for i in range(len(feature_cols))])
+print(loadings.round(3))
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+axes[0].bar(range(1, len(pca.explained_variance_ratio_) + 1),
+            pca.explained_variance_ratio_, color='steelblue', alpha=0.8)
+axes[0].plot(range(1, len(pca.explained_variance_ratio_) + 1),
+             np.cumsum(pca.explained_variance_ratio_), 'ro-')
+axes[0].set_xlabel('Principal Component')
+axes[0].set_ylabel('Variance Explained')
+axes[0].set_title('Scree Plot')
+axes[0].set_xticks(range(1, len(feature_cols) + 1))
+
+tiers = df.loc[X.index, 'Tier']
+tier_names = sorted(tiers.unique())
+colors = plt.cm.Set1(np.linspace(0, 1, len(tier_names)))
+for i, tier in enumerate(tier_names):
+    mask = tiers == tier
+    axes[1].scatter(X_pca[mask, 0], X_pca[mask, 1],
+                    c=[colors[i]], label=tier, alpha=0.5, edgecolors='black', linewidth=0.3)
+axes[1].set_xlabel('PC1')
+axes[1].set_ylabel('PC2')
+axes[1].set_title('Customers in PCA Space (by Tier)')
+axes[1].legend()
+
+for i, feat in enumerate(feature_cols):
+    axes[2].arrow(0, 0, pca.components_[0, i], pca.components_[1, i],
+                  head_width=0.05, head_length=0.02, fc='steelblue', ec='steelblue')
+    axes[2].text(pca.components_[0, i] * 1.15, pca.components_[1, i] * 1.15,
+                 feat, fontsize=9, ha='center')
+axes[2].set_xlabel('PC1')
+axes[2].set_ylabel('PC2')
+axes[2].set_title('Feature Loadings (Biplot)')
+axes[2].axhline(y=0, color='gray', linestyle='--', linewidth=0.5)
+axes[2].axvline(x=0, color='gray', linestyle='--', linewidth=0.5)
+
+plt.tight_layout()
+plt.show()
 ";
         }
 
