@@ -329,7 +329,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.refTreeView.Name = "refTreeView";
             this.refTreeView.Size = new System.Drawing.Size(260, 550);
             this.refTreeView.TabIndex = 0;
-            this.refTreeView.SelectedNodeChanged += new System.EventHandler(this.OnRefTreeSelect);
+            this.refTreeView.SelectedNodeChanged += new Telerik.WinControls.UI.RadTreeView.RadTreeViewEventHandler(this.OnRefTreeSelect);
             // 
             // refDetailBox
             // 

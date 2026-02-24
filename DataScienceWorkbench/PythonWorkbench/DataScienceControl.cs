@@ -1043,7 +1043,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             editMenu.Items.Add(new RadMenuSeparatorItem());
             var clearOutputItem = new RadMenuItem("Clear Output");
-            clearOutputItem.Click += (s, e) => outputBox.Clear();
+            clearOutputItem.Click += (s, e) => ClearOutput();
             editMenu.Items.Add(clearOutputItem);
 
             editMenu.DropDownOpening += (s, e) =>
