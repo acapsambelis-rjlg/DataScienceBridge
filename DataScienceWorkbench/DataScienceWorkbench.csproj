@@ -98,5 +98,11 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\extern\SyntaxEditorControl\SyntaxEditor\SyntaxEditor.csproj">
+      <Project>{8166d680-4682-4330-914b-02c2ca1be632}</Project>
+      <Name>SyntaxEditor</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
