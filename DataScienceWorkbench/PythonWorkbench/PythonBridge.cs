@@ -772,25 +772,31 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     var stdoutBuilder = new StringBuilder();
                     var stderrBuilder = new StringBuilder();
 
-                    proc.OutputDataReceived += delegate(object s, DataReceivedEventArgs e)
+                    var stderrThread = new Thread(new ThreadStart(delegate
                     {
-                        if (e.Data != null)
+                        try
                         {
-                            stdoutBuilder.AppendLine(e.Data);
-                            onOutput(e.Data);
+                            string line;
+                            while ((line = proc.StandardError.ReadLine()) != null)
+                            {
+                                stderrBuilder.AppendLine(line);
+                                onOutput(line);
+                            }
                         }
-                    };
-                    proc.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e)
-                    {
-                        if (e.Data != null)
-                        {
-                            stderrBuilder.AppendLine(e.Data);
-                            onOutput(e.Data);
-                        }
-                    };
+                        catch { }
+                    }));
+                    stderrThread.IsBackground = true;
+                    stderrThread.Start();
 
-                    proc.BeginOutputReadLine();
-                    proc.BeginErrorReadLine();
+                    string stdoutLine;
+                    while ((stdoutLine = proc.StandardOutput.ReadLine()) != null)
+                    {
+                        stdoutBuilder.AppendLine(stdoutLine);
+                        onOutput(stdoutLine);
+                    }
+
+                    stderrThread.Join(10000);
+
                     bool exited = proc.WaitForExit(timeoutMs);
 
                     if (!exited)
