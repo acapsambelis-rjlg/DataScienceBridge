@@ -1,0 +1,3 @@
+[submodule "extern/SyntaxEditorControl"]
+	path = extern/SyntaxEditorControl
+	url = https://github.com/acapsambelis-rjlg/SyntaxEditorControl
