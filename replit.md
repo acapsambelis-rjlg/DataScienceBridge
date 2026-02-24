@@ -1,7 +1,7 @@
 # Data Science Workbench
 
 ## Overview
-The Data Science Workbench is a Windows Forms application developed with Mono (.NET Framework) that provides an integrated Python editor for data science tasks. It offers a robust, embeddable environment for data analysis and scripting, encapsulated within a reusable `DataScienceControl` UserControl. The application serves as a comprehensive demonstration of these capabilities, featuring dummy data and a fully functional UI, with a vision to enhance data analysis workflows and support complex data science projects.
+The Data Science Workbench is a Windows Forms application developed with Mono (.NET Framework 4.7.2 compatible) that provides an integrated Python editor for data science tasks. It offers a robust, embeddable environment for data analysis and scripting, encapsulated within a reusable `DataScienceControl` UserControl. The application serves as a comprehensive demonstration of these capabilities, featuring dummy data and a fully functional UI, with a vision to enhance data analysis workflows and support complex data science projects.
 
 ## User Preferences
 - The DataScienceControl is designed for integration into a larger Telerik-based application (RJLG IntelliSEM)
@@ -12,41 +12,44 @@ The Data Science Workbench is a Windows Forms application developed with Mono (.
 The application uses Mono (C# / .NET Framework 4.7.2 compatible) for cross-platform execution on Linux. Python integration occurs via subprocess-based execution, streaming data in-memory directly to Python variables. The UI is built with Windows Forms, and `DataScienceControl` is a self-contained, reusable component.
 
 **Dual-Project Structure:**
-- `src/` — Mono project, stays with standard WinForms controls for Linux/Replit execution
-- `DataScienceWorkbench/PythonWorkbench/` — Visual Studio project, migrating to Telerik UI for WinForms controls
+- `src/` — Mono project, standard WinForms controls for Linux/Replit execution
+- `DataScienceWorkbench/PythonWorkbench/` — Visual Studio project, Telerik UI for WinForms controls (non-editor UI only)
+- `extern/SyntaxEditorControl/` — Git submodule containing the CodeTextBox editor control (shared by both projects)
+
+**Editor Control — CodeTextBox (from extern/SyntaxEditorControl):**
+Both projects now use `CodeEditor.CodeTextBox` as the Python editor, replacing the previous SquiggleRichTextBox (Mono) and RadSyntaxEditor (VS) implementations. CodeTextBox provides built-in:
+- Syntax highlighting via `SyntaxRuleset` (using `SyntaxRuleset.CreatePythonRuleset()`)
+- Code folding via `IndentFoldingProvider`
+- Completion/autocomplete via `ICompletionProvider` interface (implemented by `DataSciencePythonCompletionProvider`)
+- Diagnostics (error squiggles) via `SetDiagnostics()`/`ClearDiagnostics()`
+- Find/Replace (Ctrl+F / Ctrl+H)
+- Bracket matching and auto-close
+- Auto-indent on Enter
+- Tab indent/dedent (with selection support)
+- Built-in undo/redo
+- Line numbers
+- Ctrl+scroll zoom
+- Ctrl+Shift+D duplicate line, Ctrl+Shift+L delete line
 
 **Telerik Migration Status (VS project only):**
 - **Phase 1 COMPLETE:** Basic layout/container controls swapped — TabControl→RadPageView, SplitContainer→RadSplitContainer+SplitPanel, Panel→RadPanel, Button→RadButton, Label→RadLabel, MenuStrip→RadMenu, ToolStripMenuItem→RadMenuItem, ContextMenuStrip→RadContextMenu, GroupBox→RadGroupBox, TextBox→RadTextBox, ComboBox→RadDropDownList
 - **Phase 2 PENDING:** TreeView→RadTreeView, ListBox→RadListControl
-- **Phase 3 COMPLETE:** SquiggleRichTextBox→RadSyntaxEditor with tagger-based architecture. PythonTagger.cs handles syntax highlighting (keywords, builtins, strings, comments, numbers, decorators, self, function/class defs, f-string braces). DiagnosticTagger.cs handles error squiggles (red underline via UnderlineInfo) and symbol warnings (blue underline). SyntaxEditorHelper.cs provides 20+ extension methods bridging RichTextBox API to RadSyntaxEditor API. Custom undo/redo stack removed (RadSyntaxEditor built-in). LineNumberPanel removed (RadSyntaxEditor.ShowLineNumbers). ErrorSquiggleOverlay eliminated. AutoCompletePopup updated for RadSyntaxEditor.
-- **Phase 3 API Corrections COMPLETE:** Fixed Telerik API mismatches per official docs (R1 2021 SP2+):
-  - `IsLineNumberMarginVisible` → `ShowLineNumbers`
-  - `Telerik.WinForms.Documents.Model.SolidFill` → `System.Drawing.SolidBrush` in TextFormatDefinition constructors
-  - `TextFormatDefinition.Foreground = ...` property setter → constructor-based: `new TextFormatDefinition(new SolidBrush(color))`
-  - `TextFormatDefinition.Underline = true` → `new UnderlineInfo(brush, UnderlineDecorations.Line)` in 4-arg constructor
-  - `SyntaxEditorElement.CaretPositionChanged` → `RadSyntaxEditor.SelectionChanged`
-  - `pythonEditor.Font = ...` → `SyntaxEditorElement.EditorFontSize` + `SyntaxEditorElement.EditorFontFamily`
-  - `CaretPosition.Index` fixed: now correctly calculates absolute position as `lineStart + column`
-  - `InvalidateTags()` → `CallOnTagsChanged(this.Document.CurrentSnapshot.Span)` (protected base method)
-  - `TagSpan<T>(Span, tag)` → `TagSpan<T>(TextSnapshotSpan, tag)` with proper snapshot reference
-  - `snapshot.GetText()` → `snapshot.GetText(snapshot.Span)` (explicit Span overload)
-  - `TextSnapshotLine.Start` → `TextSnapshotLine.Span.Start` (TextSnapshotLine does NOT have direct .Start property)
-  - `TextDocument.Remove(Span)` → SelectRange() + DeleteCommand.Execute(null) (TextDocument has no Remove/Delete)
-  - `Selection.GetSelectedSpans()` / `Selection.GetSelectionSpan()` → `Selection.GetSelectedText().Length` (not available in WinForms)
-  - `SyntaxEditorCommandBase.Execute()` → `.Execute(null)` (Execute(object) requires parameter)
-  - `TextSnapshotSpan(int, int)` → `TextSnapshotSpan(TextSnapshot, Span)` (requires snapshot reference)
-  - `RadSyntaxEditorElement.InvalidateUI()` → does not exist, not needed
+- **Phase 3 COMPLETE — CodeTextBox Migration:** Replaced RadSyntaxEditor with CodeTextBox from `extern/SyntaxEditorControl`. Eliminated PythonTagger.cs, DiagnosticTagger.cs, AutoCompletePopup.cs, PythonSyntaxHighlighter.cs, ErrorSquiggleOverlay.cs, LineNumberPanel.cs. Custom undo/redo stack removed. SyntaxEditorHelper.cs rewritten as CodeTextBox extension methods. DataSciencePythonCompletionProvider.cs created implementing `ICompletionProvider`.
 
 **Namespace Structure (decoupled from file paths — do not change):**
-- `RJLG.IntelliSEM.UI.Controls.PythonDataScience` — DataScienceControl, AutoCompletePopup, PythonTagger, DiagnosticTagger, SyntaxEditorHelper, PlotViewerForm, PythonBridge, PythonSymbolAnalyzer
+- `RJLG.IntelliSEM.UI.Controls.PythonDataScience` — DataScienceControl, DataSciencePythonCompletionProvider, SyntaxEditorHelper, PlotViewerForm, PythonBridge, PythonSymbolAnalyzer
 - `RJLG.IntelliSEM.Data.PythonDataScience` — DataModels (PythonVisibleAttribute, SampleDataItem, etc.), JsonHelper
 - `DataScienceWorkbench` — MainForm, Program (demo app only, not part of reusable control)
 
-Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` for non-Telerik files without namespace adjustments. The VS Designer.cs now uses fully-qualified Telerik types (e.g., `Telerik.WinControls.UI.RadPageView`). The `CreateMenuStrip()` public API now returns `RadMenu` in the VS project (was `MenuStrip`).
+Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` for non-Telerik files without namespace adjustments. The VS Designer.cs uses fully-qualified Telerik types for non-editor controls. The `CreateMenuStrip()` public API returns `RadMenu` in the VS project and `MenuStrip` in the Mono project.
+
+**Build Process (Mono/Replit):**
+- `build.sh` — Two-stage build: first compiles SyntaxEditor.dll from `extern/SyntaxEditorControl/SyntaxEditor/*.cs`, then compiles the main application referencing it
+- `run.sh` — Starts Xvfb, x11vnc (port 5900), and runs DataScienceWorkbench.exe via Mono
 
 **Key Features:**
 - **Multi-File Editor:** Supports multiple Python files with a TreeView-based file explorer panel showing the full directory hierarchy of `python/scripts/`. Features persistent storage, per-file state preservation (undo/redo, bookmarks, cursor/scroll position), and cross-file imports. Includes right-click context menu for file operations: New File, New Folder, Rename (inline label editing with validation), Delete (with confirmation), and folder/subfolder creation. Files in subdirectories are fully supported.
-- **Integrated Python Editor:** Features syntax highlighting, line numbers, real-time syntax checking, code snippets, context-aware autocomplete (for dataset columns, class members, DataFrame methods), bracket matching, code folding, bookmarks, and error squiggles with tooltips.
+- **Integrated Python Editor:** Features syntax highlighting, line numbers, real-time syntax checking, code snippets, context-aware autocomplete (for dataset columns, class members, DataFrame methods), bracket matching, code folding, bookmarks, find/replace, and error squiggles with tooltips.
 - **Data Reference Tab:** Displays loaded datasets, columns, data types, registered Python classes, and context variables in a TreeView, with a detail panel for information and example snippets. Includes search and filter.
 - **Package Manager Tab:** Allows installation and uninstallation of pip packages within an isolated Python environment, displaying a flat alphabetical list with search/filter.
 - **In-memory Data Bridge:** Streams .NET data to Python via a virtual `DotNetData` module, eliminating file I/O. Supports recursive flattening of nested `[PythonVisible]` classes into prefixed DataFrame columns and serializes Bitmap/Image properties to PIL Image objects in Python.
@@ -54,7 +57,7 @@ Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWork
 - **Plot Viewer:** Captures and displays `matplotlib.pyplot` plots in an interactive viewer with navigation and saving.
 - **Python Class Registration and Context Hub:** Provides APIs (`RegisterPythonClass`, `SetContext`) for the host application to inject Python class definitions and named variables (strings, numbers, booleans, lists, dictionaries) into the Python execution environment. These are visible in the Data Reference tab and recognized by autocomplete.
 - **Public API (`DataScienceControl`):** Offers methods for `LoadData`, `RegisterInMemoryData`, `RegisterPythonClass`, `SetContext`, `RunScript`, and `ResetPythonEnvironment`, along with properties for editor content and output, and events for status updates.
-- **UI/UX Decisions:** Features a clear, functional tabbed UI for editor, data reference, and package manager. Output panels use a light mode, and find/replace is integrated inline within the editor.
+- **Custom Keyboard Shortcuts (DataScienceControl):** Ctrl+D (duplicate line), Alt+Up/Down (move line), Ctrl+B (toggle bookmark), F2/Shift+F2 (bookmark navigation). CodeTextBox handles Ctrl+F (find), Ctrl+H (replace), Ctrl+Shift+D (duplicate), Ctrl+Shift+L (delete line), Ctrl+scroll (zoom).
 
 ## External Dependencies
 - **System:** Mono runtime, libgdiplus, X11 libraries, gtk2, cairo, pango, fontconfig

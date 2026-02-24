@@ -1,22 +1,30 @@
 #!/bin/bash
 set -e
 
+echo "Building SyntaxEditor library..."
+
+REFS="-r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.dll -r:System.Core.dll"
+
+mcs $REFS \
+    -target:library \
+    -out:SyntaxEditor.dll \
+    -langversion:7 \
+    -recurse:extern/SyntaxEditorControl/SyntaxEditor/*.cs
+
 echo "Building Data Science Workbench..."
 
-REFS="-r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.dll -r:System.Data.dll -r:System.Core.dll -r:System.Xml.dll"
+REFS="-r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.dll -r:System.Data.dll -r:System.Core.dll -r:System.Xml.dll -r:SyntaxEditor.dll"
 
 mcs $REFS \
     -target:winexe \
     -out:DataScienceWorkbench.exe \
     -langversion:7 \
     src/DataModels.cs \
-    src/ErrorSquiggleOverlay.cs \
-    src/AutoCompletePopup.cs \
     src/JsonHelper.cs \
     src/PythonBridge.cs \
     src/PythonSymbolAnalyzer.cs \
-    src/PythonSyntaxHighlighter.cs \
-    src/LineNumberPanel.cs \
+    src/SyntaxEditorHelper.cs \
+    src/DataSciencePythonCompletionProvider.cs \
     src/DataScienceControl.Designer.cs \
     src/DataScienceControl.cs \
     src/PlotViewerForm.cs \

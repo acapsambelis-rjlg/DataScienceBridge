@@ -5,10 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using CodeEditor;
 using Telerik.WinControls;
 using Telerik.WinControls.UI;
-using Telerik.WinForms.Controls.SyntaxEditor.UI;
-using Telerik.WinForms.SyntaxEditor.Core.Text;
 using RJLG.IntelliSEM.Data.PythonDataScience;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
@@ -26,11 +25,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private bool suppressHighlight;
         private bool textDirty;
 
-        private PythonTagger pythonTagger;
-        private DiagnosticTagger diagnosticTagger;
-
-        private AutoCompletePopup autoComplete;
-        private bool suppressAutoComplete;
+        private DataSciencePythonCompletionProvider completionProvider;
+        private List<Diagnostic> symbolDiagnostics = new List<Diagnostic>();
+        private List<Diagnostic> syntaxDiagnostics = new List<Diagnostic>();
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
         private Dictionary<string, Func<string>> inMemoryDataSources = new Dictionary<string, Func<string>>();
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
@@ -42,11 +39,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private const float MaxFontSize = 28f;
         private const float DefaultFontSize = 10f;
         private HashSet<int> bookmarks = new HashSet<int>();
-
-        private static readonly Dictionary<char, char> BracketPairs = new Dictionary<char, char>
-        {
-            { '(', ')' }, { '[', ']' }, { '{', '}' }, { '"', '"' }, { '\'', '\'' }
-        };
 
         private class UndoEntry
         {
@@ -108,24 +100,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var monoFont9 = ResolveMonoFont(9f);
             var uiFontBold = ResolveUIFont(9f, FontStyle.Bold);
 
-            pythonEditor.SyntaxEditorElement.EditorFontSize = 10f;
-            try
-            {
-                var monoFamilies = new[] { "Consolas", "DejaVu Sans Mono", "Courier New" };
-                foreach (var name in monoFamilies)
-                {
-                    using (var testFont = new Font(name, 10f))
-                    {
-                        if (testFont.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
-                        {
-                            pythonEditor.SyntaxEditorElement.EditorFontFamily =
-                                new Telerik.WinForms.Controls.SyntaxEditor.UI.FontFamily(name);
-                            break;
-                        }
-                    }
-                }
-            }
-            catch { }
+            pythonEditor.EditorFont = monoFont10;
             outputBox.Font = monoFont9;
             packageListBox.Font = monoFont9;
 
@@ -158,12 +133,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     if (activeFile != null && !string.IsNullOrEmpty(activeFile.Content))
                     {
                         suppressHighlight = true;
-                        suppressAutoComplete = true;
                         pythonEditor.SetText(activeFile.Content);
                         pythonEditor.SetCaretIndex(0);
                         pythonEditor.ClearSelection();
                         suppressHighlight = false;
-                        suppressAutoComplete = false;
                         ApplySyntaxHighlighting();
                         activeFile.IsModified = false;
                         RefreshFileList();
@@ -174,17 +147,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SetupSyntaxHighlighting()
         {
-            pythonEditor.ShowLineNumbers = true;
+            pythonEditor.Ruleset = SyntaxRuleset.CreatePythonRuleset();
+            pythonEditor.FoldingProvider = new IndentFoldingProvider();
 
-            pythonTagger = new PythonTagger(pythonEditor.SyntaxEditorElement);
-            diagnosticTagger = new DiagnosticTagger(pythonEditor.SyntaxEditorElement);
-
-            pythonEditor.TaggersRegistry.RegisterTagger(pythonTagger);
-            pythonEditor.TaggersRegistry.RegisterTagger(diagnosticTagger);
-
-            RegisterTextFormatDefinitions();
-
-            autoComplete = new AutoCompletePopup(pythonEditor);
+            completionProvider = new DataSciencePythonCompletionProvider();
+            pythonEditor.CompletionProvider = completionProvider;
             UpdateDynamicSymbols();
 
             highlightTimer = new System.Windows.Forms.Timer();
@@ -198,18 +165,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 RunLiveSyntaxCheck();
             };
 
-            pythonEditor.DocumentContentChanged += (s, e) =>
+            pythonEditor.TextChanged += (s, e) =>
             {
                 if (!suppressHighlight)
                 {
                     textDirty = true;
                     highlightTimer.Stop();
                     highlightTimer.Start();
-
-                    if (!suppressAutoComplete)
-                    {
-                        autoComplete.OnTextChanged();
-                    }
 
                     if (activeFile != null && !activeFile.IsModified)
                     {
@@ -224,78 +186,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             };
 
-            pythonEditor.SelectionChanged += (s, e) =>
+            pythonEditor.KeyUp += (s, e) =>
             {
                 if (!suppressHighlight)
-                {
                     UpdateCursorPositionStatus();
-                    autoComplete.OnSelectionChanged();
-                }
             };
 
-            pythonEditor.MouseWheel += (s, e) =>
+            pythonEditor.MouseClick += (s, e) =>
             {
-                if (Control.ModifierKeys.HasFlag(Keys.Control))
-                {
-                    ((HandledMouseEventArgs)e).Handled = true;
-                    if (e.Delta > 0) ZoomEditor(1f);
-                    else if (e.Delta < 0) ZoomEditor(-1f);
-                }
+                if (!suppressHighlight)
+                    UpdateCursorPositionStatus();
             };
 
             pythonEditor.KeyDown += (s, e) =>
             {
-                if (autoComplete.IsShowing && autoComplete.HandleKeyDown(e.KeyCode, e.Modifiers))
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    return;
-                }
-
-                if (e.KeyCode == Keys.Escape)
-                {
-                    if (autoComplete.IsShowing)
-                        autoComplete.Hide();
-                    if (findReplacePanel != null && findReplacePanel.Visible)
-                        HideFindReplace();
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                }
-                else if (e.KeyCode == Keys.Back && !e.Control && pythonEditor.GetSelectionLength() == 0)
-                {
-                    if (HandleBracketAutoDelete(false))
-                    {
-                        e.Handled = true;
-                        e.SuppressKeyPress = true;
-                    }
-                }
-                else if (e.KeyCode == Keys.Delete && !e.Control && pythonEditor.GetSelectionLength() == 0)
-                {
-                    if (HandleBracketAutoDelete(true))
-                    {
-                        e.Handled = true;
-                        e.SuppressKeyPress = true;
-                    }
-                }
-                else if (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    HandleAutoIndent();
-                }
-                else if (e.KeyCode == Keys.Tab && pythonEditor.GetSelectionLength() > 0)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    BlockIndent(!e.Shift);
-                }
-                else if (e.KeyCode == Keys.Tab && e.Shift)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    BlockIndent(false);
-                }
-                else if (e.Control && e.KeyCode == Keys.D)
+                if (e.Control && e.KeyCode == Keys.D && !e.Shift)
                 {
                     e.Handled = true;
                     e.SuppressKeyPress = true;
@@ -325,307 +230,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     e.SuppressKeyPress = true;
                     GoToPreviousBookmark();
                 }
-                else if (e.Control && (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add))
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    ZoomEditor(1f);
-                }
-                else if (e.Control && (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract))
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    ZoomEditor(-1f);
-                }
-                else if (e.Control && e.KeyCode == Keys.D0)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    ZoomEditor(0f);
-                }
-                else if (e.Control && e.KeyCode == Keys.F)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    ShowFindReplace();
-                }
             };
-
-            pythonEditor.KeyPress += (s, e) =>
-            {
-                if (HandleBracketAutoClose(e.KeyChar))
-                {
-                    e.Handled = true;
-                    return;
-                }
-
-                if (e.KeyChar == '\t')
-                {
-                    e.Handled = true;
-                    suppressAutoComplete = true;
-                    pythonEditor.InsertAtCaret("    ");
-                    suppressAutoComplete = false;
-                }
-            };
-        }
-
-        private void RegisterTextFormatDefinitions()
-        {
-            var defs = pythonEditor.TextFormatDefinitions;
-
-            defs.AddLast(PythonTagger.KeywordType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 0, 200))));
-
-            defs.AddLast(PythonTagger.BuiltinType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 128, 128))));
-
-            defs.AddLast(PythonTagger.StringType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(163, 21, 21))));
-
-            defs.AddLast(PythonTagger.CommentType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 128, 0))));
-
-            defs.AddLast(PythonTagger.NumberType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(9, 136, 90))));
-
-            defs.AddLast(PythonTagger.DecoratorType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(128, 0, 128))));
-
-            defs.AddLast(PythonTagger.SelfType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(148, 85, 141))));
-
-            defs.AddLast(PythonTagger.FunctionDefType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(0, 100, 180))));
-
-            defs.AddLast(PythonTagger.ClassDefType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(43, 145, 175))));
-
-            defs.AddLast(PythonTagger.FStringBraceType,
-                new TextFormatDefinition(new System.Drawing.SolidBrush(Color.FromArgb(200, 140, 0))));
-
-            defs.AddLast(DiagnosticTagger.ErrorType,
-                new TextFormatDefinition(
-                    new System.Drawing.SolidBrush(Color.FromArgb(255, 0, 0)),
-                    null,
-                    new UnderlineInfo(new System.Drawing.SolidBrush(Color.FromArgb(255, 0, 0)), UnderlineDecorations.Line),
-                    null));
-
-            defs.AddLast(DiagnosticTagger.WarningType,
-                new TextFormatDefinition(
-                    new System.Drawing.SolidBrush(Color.FromArgb(0, 100, 200)),
-                    null,
-                    new UnderlineInfo(new System.Drawing.SolidBrush(Color.FromArgb(0, 100, 200)), UnderlineDecorations.Line),
-                    null));
-        }
-
-        private bool HandleBracketAutoClose(char typed)
-        {
-            string text = pythonEditor.GetText();
-            int pos = pythonEditor.GetCaretIndex();
-
-            if (typed == '"' || typed == '\'')
-            {
-                if (pos < text.Length && text[pos] == typed)
-                {
-                    pythonEditor.SetCaretIndex(pos + 1);
-                    return true;
-                }
-
-                bool atWordChar = pos > 0 && (char.IsLetterOrDigit(text[pos - 1]) || text[pos - 1] == '_');
-                if (!atWordChar)
-                {
-                    suppressAutoComplete = true;
-                    int selLen = pythonEditor.GetSelectionLength();
-                    if (selLen > 0)
-                    {
-                        string selected = pythonEditor.GetSelectedText();
-                        pythonEditor.InsertAtCaret(typed.ToString() + selected + typed.ToString());
-                        pythonEditor.SetCaretIndex(pos + 1);
-                        pythonEditor.SelectRange(pos + 1, selLen);
-                    }
-                    else
-                    {
-                        pythonEditor.InsertAtCaret(typed.ToString() + typed.ToString());
-                        pythonEditor.SetCaretIndex(pos + 1);
-                    }
-                    suppressAutoComplete = false;
-                    return true;
-                }
-                return false;
-            }
-
-            if (BracketPairs.ContainsKey(typed) && typed != '"' && typed != '\'')
-            {
-                char close = BracketPairs[typed];
-
-                if (typed == close && pos < text.Length && text[pos] == typed)
-                {
-                    pythonEditor.SetCaretIndex(pos + 1);
-                    return true;
-                }
-
-                suppressAutoComplete = true;
-                int selLen = pythonEditor.GetSelectionLength();
-                if (selLen > 0)
-                {
-                    string selected = pythonEditor.GetSelectedText();
-                    pythonEditor.InsertAtCaret(typed.ToString() + selected + close.ToString());
-                    pythonEditor.SetCaretIndex(pos + 1);
-                    pythonEditor.SelectRange(pos + 1, selLen);
-                }
-                else
-                {
-                    pythonEditor.InsertAtCaret(typed.ToString() + close.ToString());
-                    pythonEditor.SetCaretIndex(pos + 1);
-                }
-                suppressAutoComplete = false;
-                return true;
-            }
-
-            bool isClosing = typed == ')' || typed == ']' || typed == '}';
-            if (isClosing && pos < text.Length && text[pos] == typed)
-            {
-                pythonEditor.SetCaretIndex(pos + 1);
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool HandleBracketAutoDelete(bool isDeleteKey)
-        {
-            string text = pythonEditor.GetText();
-            int pos = pythonEditor.GetCaretIndex();
-
-            int openPos, closePos;
-            if (isDeleteKey)
-            {
-                openPos = pos;
-                closePos = pos + 1;
-            }
-            else
-            {
-                openPos = pos - 1;
-                closePos = pos;
-            }
-
-            if (openPos < 0 || closePos >= text.Length) return false;
-
-            char openChar = text[openPos];
-            char closeChar = text[closePos];
-
-            if (!BracketPairs.ContainsKey(openChar)) return false;
-            if (BracketPairs[openChar] != closeChar) return false;
-
-            suppressHighlight = true;
-            pythonEditor.SelectRange(openPos, 2);
-            pythonEditor.InsertAtCaret("");
-            pythonEditor.SetCaretIndex(openPos);
-            suppressHighlight = false;
-            RunSymbolAnalysis();
-
-            return true;
-        }
-
-        private void HandleAutoIndent()
-        {
-            int pos = pythonEditor.GetCaretIndex();
-            int lineIndex = pythonEditor.GetLineFromCharIndex(pos);
-            string currentLine = pythonEditor.GetLineText(lineIndex);
-
-            int charInLine = pos - pythonEditor.GetFirstCharIndexFromLine(lineIndex);
-            string textBeforeCursor = charInLine <= currentLine.Length ? currentLine.Substring(0, charInLine) : currentLine;
-
-            string indent = "";
-            foreach (char c in textBeforeCursor)
-            {
-                if (c == ' ') indent += ' ';
-                else break;
-            }
-
-            string trimmed = textBeforeCursor.TrimEnd();
-            if (trimmed.EndsWith(":"))
-            {
-                indent += "    ";
-            }
-
-            suppressHighlight = true;
-            suppressAutoComplete = true;
-            pythonEditor.InsertAtCaret("\n" + indent);
-            suppressHighlight = false;
-            suppressAutoComplete = false;
-            RunSymbolAnalysis();
-        }
-
-        private void BlockIndent(bool indent)
-        {
-            string text = pythonEditor.GetText();
-            int selStart = pythonEditor.GetCaretIndex();
-            int selEnd = selStart + pythonEditor.GetSelectionLength();
-            int firstLine = pythonEditor.GetLineFromCharIndex(selStart);
-            int lastLine = pythonEditor.GetLineFromCharIndex(selEnd > selStart ? selEnd - 1 : selEnd);
-            if (lastLine < firstLine) lastLine = firstLine;
-
-            suppressHighlight = true;
-            var lines = new List<string>(pythonEditor.GetLines());
-            int totalDelta = 0;
-            int firstLineDelta = 0;
-
-            for (int i = firstLine; i <= lastLine && i < lines.Count; i++)
-            {
-                string line = lines[i];
-                if (indent)
-                {
-                    lines[i] = "    " + line;
-                    if (i == firstLine) firstLineDelta = 4;
-                    totalDelta += 4;
-                }
-                else
-                {
-                    int removed = 0;
-                    while (removed < 4 && removed < line.Length && line[removed] == ' ')
-                        removed++;
-                    if (removed > 0)
-                    {
-                        lines[i] = line.Substring(removed);
-                        if (i == firstLine) firstLineDelta = -removed;
-                        totalDelta -= removed;
-                    }
-                }
-            }
-
-            pythonEditor.SetText(string.Join("\n", lines));
-
-            int newSelStart = Math.Max(0, selStart + firstLineDelta);
-            int newSelEnd = Math.Max(newSelStart, selEnd + totalDelta);
-            pythonEditor.SelectRange(newSelStart, newSelEnd - newSelStart);
-
-            suppressHighlight = false;
-            textDirty = true;
-            highlightTimer.Stop();
-            highlightTimer.Start();
         }
 
         private void DuplicateLine()
         {
-            int pos = pythonEditor.GetCaretIndex();
-            int lineIndex = pythonEditor.GetLineFromCharIndex(pos);
-            if (lineIndex >= pythonEditor.GetLineCount()) return;
-
-            string line = pythonEditor.GetLineText(lineIndex);
-            int lineStart = pythonEditor.GetFirstCharIndexFromLine(lineIndex);
-            int colOffset = pos - lineStart;
-            int lineEnd = lineStart + line.Length;
-
             suppressHighlight = true;
-            string insertText = "\n" + line;
-            pythonEditor.SetCaretIndex(lineEnd);
-            pythonEditor.ClearSelection();
-            pythonEditor.InsertAtCaret(insertText);
-
-            int newLineStart = pythonEditor.GetFirstCharIndexFromLine(lineIndex + 1);
-            pythonEditor.SetCaretIndex(newLineStart + Math.Min(colOffset, line.Length));
-            pythonEditor.ClearSelection();
+            pythonEditor.DuplicateLine();
             suppressHighlight = false;
 
             textDirty = true;
@@ -737,9 +348,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             editorFontSize = newSize;
 
-            pythonEditor.SyntaxEditorElement.EditorFontSize = editorFontSize;
-
-            pythonEditor.ScrollToCaretPosition();
+            pythonEditor.EditorFont = ResolveMonoFont(editorFontSize);
 
             UpdateCursorPositionStatus();
         }
@@ -756,15 +365,42 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 string code = pythonEditor.GetText();
                 if (string.IsNullOrWhiteSpace(code))
                 {
-                    diagnosticTagger.ClearSymbolErrors();
+                    symbolDiagnostics.Clear();
+                    MergeDiagnostics();
                     return;
                 }
                 var errors = symbolAnalyzer.Analyze(code);
-                diagnosticTagger.SetSymbolErrors(errors);
+                symbolDiagnostics.Clear();
+                if (errors != null)
+                {
+                    foreach (var err in errors)
+                    {
+                        string text = pythonEditor.GetText();
+                        int lineIndex = 0;
+                        int charCount = 0;
+                        string[] allLines = text.Split('\n');
+                        for (int i = 0; i < allLines.Length; i++)
+                        {
+                            if (charCount + allLines[i].Length >= err.StartIndex)
+                            {
+                                lineIndex = i;
+                                break;
+                            }
+                            charCount += allLines[i].Length + 1;
+                        }
+                        int col = err.StartIndex - charCount;
+                        symbolDiagnostics.Add(new Diagnostic(
+                            lineIndex, col, err.Length,
+                            err.Message ?? "Symbol issue",
+                            DiagnosticSeverity.Warning));
+                    }
+                }
+                MergeDiagnostics();
             }
             catch
             {
-                diagnosticTagger.ClearSymbolErrors();
+                symbolDiagnostics.Clear();
+                MergeDiagnostics();
             }
         }
 
@@ -775,7 +411,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             string script = pythonEditor.GetText();
             if (string.IsNullOrWhiteSpace(script))
             {
-                diagnosticTagger.ClearErrorLine();
+                syntaxDiagnostics.Clear();
+                MergeDiagnostics();
                 RaiseStatus("Ready");
                 return;
             }
@@ -786,7 +423,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 if (result.Success)
                 {
-                    diagnosticTagger.ClearErrorLine();
+                    syntaxDiagnostics.Clear();
+                    MergeDiagnostics();
                     RaiseStatus("Ready");
                 }
                 else
@@ -796,12 +434,28 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     {
                         var errorMsg = result.Error.Trim();
                         var firstLine = errorMsg.Split('\n')[0];
-                        diagnosticTagger.SetErrorLine(errorLine, firstLine, pythonEditor.Document);
+                        syntaxDiagnostics.Clear();
+                        syntaxDiagnostics.Add(new Diagnostic(
+                            errorLine - 1, 0, 0,
+                            firstLine,
+                            DiagnosticSeverity.Error));
+                        MergeDiagnostics();
                         RaiseStatus("Line " + errorLine + ": " + firstLine);
                     }
                 }
             }
             catch { }
+        }
+
+        private void MergeDiagnostics()
+        {
+            var all = new List<Diagnostic>();
+            all.AddRange(symbolDiagnostics);
+            all.AddRange(syntaxDiagnostics);
+            if (all.Count > 0)
+                pythonEditor.SetDiagnostics(all);
+            else
+                pythonEditor.ClearDiagnostics();
         }
 
         public void LoadData(List<Customer> customers, List<Employee> employees)
@@ -1129,12 +783,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
             symbolAnalyzer.SetDatasetColumns(colMap);
 
-            if (autoComplete != null)
+            if (completionProvider != null)
             {
                 var allNames = new List<string>(names);
                 allNames.AddRange(inMemoryDataTypes.Keys);
-                autoComplete.SetDynamicSymbols(allNames);
-                autoComplete.SetDatasetColumns(colMap);
+                completionProvider.SetDynamicSymbols(allNames);
+                completionProvider.SetDataSources(colMap);
+                completionProvider.SetRegisteredClasses(registeredPythonClasses);
+                completionProvider.SetContextVariables(contextVariables);
             }
         }
 
@@ -1293,7 +949,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editMenu.Items.Add(pasteItem);
 
             var deleteItem = new RadMenuItem("Delete");
-            deleteItem.Click += (s, e) => { if (pythonEditor.ContainsFocus && pythonEditor.GetSelectionLength() > 0) pythonEditor.InsertAtCaret(""); };
+            deleteItem.Click += (s, e) => { if (pythonEditor.ContainsFocus && pythonEditor.SelectionLength > 0) pythonEditor.DeleteSelectionText(); };
             deleteItem.HintText = "Del";
             editMenu.Items.Add(deleteItem);
 
@@ -1307,7 +963,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editMenu.Items.Add(new RadMenuSeparatorItem());
 
             var findItem = new RadMenuItem("Find && Replace...");
-            findItem.Click += (s, e) => ShowFindReplace();
+            findItem.Click += (s, e) => pythonEditor.ShowReplace();
             findItem.HintText = "Ctrl+H";
             editMenu.Items.Add(findItem);
 
@@ -1354,7 +1010,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 undoItem.Enabled = pythonEditor.ContainsFocus;
                 redoItem.Enabled = pythonEditor.ContainsFocus;
-                bool hasSelection = pythonEditor.ContainsFocus && pythonEditor.GetSelectionLength() > 0;
+                bool hasSelection = pythonEditor.ContainsFocus && pythonEditor.SelectionLength > 0;
                 cutItem.Enabled = hasSelection;
                 copyItem.Enabled = hasSelection;
                 deleteItem.Enabled = hasSelection;
@@ -2362,7 +2018,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             if (result.Success)
             {
-                diagnosticTagger.ClearErrorLine();
+                syntaxDiagnostics.Clear();
+                MergeDiagnostics();
                 AppendOutput("Syntax OK - no errors found.\n", Color.FromArgb(0, 128, 0));
                 RaiseStatus("Syntax check passed.");
             }
@@ -2375,7 +2032,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 {
                     var errorMsg = result.Error.Trim();
                     var firstLine = errorMsg.Split('\n')[0];
-                    diagnosticTagger.SetErrorLine(errorLine, firstLine, pythonEditor.Document);
+                    syntaxDiagnostics.Clear();
+                    syntaxDiagnostics.Add(new Diagnostic(
+                        errorLine - 1, 0, 0,
+                        firstLine,
+                        DiagnosticSeverity.Error));
+                    MergeDiagnostics();
                 }
                 RaiseStatus("Syntax error on line " + errorLine);
             }
@@ -2394,154 +2056,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         }
 
 
-        private Panel findReplacePanel;
-        private TextBox frFindBox;
-        private TextBox frReplaceBox;
-        private CheckBox frMatchCase;
-        private int frSearchStart;
-
-        private void ShowFindReplace()
-        {
-            if (findReplacePanel != null && findReplacePanel.Visible)
-            {
-                frFindBox.Focus();
-                frFindBox.SelectAll();
-                return;
-            }
-
-            if (findReplacePanel == null)
-            {
-                findReplacePanel = new Panel
-                {
-                    Size = new Size(370, 90),
-                    BackColor = Color.FromArgb(245, 245, 245),
-                    BorderStyle = BorderStyle.FixedSingle,
-                    Visible = false
-                };
-
-                var findLabel = new Label { Text = "Find:", Location = new Point(6, 8), Size = new Size(38, 18), Font = new Font("Segoe UI", 8.5F) };
-                frFindBox = new TextBox { Location = new Point(54, 5), Size = new Size(180, 22), Font = new Font("Segoe UI", 9F) };
-                var replaceLabel = new Label { Text = "Replace:", Location = new Point(6, 34), Size = new Size(48, 18), Font = new Font("Segoe UI", 8.5F) };
-                frReplaceBox = new TextBox { Location = new Point(54, 31), Size = new Size(180, 22), Font = new Font("Segoe UI", 9F) };
-                frMatchCase = new CheckBox { Text = "Match case", Location = new Point(54, 57), Size = new Size(100, 20), Font = new Font("Segoe UI", 8F) };
-
-                var findNextBtn = new Button { Text = "Next", Location = new Point(240, 4), Size = new Size(55, 24), Font = new Font("Segoe UI", 8F), FlatStyle = FlatStyle.Flat };
-                var replaceBtn = new Button { Text = "Replace", Location = new Point(240, 30), Size = new Size(55, 24), Font = new Font("Segoe UI", 8F), FlatStyle = FlatStyle.Flat };
-                var replaceAllBtn = new Button { Text = "All", Location = new Point(298, 30), Size = new Size(38, 24), Font = new Font("Segoe UI", 8F), FlatStyle = FlatStyle.Flat };
-                var closeBtn = new Button { Text = "\u2715", Location = new Point(340, 4), Size = new Size(24, 24), Font = new Font("Segoe UI", 9F), FlatStyle = FlatStyle.Flat, ForeColor = Color.FromArgb(100, 100, 100) };
-                closeBtn.FlatAppearance.BorderSize = 0;
-
-                findNextBtn.Click += (s, ev) => FindNext();
-                replaceBtn.Click += (s, ev) => ReplaceNext();
-                replaceAllBtn.Click += (s, ev) => ReplaceAll();
-                closeBtn.Click += (s, ev) => HideFindReplace();
-
-                Action<object, KeyEventArgs> handleKeys = (s, ev) =>
-                {
-                    if (ev.KeyCode == Keys.Enter) { FindNext(); ev.Handled = true; ev.SuppressKeyPress = true; }
-                    if (ev.KeyCode == Keys.Escape) { HideFindReplace(); ev.Handled = true; ev.SuppressKeyPress = true; }
-                };
-                frFindBox.KeyDown += new KeyEventHandler(handleKeys);
-                frReplaceBox.KeyDown += (s, ev) =>
-                {
-                    if (ev.KeyCode == Keys.Enter) { ReplaceNext(); ev.Handled = true; ev.SuppressKeyPress = true; }
-                    if (ev.KeyCode == Keys.Escape) { HideFindReplace(); ev.Handled = true; ev.SuppressKeyPress = true; }
-                };
-
-                findReplacePanel.Controls.AddRange(new Control[] { findLabel, frFindBox, replaceLabel, frReplaceBox, frMatchCase, findNextBtn, replaceBtn, replaceAllBtn, closeBtn });
-                editorPanel.Controls.Add(findReplacePanel);
-                findReplacePanel.BringToFront();
-            }
-
-            PositionFindReplacePanel();
-            editorPanel.Resize += (s, ev) => { if (findReplacePanel.Visible) PositionFindReplacePanel(); };
-
-            if (pythonEditor.GetSelectionLength() > 0)
-                frFindBox.Text = pythonEditor.GetSelectedText();
-
-            frSearchStart = 0;
-            findReplacePanel.Visible = true;
-            frFindBox.Focus();
-            frFindBox.SelectAll();
-        }
-
-        private void PositionFindReplacePanel()
-        {
-            int x = editorPanel.Width - findReplacePanel.Width - 20;
-            if (x < 0) x = 0;
-            int y = editorMenuBar.Height + 2;
-            findReplacePanel.Location = new Point(x, y);
-        }
-
-        private void HideFindReplace()
-        {
-            if (findReplacePanel != null)
-                findReplacePanel.Visible = false;
-            pythonEditor.Focus();
-        }
-
-        private void FindNext()
-        {
-            string find = frFindBox.Text;
-            if (string.IsNullOrEmpty(find)) return;
-
-            var comparison = frMatchCase.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-            string text = pythonEditor.GetText();
-            int idx = text.IndexOf(find, frSearchStart, comparison);
-            if (idx < 0)
-            {
-                idx = text.IndexOf(find, 0, comparison);
-                if (idx < 0)
-                {
-                    RaiseStatus("Not found: " + find);
-                    return;
-                }
-            }
-            pythonEditor.SelectRange(idx, find.Length);
-            pythonEditor.ScrollToCaretPosition();
-            frSearchStart = idx + find.Length;
-            RaiseStatus("Found at position " + idx);
-        }
-
-        private void ReplaceNext()
-        {
-            if (pythonEditor.GetSelectionLength() > 0)
-            {
-                pythonEditor.InsertAtCaret(frReplaceBox.Text);
-            }
-            FindNext();
-        }
-
-        private void ReplaceAll()
-        {
-            string find = frFindBox.Text;
-            string replace = frReplaceBox.Text;
-            if (string.IsNullOrEmpty(find)) return;
-
-            var comparison = frMatchCase.Checked ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
-            int count = 0;
-            int idx = 0;
-            string text = pythonEditor.GetText();
-            var sb = new System.Text.StringBuilder();
-            while (true)
-            {
-                int found = text.IndexOf(find, idx, comparison);
-                if (found < 0)
-                {
-                    sb.Append(text.Substring(idx));
-                    break;
-                }
-                sb.Append(text.Substring(idx, found - idx));
-                sb.Append(replace);
-                idx = found + find.Length;
-                count++;
-            }
-            if (count > 0)
-            {
-                pythonEditor.SetText(sb.ToString());
-            }
-            RaiseStatus("Replaced " + count + " occurrence(s).");
-        }
 
         private void InitializeFileSystem()
         {
@@ -3001,7 +2515,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private void LoadFileIntoEditor(FileTab tab)
         {
             suppressHighlight = true;
-            suppressAutoComplete = true;
 
             pythonEditor.SetText(tab.Content);
             pythonEditor.SetCaretIndex(Math.Min(tab.CursorPosition, pythonEditor.GetText().Length));
@@ -3010,7 +2523,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             bookmarks = new HashSet<int>(tab.Bookmarks);
 
             suppressHighlight = false;
-            suppressAutoComplete = false;
             RunSymbolAnalysis();
 
             pythonEditor.ScrollToCaretPosition();
