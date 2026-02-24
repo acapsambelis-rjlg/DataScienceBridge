@@ -316,12 +316,77 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             return products;
         }
 
+        private double Clamp(double val, double min, double max)
+        {
+            if (val < min) return min;
+            if (val > max) return max;
+            return val;
+        }
+
+        private double GaussianNoise(double mean, double stddev)
+        {
+            double u1 = 1.0 - rng.NextDouble();
+            double u2 = 1.0 - rng.NextDouble();
+            double z = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
+            return mean + stddev * z;
+        }
+
         public List<Customer> GenerateCustomers(int count = 150, List<Product> products = null)
         {
             var customers = new List<Customer>();
             for (int i = 1; i <= count; i++)
             {
                 int cityIdx = rng.Next(Cities.Length);
+
+                var dob = RandDate(new DateTime(1960, 1, 1), new DateTime(2003, 1, 1));
+                int age = (int)((new DateTime(2025, 6, 1) - dob).TotalDays / 365.25);
+
+                double tierRoll = rng.NextDouble();
+                string tier;
+                double creditBase;
+                double activeChance;
+                DateTime regEarliest;
+                if (age >= 50 && tierRoll < 0.35)
+                {
+                    tier = "Platinum";
+                    creditBase = GaussianNoise(35000, 8000);
+                    activeChance = 0.92;
+                    regEarliest = new DateTime(2018, 1, 1);
+                }
+                else if (age >= 40 && tierRoll < 0.50)
+                {
+                    tier = "Gold";
+                    creditBase = GaussianNoise(22000, 5000);
+                    activeChance = 0.88;
+                    regEarliest = new DateTime(2019, 1, 1);
+                }
+                else if (age >= 30 && tierRoll < 0.60)
+                {
+                    tier = "Silver";
+                    creditBase = GaussianNoise(12000, 3000);
+                    activeChance = 0.82;
+                    regEarliest = new DateTime(2020, 1, 1);
+                }
+                else if (tierRoll < 0.80)
+                {
+                    tier = "Bronze";
+                    creditBase = GaussianNoise(5000, 2000);
+                    activeChance = 0.70;
+                    regEarliest = new DateTime(2021, 1, 1);
+                }
+                else
+                {
+                    tier = "Diamond";
+                    creditBase = GaussianNoise(45000, 5000);
+                    activeChance = 0.95;
+                    regEarliest = new DateTime(2018, 1, 1);
+                }
+
+                double creditLimit = Math.Round(Clamp(creditBase, 500, 60000), 2);
+                bool isActive = rng.NextDouble() < activeChance;
+
+                var regDate = RandDate(regEarliest, new DateTime(2025, 12, 31));
+
                 var cust = new Customer
                 {
                     Id = i,
@@ -329,11 +394,11 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     LastName = Pick(LastNames),
                     Email = "user" + i + "@example.com",
                     Phone = "(" + rng.Next(200, 999) + ") " + rng.Next(200, 999) + "-" + rng.Next(1000, 9999),
-                    DateOfBirth = RandDate(new DateTime(1960, 1, 1), new DateTime(2003, 1, 1)),
-                    RegistrationDate = RandDate(new DateTime(2018, 1, 1), new DateTime(2025, 12, 31)),
-                    Tier = Pick(Tiers),
-                    CreditLimit = Math.Round(RandDouble(500, 50000), 2),
-                    IsActive = rng.NextDouble() > 0.15,
+                    DateOfBirth = dob,
+                    RegistrationDate = regDate,
+                    Tier = tier,
+                    CreditLimit = creditLimit,
+                    IsActive = isActive,
                     Address = new Address
                     {
                         Street = rng.Next(100, 9999) + " " + Pick(LastNames) + " St",
@@ -397,24 +462,113 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             return orders;
         }
 
+        private static readonly Dictionary<string, double> DeptSalaryBase = new Dictionary<string, double>
+        {
+            { "Engineering", 115000 }, { "R&D", 110000 }, { "Product", 105000 },
+            { "Finance", 95000 }, { "Legal", 100000 }, { "Marketing", 80000 },
+            { "Sales", 75000 }, { "Operations", 70000 }, { "HR", 72000 }, { "Support", 60000 }
+        };
+
+        private static readonly Dictionary<string, double> DeptRemoteRate = new Dictionary<string, double>
+        {
+            { "Engineering", 0.60 }, { "R&D", 0.50 }, { "Product", 0.55 },
+            { "Finance", 0.25 }, { "Legal", 0.20 }, { "Marketing", 0.45 },
+            { "Sales", 0.40 }, { "Operations", 0.15 }, { "HR", 0.30 }, { "Support", 0.65 }
+        };
+
+        private static readonly Dictionary<string, string[]> DeptTitles = new Dictionary<string, string[]>
+        {
+            { "Engineering", new[] { "Associate", "Analyst", "Lead", "Senior Analyst", "Manager", "Senior Manager", "Director", "VP" } },
+            { "R&D", new[] { "Associate", "Specialist", "Lead", "Senior Analyst", "Manager", "Senior Manager", "Director", "VP" } },
+            { "Product", new[] { "Coordinator", "Analyst", "Specialist", "Senior Analyst", "Manager", "Senior Manager", "Director", "VP" } },
+            { "Finance", new[] { "Associate", "Analyst", "Senior Analyst", "Specialist", "Manager", "Senior Manager", "Director", "VP" } },
+            { "Legal", new[] { "Coordinator", "Analyst", "Specialist", "Senior Analyst", "Manager", "Senior Manager", "Director", "VP" } },
+            { "Marketing", new[] { "Coordinator", "Associate", "Specialist", "Analyst", "Senior Analyst", "Manager", "Senior Manager", "Director" } },
+            { "Sales", new[] { "Associate", "Coordinator", "Specialist", "Analyst", "Senior Analyst", "Manager", "Senior Manager", "Director" } },
+            { "Operations", new[] { "Associate", "Coordinator", "Specialist", "Analyst", "Manager", "Senior Manager", "Director", "VP" } },
+            { "HR", new[] { "Coordinator", "Associate", "Specialist", "Analyst", "Manager", "Senior Manager", "Director", "VP" } },
+            { "Support", new[] { "Associate", "Coordinator", "Specialist", "Analyst", "Lead", "Manager", "Senior Manager", "Director" } }
+        };
+
+        private static readonly Dictionary<string, string> DeptOffice = new Dictionary<string, string>
+        {
+            { "Engineering", "West - SF" }, { "R&D", "West - SF" }, { "Product", "West - SF" },
+            { "Finance", "HQ - NYC" }, { "Legal", "HQ - NYC" }, { "Marketing", "HQ - NYC" },
+            { "Sales", "South - Austin" }, { "Operations", "Midwest - Chicago" },
+            { "HR", "HQ - NYC" }, { "Support", "South - Austin" }
+        };
+
         public List<Employee> GenerateEmployees(int count = 100)
         {
             var employees = new List<Employee>();
+
+            string[] deptPool = Departments;
+            double[] deptWeights = { 0.20, 0.12, 0.10, 0.08, 0.08, 0.05, 0.10, 0.12, 0.07, 0.08 };
+
             for (int i = 1; i <= count; i++)
             {
+                double deptRoll = rng.NextDouble();
+                double cumulative = 0;
+                string dept = deptPool[deptPool.Length - 1];
+                for (int d = 0; d < deptPool.Length; d++)
+                {
+                    cumulative += deptWeights[d];
+                    if (deptRoll < cumulative) { dept = deptPool[d]; break; }
+                }
+
+                var hireDate = RandDate(new DateTime(2010, 1, 1), new DateTime(2025, 6, 1));
+                int yearsEmployed = (int)((new DateTime(2025, 6, 1) - hireDate).TotalDays / 365.25);
+
+                string[] titleLadder = DeptTitles[dept];
+                int titleIdx;
+                if (yearsEmployed >= 12)
+                    titleIdx = rng.Next(Math.Max(0, titleLadder.Length - 3), titleLadder.Length);
+                else if (yearsEmployed >= 7)
+                    titleIdx = rng.Next(Math.Max(0, titleLadder.Length / 2 - 1), Math.Min(titleLadder.Length, titleLadder.Length - 1));
+                else if (yearsEmployed >= 3)
+                    titleIdx = rng.Next(1, Math.Min(titleLadder.Length, titleLadder.Length / 2 + 2));
+                else
+                    titleIdx = rng.Next(0, Math.Min(titleLadder.Length, 3));
+                string title = titleLadder[titleIdx];
+
+                double baseSalary = DeptSalaryBase[dept];
+                double tenureBonus = yearsEmployed * 2800;
+                double titleMultiplier = 1.0 + (titleIdx * 0.12);
+                double salaryNoise = GaussianNoise(0, baseSalary * 0.08);
+                double salary = Math.Round(Clamp((baseSalary + tenureBonus) * titleMultiplier + salaryNoise, 38000, 250000), 2);
+
+                double perfBase = 2.8;
+                if (yearsEmployed >= 5) perfBase += 0.4;
+                if (titleIdx >= titleLadder.Length / 2) perfBase += 0.3;
+                if (dept == "Engineering" || dept == "R&D") perfBase += 0.2;
+                if (dept == "Support") perfBase -= 0.2;
+                double perfNoise = GaussianNoise(0, 0.5);
+                double performanceScore = Math.Round(Clamp(perfBase + perfNoise, 1.0, 5.0), 2);
+
+                bool isRemote = rng.NextDouble() < DeptRemoteRate[dept];
+
+                string primaryOffice = DeptOffice[dept];
+                string office;
+                if (isRemote)
+                    office = "Remote";
+                else if (rng.NextDouble() < 0.75)
+                    office = primaryOffice;
+                else
+                    office = Pick(Offices);
+
                 employees.Add(new Employee
                 {
                     Id = i,
                     FirstName = Pick(FirstNames),
                     LastName = Pick(LastNames),
-                    Department = Pick(Departments),
-                    Title = Pick(Titles),
-                    HireDate = RandDate(new DateTime(2010, 1, 1), new DateTime(2025, 6, 1)),
-                    Salary = Math.Round(RandDouble(40000, 200000), 2),
-                    PerformanceScore = Math.Round(RandDouble(1, 5), 2),
+                    Department = dept,
+                    Title = title,
+                    HireDate = hireDate,
+                    Salary = salary,
+                    PerformanceScore = performanceScore,
                     ManagerId = i > 10 ? rng.Next(1, 11) : 0,
-                    IsRemote = rng.NextDouble() < 0.35,
-                    Office = Pick(Offices)
+                    IsRemote = isRemote,
+                    Office = office
                 });
             }
             return employees;
