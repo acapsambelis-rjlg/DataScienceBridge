@@ -66,6 +66,9 @@
     <Compile Include="PythonWorkbench\PlotViewerForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="PythonWorkbench\PlotViewerForm.Designer.cs">
+      <DependentUpon>PlotViewerForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,6 +88,9 @@
   <ItemGroup>
     <EmbeddedResource Include="PythonWorkbench\DataScienceControl.resx">
       <DependentUpon>DataScienceControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PythonWorkbench\PlotViewerForm.resx">
+      <DependentUpon>PlotViewerForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>

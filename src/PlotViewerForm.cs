@@ -6,14 +6,8 @@ using System.Windows.Forms;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
-    public class PlotViewerForm : Form
+    public partial class PlotViewerForm : Form
     {
-        private PictureBox pictureBox;
-        private Panel navPanel;
-        private Button prevBtn;
-        private Button nextBtn;
-        private Button saveBtn;
-        private Label indexLabel;
         private List<string> imagePaths;
         private int currentIndex;
 
@@ -22,78 +16,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             imagePaths = paths;
             currentIndex = 0;
 
-            Text = "Plot Viewer";
-            Size = new Size(900, 700);
-            MinimumSize = new Size(400, 300);
-            StartPosition = FormStartPosition.CenterParent;
-            BackColor = Color.FromArgb(30, 30, 30);
-
-            pictureBox = new PictureBox
-            {
-                Dock = DockStyle.Fill,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = Color.White
-            };
-
-            navPanel = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 40,
-                BackColor = Color.FromArgb(45, 45, 48)
-            };
-
-            prevBtn = new Button
-            {
-                Text = "< Previous",
-                Location = new Point(10, 7),
-                Size = new Size(90, 26),
-                FlatStyle = FlatStyle.Flat,
-                ForeColor = Color.White,
-                BackColor = Color.FromArgb(60, 60, 65)
-            };
-            prevBtn.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
-            prevBtn.Click += (s, e) => Navigate(-1);
-
-            nextBtn = new Button
-            {
-                Text = "Next >",
-                Location = new Point(110, 7),
-                Size = new Size(90, 26),
-                FlatStyle = FlatStyle.Flat,
-                ForeColor = Color.White,
-                BackColor = Color.FromArgb(60, 60, 65)
-            };
-            nextBtn.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
-            nextBtn.Click += (s, e) => Navigate(1);
-
-            indexLabel = new Label
-            {
-                Location = new Point(210, 11),
-                Size = new Size(200, 20),
-                ForeColor = Color.FromArgb(200, 200, 200),
-                TextAlign = ContentAlignment.MiddleLeft
-            };
-
-            saveBtn = new Button
-            {
-                Text = "Save As...",
-                Size = new Size(90, 26),
-                FlatStyle = FlatStyle.Flat,
-                ForeColor = Color.White,
-                BackColor = Color.FromArgb(60, 60, 65),
-                Anchor = AnchorStyles.Top | AnchorStyles.Right
-            };
-            saveBtn.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
-            saveBtn.Location = new Point(navPanel.Width - 100, 7);
-            saveBtn.Click += OnSaveAs;
-
-            navPanel.Controls.Add(prevBtn);
-            navPanel.Controls.Add(nextBtn);
-            navPanel.Controls.Add(indexLabel);
-            navPanel.Controls.Add(saveBtn);
-
-            Controls.Add(pictureBox);
-            Controls.Add(navPanel);
+            InitializeComponent();
 
             if (imagePaths.Count <= 1)
             {
@@ -102,8 +25,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             ShowImage();
+        }
 
-            FormClosed += (s, e) => CleanupTempFiles();
+        private void OnPrevClick(object sender, EventArgs e)
+        {
+            Navigate(-1);
+        }
+
+        private void OnNextClick(object sender, EventArgs e)
+        {
+            Navigate(1);
+        }
+
+        private void OnFormClosed(object sender, FormClosedEventArgs e)
+        {
+            CleanupTempFiles();
         }
 
         private void Navigate(int direction)

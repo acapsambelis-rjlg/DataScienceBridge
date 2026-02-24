@@ -27,6 +27,7 @@ mcs $REFS \
     src/DataSciencePythonCompletionProvider.cs \
     src/DataScienceControl.Designer.cs \
     src/DataScienceControl.cs \
+    src/PlotViewerForm.Designer.cs \
     src/PlotViewerForm.cs \
     src/MainForm.Designer.cs \
     src/MainForm.cs \
