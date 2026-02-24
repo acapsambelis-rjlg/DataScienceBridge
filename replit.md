@@ -18,10 +18,27 @@ The application uses Mono (C# / .NET Framework 4.7.2 compatible) for cross-platf
 **Telerik Migration Status (VS project only):**
 - **Phase 1 COMPLETE:** Basic layout/container controls swapped — TabControl→RadPageView, SplitContainer→RadSplitContainer+SplitPanel, Panel→RadPanel, Button→RadButton, Label→RadLabel, MenuStrip→RadMenu, ToolStripMenuItem→RadMenuItem, ContextMenuStrip→RadContextMenu, GroupBox→RadGroupBox, TextBox→RadTextBox, ComboBox→RadDropDownList
 - **Phase 2 PENDING:** TreeView→RadTreeView, ListBox→RadListControl
-- **Phase 3 PENDING:** RichTextBox migration, SquiggleRichTextBox adaptation
+- **Phase 3 COMPLETE:** SquiggleRichTextBox→RadSyntaxEditor with tagger-based architecture. PythonTagger.cs handles syntax highlighting (keywords, builtins, strings, comments, numbers, decorators, self, function/class defs, f-string braces). DiagnosticTagger.cs handles error squiggles (red underline via UnderlineInfo) and symbol warnings (blue underline). SyntaxEditorHelper.cs provides 20+ extension methods bridging RichTextBox API to RadSyntaxEditor API. Custom undo/redo stack removed (RadSyntaxEditor built-in). LineNumberPanel removed (RadSyntaxEditor.ShowLineNumbers). ErrorSquiggleOverlay eliminated. AutoCompletePopup updated for RadSyntaxEditor.
+- **Phase 3 API Corrections COMPLETE:** Fixed Telerik API mismatches per official docs (R1 2021 SP2+):
+  - `IsLineNumberMarginVisible` → `ShowLineNumbers`
+  - `Telerik.WinForms.Documents.Model.SolidFill` → `System.Drawing.SolidBrush` in TextFormatDefinition constructors
+  - `TextFormatDefinition.Foreground = ...` property setter → constructor-based: `new TextFormatDefinition(new SolidBrush(color))`
+  - `TextFormatDefinition.Underline = true` → `new UnderlineInfo(brush, UnderlineDecorations.Line)` in 4-arg constructor
+  - `SyntaxEditorElement.CaretPositionChanged` → `RadSyntaxEditor.SelectionChanged`
+  - `pythonEditor.Font = ...` → `SyntaxEditorElement.EditorFontSize` + `SyntaxEditorElement.EditorFontFamily`
+  - `CaretPosition.Index` fixed: now correctly calculates absolute position as `lineStart + column`
+  - `InvalidateTags()` → `CallOnTagsChanged(this.Document.CurrentSnapshot.Span)` (protected base method)
+  - `TagSpan<T>(Span, tag)` → `TagSpan<T>(TextSnapshotSpan, tag)` with proper snapshot reference
+  - `snapshot.GetText()` → `snapshot.GetText(snapshot.Span)` (explicit Span overload)
+  - `TextSnapshotLine.Start` → `TextSnapshotLine.Span.Start` (TextSnapshotLine does NOT have direct .Start property)
+  - `TextDocument.Remove(Span)` → SelectRange() + DeleteCommand.Execute(null) (TextDocument has no Remove/Delete)
+  - `Selection.GetSelectedSpans()` / `Selection.GetSelectionSpan()` → `Selection.GetSelectedText().Length` (not available in WinForms)
+  - `SyntaxEditorCommandBase.Execute()` → `.Execute(null)` (Execute(object) requires parameter)
+  - `TextSnapshotSpan(int, int)` → `TextSnapshotSpan(TextSnapshot, Span)` (requires snapshot reference)
+  - `RadSyntaxEditorElement.InvalidateUI()` → does not exist, not needed
 
 **Namespace Structure (decoupled from file paths — do not change):**
-- `RJLG.IntelliSEM.UI.Controls.PythonDataScience` — DataScienceControl, AutoCompletePopup, ErrorSquiggleOverlay (SquiggleRichTextBox), LineNumberPanel, PlotViewerForm, PythonBridge, PythonSyntaxHighlighter, PythonSymbolAnalyzer
+- `RJLG.IntelliSEM.UI.Controls.PythonDataScience` — DataScienceControl, AutoCompletePopup, PythonTagger, DiagnosticTagger, SyntaxEditorHelper, PlotViewerForm, PythonBridge, PythonSymbolAnalyzer
 - `RJLG.IntelliSEM.Data.PythonDataScience` — DataModels (PythonVisibleAttribute, SampleDataItem, etc.), JsonHelper
 - `DataScienceWorkbench` — MainForm, Program (demo app only, not part of reusable control)
 

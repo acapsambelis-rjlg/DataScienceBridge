@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using Telerik.WinControls.UI;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
@@ -27,7 +28,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
     public class AutoCompletePopup : IDisposable
     {
-        private readonly RichTextBox editor;
+        private readonly RadSyntaxEditor editor;
         private readonly ListBox listBox;
         private readonly NoActivateForm popupForm;
         private int triggerStart = -1;
@@ -133,7 +134,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AllItems.Sort(StringComparer.OrdinalIgnoreCase);
         }
 
-        public AutoCompletePopup(RichTextBox editor)
+        public AutoCompletePopup(RadSyntaxEditor editor)
         {
             this.editor = editor;
 
@@ -226,8 +227,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public void OnTextChanged()
         {
-            string text = editor.Text;
-            int pos = editor.SelectionStart;
+            string text = editor.GetText();
+            int pos = editor.GetCaretIndex();
             if (pos <= 0 || pos > text.Length) { Hide(); return; }
 
             char lastChar = text[pos - 1];
@@ -340,7 +341,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
             else if (objectName == "self")
             {
-                var classMembers = ExtractClassMembersForSelf(code, editor.SelectionStart);
+                var classMembers = ExtractClassMembersForSelf(code, editor.GetCaretIndex());
                 members.AddRange(classMembers);
             }
             else
@@ -541,7 +542,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             int popupHeight = visibleItems * listBox.ItemHeight + 4;
             int popupWidth = 280;
 
-            Point caretPos = editor.GetPositionFromCharIndex(editor.SelectionStart);
+            Point caretPos = editor.GetPositionFromCharIndex(editor.GetCaretIndex());
             Point screenPos = editor.PointToScreen(caretPos);
             screenPos.Y += editor.Font.Height + 2;
 
@@ -571,12 +572,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public void OnSelectionChanged()
         {
             if (!isShowing) return;
-            if (editor.SelectionLength > 0)
+            if (editor.GetSelectionLength() > 0)
             {
                 Hide();
                 return;
             }
-            int pos = editor.SelectionStart;
+            int pos = editor.GetCaretIndex();
             if (pos < triggerStart)
             {
                 Hide();
@@ -590,17 +591,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             string selected = listBox.SelectedItem.ToString();
             Hide();
 
-            int pos = editor.SelectionStart;
-            string text = editor.Text;
+            int pos = editor.GetCaretIndex();
+            string text = editor.GetText();
             string prefix = text.Substring(triggerStart, pos - triggerStart);
 
             int dotIdx = prefix.LastIndexOf('.');
             if (dotIdx >= 0)
             {
                 int memberStart = triggerStart + dotIdx + 1;
-                editor.Select(memberStart, pos - memberStart);
-                editor.SelectedText = selected;
-                editor.SelectionStart = memberStart + selected.Length;
+                editor.SelectRange(memberStart, pos - memberStart);
+                editor.InsertAtCaret(selected);
+                editor.SetCaretIndex(memberStart + selected.Length);
             }
             else
             {
@@ -610,20 +611,22 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     insertion = selected.TrimStart('.');
                 }
 
-                editor.Select(triggerStart, pos - triggerStart);
-                editor.SelectedText = insertion;
-                editor.SelectionStart = triggerStart + insertion.Length;
+                editor.SelectRange(triggerStart, pos - triggerStart);
+                editor.InsertAtCaret(insertion);
+                editor.SetCaretIndex(triggerStart + insertion.Length);
             }
 
-            editor.SelectionLength = 0;
+            editor.ClearSelection();
             editor.Focus();
         }
 
         public void Dispose()
         {
             Hide();
-            popupForm.Dispose();
-            listBox.Dispose();
+            if (popupForm != null)
+                popupForm.Dispose();
+            if (listBox != null)
+                listBox.Dispose();
         }
     }
 }
