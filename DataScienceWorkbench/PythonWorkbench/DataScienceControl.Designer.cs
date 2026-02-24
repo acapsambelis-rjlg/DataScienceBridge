@@ -20,11 +20,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void InitializeComponent()
         {
-            this.mainTabs = new Telerik.WinControls.UI.RadPageView();
-            this.editorTab = new Telerik.WinControls.UI.RadPageViewPage();
-            this.mainSplit = new Telerik.WinControls.UI.RadSplitContainer();
-            this.mainSplitEditorPanel = new Telerik.WinControls.UI.SplitPanel();
-            this.mainSplitOutputPanel = new Telerik.WinControls.UI.SplitPanel();
+            this.dockPanel = new WeifenLuo.WinFormsUI.Docking.DockPanel();
             this.fileListPanel = new Telerik.WinControls.UI.RadPanel();
             this.fileTreeView = new Telerik.WinControls.UI.RadTreeView();
             this.fileListLabel = new Telerik.WinControls.UI.RadLabel();
@@ -32,7 +28,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileNewBtn = new Telerik.WinControls.UI.RadButton();
             this.fileOpenBtn = new Telerik.WinControls.UI.RadButton();
             this.fileCloseBtn = new Telerik.WinControls.UI.RadButton();
-            this.fileListSplitter = new System.Windows.Forms.Splitter();
             this.editorPanel = new Telerik.WinControls.UI.RadPanel();
             this.pythonEditor = new CodeEditor.CodeTextBox();
             this.editorMenuBar = new Telerik.WinControls.UI.RadMenu();
@@ -40,14 +35,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.outputPanel = new Telerik.WinControls.UI.RadPanel();
             this.outputBox = new System.Windows.Forms.RichTextBox();
             this.outputLabel = new Telerik.WinControls.UI.RadLabel();
-            this.referenceTab = new Telerik.WinControls.UI.RadPageViewPage();
+            this.refPanel = new Telerik.WinControls.UI.RadPanel();
             this.refSplit = new Telerik.WinControls.UI.RadSplitContainer();
             this.refSplitTreePanel = new Telerik.WinControls.UI.SplitPanel();
             this.refSplitDetailPanel = new Telerik.WinControls.UI.SplitPanel();
             this.refTreeView = new Telerik.WinControls.UI.RadTreeView();
             this.refSearchBox = new Telerik.WinControls.UI.RadTextBox();
             this.refDetailBox = new System.Windows.Forms.RichTextBox();
-            this.packagesTab = new Telerik.WinControls.UI.RadPageViewPage();
+            this.pkgPanel = new Telerik.WinControls.UI.RadPanel();
             this.pkgRightPanel = new Telerik.WinControls.UI.RadPanel();
             this.packageListBox = new System.Windows.Forms.ListBox();
             this.pkgListLabel = new Telerik.WinControls.UI.RadLabel();
@@ -66,99 +61,42 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileListButtonPanel.SuspendLayout();
             this.editorPanel.SuspendLayout();
             this.outputPanel.SuspendLayout();
+            this.refPanel.SuspendLayout();
+            this.pkgPanel.SuspendLayout();
             this.pkgRightPanel.SuspendLayout();
             this.pkgLeftPanel.SuspendLayout();
             this.installGroup.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // mainTabs
-            // 
-            this.mainTabs.ViewMode = Telerik.WinControls.UI.PageViewMode.Strip;
-            this.mainTabs.Pages.Add(this.editorTab);
-            this.mainTabs.Pages.Add(this.referenceTab);
-            this.mainTabs.Pages.Add(this.packagesTab);
-            this.mainTabs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainTabs.Location = new System.Drawing.Point(0, 0);
-            this.mainTabs.Name = "mainTabs";
-            this.mainTabs.Size = new System.Drawing.Size(800, 600);
-            this.mainTabs.TabIndex = 0;
-            this.mainTabs.SelectedPageChanged += new System.EventHandler(this.mainTabs_SelectedPageChanged);
-            // 
-            // editorTab
-            // 
-            this.editorTab.Controls.Add(this.mainSplit);
-            this.editorTab.Location = new System.Drawing.Point(4, 22);
-            this.editorTab.Name = "editorTab";
-            this.editorTab.Size = new System.Drawing.Size(792, 574);
-            this.editorTab.TabIndex = 0;
-            this.editorTab.Text = "Python Editor";
-            // 
-            // mainSplit
-            // 
-            this.mainSplit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainSplit.Location = new System.Drawing.Point(0, 0);
-            this.mainSplit.Name = "mainSplit";
-            this.mainSplit.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.mainSplit.Size = new System.Drawing.Size(792, 574);
-            this.mainSplit.TabIndex = 0;
-            // 
-            // mainSplitEditorPanel
-            // 
-            this.mainSplitEditorPanel.Controls.Add(this.editorPanel);
-            this.mainSplitEditorPanel.Controls.Add(this.fileListSplitter);
-            this.mainSplitEditorPanel.Controls.Add(this.fileListPanel);
-            this.mainSplitEditorPanel.SizeInfo.SizeMode = Telerik.WinControls.UI.Docking.SplitPanelSizeMode.Absolute;
-            this.mainSplitEditorPanel.SizeInfo.AbsoluteSize = new System.Drawing.Size(792, 380);
-            this.mainSplitEditorPanel.Name = "mainSplitEditorPanel";
-            this.mainSplitEditorPanel.TabIndex = 0;
-            // 
-            // mainSplitOutputPanel
-            // 
-            this.mainSplitOutputPanel.Controls.Add(this.outputPanel);
-            this.mainSplitOutputPanel.Name = "mainSplitOutputPanel";
-            this.mainSplitOutputPanel.TabIndex = 1;
-            // 
-            // mainSplit.SplitPanels
-            // 
-            this.mainSplit.SplitPanels.AddRange(new Telerik.WinControls.UI.SplitPanel[] { this.mainSplitEditorPanel, this.mainSplitOutputPanel });
-            // 
-            // fileListSplitter
-            // 
-            this.fileListSplitter.Dock = System.Windows.Forms.DockStyle.Left;
-            this.fileListSplitter.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
-            this.fileListSplitter.Location = new System.Drawing.Point(200, 0);
-            this.fileListSplitter.MinExtra = 200;
-            this.fileListSplitter.MinSize = 120;
-            this.fileListSplitter.Size = new System.Drawing.Size(4, 380);
-            this.fileListSplitter.Name = "fileListSplitter";
-            this.fileListSplitter.TabIndex = 4;
-            this.fileListSplitter.TabStop = false;
-            // 
+            //
+            // dockPanel
+            //
+            this.dockPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dockPanel.DocumentStyle = WeifenLuo.WinFormsUI.Docking.DocumentStyle.DockingSdi;
+            this.dockPanel.Location = new System.Drawing.Point(0, 0);
+            this.dockPanel.Name = "dockPanel";
+            this.dockPanel.Size = new System.Drawing.Size(800, 600);
+            this.dockPanel.TabIndex = 0;
+            //
             // fileListPanel
-            // 
+            //
             this.fileListPanel.Controls.Add(this.fileTreeView);
             this.fileListPanel.Controls.Add(this.fileListButtonPanel);
             this.fileListPanel.Controls.Add(this.fileListLabel);
-            this.fileListPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.fileListPanel.Location = new System.Drawing.Point(0, 0);
+            this.fileListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fileListPanel.Name = "fileListPanel";
-            this.fileListPanel.Size = new System.Drawing.Size(200, 380);
             this.fileListPanel.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
-            this.fileListPanel.TabIndex = 3;
-            // 
+            //
             // fileListLabel
-            // 
+            //
             this.fileListLabel.Dock = System.Windows.Forms.DockStyle.Top;
             this.fileListLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.fileListLabel.Location = new System.Drawing.Point(0, 0);
             this.fileListLabel.Name = "fileListLabel";
             this.fileListLabel.Padding = new System.Windows.Forms.Padding(6, 4, 0, 0);
-            this.fileListLabel.Size = new System.Drawing.Size(160, 24);
-            this.fileListLabel.TabIndex = 0;
+            this.fileListLabel.Size = new System.Drawing.Size(200, 24);
             this.fileListLabel.Text = "Files";
-            // 
+            //
             // fileTreeView
-            // 
+            //
             this.fileTreeView.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
             this.fileTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fileTreeView.Font = new System.Drawing.Font("Segoe UI", 9F);
@@ -166,264 +104,206 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileTreeView.ShowLines = true;
             this.fileTreeView.AllowEdit = false;
             this.fileTreeView.TreeIndent = 16;
-            this.fileTreeView.Location = new System.Drawing.Point(0, 24);
             this.fileTreeView.Name = "fileTreeView";
-            this.fileTreeView.Size = new System.Drawing.Size(200, 328);
-            this.fileTreeView.TabIndex = 1;
-            // 
+            //
             // fileListButtonPanel
-            // 
+            //
             this.fileListButtonPanel.Controls.Add(this.fileNewBtn);
             this.fileListButtonPanel.Controls.Add(this.fileOpenBtn);
             this.fileListButtonPanel.Controls.Add(this.fileCloseBtn);
             this.fileListButtonPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.fileListButtonPanel.Location = new System.Drawing.Point(0, 352);
             this.fileListButtonPanel.Name = "fileListButtonPanel";
-            this.fileListButtonPanel.Size = new System.Drawing.Size(160, 28);
-            this.fileListButtonPanel.TabIndex = 2;
-            // 
+            this.fileListButtonPanel.Size = new System.Drawing.Size(200, 28);
+            //
             // fileNewBtn
-            // 
+            //
             this.fileNewBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileNewBtn.Location = new System.Drawing.Point(4, 2);
             this.fileNewBtn.Name = "fileNewBtn";
             this.fileNewBtn.Size = new System.Drawing.Size(44, 24);
-            this.fileNewBtn.TabIndex = 0;
             this.fileNewBtn.Text = "+";
-            // 
+            //
             // fileOpenBtn
-            // 
+            //
             this.fileOpenBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileOpenBtn.Location = new System.Drawing.Point(52, 2);
             this.fileOpenBtn.Name = "fileOpenBtn";
             this.fileOpenBtn.Size = new System.Drawing.Size(55, 24);
-            this.fileOpenBtn.TabIndex = 1;
             this.fileOpenBtn.Text = "Open";
-            // 
+            //
             // fileCloseBtn
-            // 
+            //
             this.fileCloseBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.fileCloseBtn.Location = new System.Drawing.Point(111, 2);
             this.fileCloseBtn.Name = "fileCloseBtn";
             this.fileCloseBtn.Size = new System.Drawing.Size(44, 24);
-            this.fileCloseBtn.TabIndex = 2;
             this.fileCloseBtn.Text = "\u00d7";
-            // 
+            //
             // editorPanel
-            // 
+            //
             this.editorPanel.Controls.Add(this.pythonEditor);
             this.editorPanel.Controls.Add(this.editorMenuBar);
             this.editorPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.editorPanel.Location = new System.Drawing.Point(0, 0);
             this.editorPanel.Name = "editorPanel";
-            this.editorPanel.Size = new System.Drawing.Size(792, 380);
-            this.editorPanel.TabIndex = 0;
-            // 
+            //
             // pythonEditor
-            // 
+            //
             this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pythonEditor.Location = new System.Drawing.Point(0, 24);
             this.pythonEditor.Name = "pythonEditor";
-            this.pythonEditor.Size = new System.Drawing.Size(792, 355);
-            this.pythonEditor.TabIndex = 0;
-            // 
+            //
             // editorMenuBar
-            // 
+            //
             this.editorMenuBar.Items.AddRange(new[] { this.insertSnippetBtn });
             this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.editorMenuBar.Location = new System.Drawing.Point(0, 0);
             this.editorMenuBar.Name = "editorMenuBar";
             this.editorMenuBar.Size = new System.Drawing.Size(792, 24);
-            this.editorMenuBar.TabIndex = 2;
-            // 
+            //
             // insertSnippetBtn
-            // 
+            //
             this.insertSnippetBtn.Name = "insertSnippetBtn";
             this.insertSnippetBtn.Size = new System.Drawing.Size(95, 20);
             this.insertSnippetBtn.Text = "Insert Snippet";
-            // 
+            //
             // outputPanel
-            // 
+            //
             this.outputPanel.Controls.Add(this.outputBox);
             this.outputPanel.Controls.Add(this.outputLabel);
             this.outputPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.outputPanel.Location = new System.Drawing.Point(0, 0);
             this.outputPanel.Name = "outputPanel";
-            this.outputPanel.Size = new System.Drawing.Size(792, 188);
-            this.outputPanel.TabIndex = 0;
-            // 
+            //
             // outputBox
-            // 
+            //
             this.outputBox.BackColor = System.Drawing.Color.White;
             this.outputBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.outputBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.outputBox.Font = new System.Drawing.Font("Consolas", 9.5F);
             this.outputBox.ForeColor = System.Drawing.Color.FromArgb(30, 30, 30);
-            this.outputBox.Location = new System.Drawing.Point(0, 22);
             this.outputBox.Name = "outputBox";
             this.outputBox.ReadOnly = true;
-            this.outputBox.Size = new System.Drawing.Size(792, 166);
-            this.outputBox.TabIndex = 0;
             this.outputBox.Text = "";
             this.outputBox.WordWrap = false;
-            // 
+            //
             // outputLabel
-            // 
+            //
             this.outputLabel.Dock = System.Windows.Forms.DockStyle.Top;
             this.outputLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.outputLabel.Location = new System.Drawing.Point(0, 0);
             this.outputLabel.Name = "outputLabel";
             this.outputLabel.Padding = new System.Windows.Forms.Padding(4, 4, 0, 0);
             this.outputLabel.Size = new System.Drawing.Size(792, 22);
-            this.outputLabel.TabIndex = 1;
             this.outputLabel.Text = "Output:";
-            // 
-            // referenceTab
-            // 
-            this.referenceTab.Controls.Add(this.refSplit);
-            this.referenceTab.Location = new System.Drawing.Point(4, 22);
-            this.referenceTab.Name = "referenceTab";
-            this.referenceTab.Size = new System.Drawing.Size(792, 574);
-            this.referenceTab.TabIndex = 1;
-            this.referenceTab.Text = "Data Reference";
-            // 
+            //
+            // refPanel
+            //
+            this.refPanel.Controls.Add(this.refSplit);
+            this.refPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.refPanel.Name = "refPanel";
+            //
             // refSplit
-            // 
+            //
             this.refSplit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.refSplit.Location = new System.Drawing.Point(0, 0);
             this.refSplit.Name = "refSplit";
-            this.refSplit.Size = new System.Drawing.Size(792, 574);
-            this.refSplit.TabIndex = 0;
-            // 
+            //
             // refSplitTreePanel
-            // 
+            //
             this.refSplitTreePanel.Controls.Add(this.refTreeView);
             this.refSplitTreePanel.Controls.Add(this.refSearchBox);
             this.refSplitTreePanel.SizeInfo.SizeMode = Telerik.WinControls.UI.Docking.SplitPanelSizeMode.Absolute;
             this.refSplitTreePanel.SizeInfo.AbsoluteSize = new System.Drawing.Size(260, 574);
             this.refSplitTreePanel.Name = "refSplitTreePanel";
-            this.refSplitTreePanel.TabIndex = 0;
-            // 
+            //
             // refSplitDetailPanel
-            // 
+            //
             this.refSplitDetailPanel.Controls.Add(this.refDetailBox);
             this.refSplitDetailPanel.Name = "refSplitDetailPanel";
-            this.refSplitDetailPanel.TabIndex = 1;
-            // 
+            //
             // refSplit.SplitPanels
-            // 
+            //
             this.refSplit.SplitPanels.AddRange(new Telerik.WinControls.UI.SplitPanel[] { this.refSplitTreePanel, this.refSplitDetailPanel });
-            // 
+            //
             // refSearchBox
-            // 
+            //
             this.refSearchBox.Dock = System.Windows.Forms.DockStyle.Top;
             this.refSearchBox.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.refSearchBox.ForeColor = System.Drawing.Color.Gray;
-            this.refSearchBox.Location = new System.Drawing.Point(0, 0);
             this.refSearchBox.Name = "refSearchBox";
             this.refSearchBox.Size = new System.Drawing.Size(260, 24);
-            this.refSearchBox.TabIndex = 1;
             this.refSearchBox.Text = "Search...";
-            // 
+            //
             // refTreeView
-            // 
+            //
             this.refTreeView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.refTreeView.Font = new System.Drawing.Font("Consolas", 9.5F);
-            this.refTreeView.Location = new System.Drawing.Point(0, 24);
             this.refTreeView.Name = "refTreeView";
-            this.refTreeView.Size = new System.Drawing.Size(260, 550);
-            this.refTreeView.TabIndex = 0;
             this.refTreeView.SelectedNodeChanged += new Telerik.WinControls.UI.RadTreeView.RadTreeViewEventHandler(this.OnRefTreeSelect);
-            // 
+            //
             // refDetailBox
-            // 
+            //
             this.refDetailBox.BackColor = System.Drawing.Color.White;
             this.refDetailBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.refDetailBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.refDetailBox.Font = new System.Drawing.Font("Consolas", 10F);
-            this.refDetailBox.Location = new System.Drawing.Point(0, 0);
             this.refDetailBox.Name = "refDetailBox";
             this.refDetailBox.ReadOnly = true;
-            this.refDetailBox.Size = new System.Drawing.Size(526, 574);
-            this.refDetailBox.TabIndex = 0;
             this.refDetailBox.Text = "";
             this.refDetailBox.WordWrap = false;
-            // 
-            // packagesTab
-            // 
-            this.packagesTab.Controls.Add(this.pkgRightPanel);
-            this.packagesTab.Controls.Add(this.pkgLeftPanel);
-            this.packagesTab.Location = new System.Drawing.Point(4, 22);
-            this.packagesTab.Name = "packagesTab";
-            this.packagesTab.Size = new System.Drawing.Size(792, 574);
-            this.packagesTab.TabIndex = 2;
-            this.packagesTab.Text = "Package Manager";
-            // 
+            //
+            // pkgPanel
+            //
+            this.pkgPanel.Controls.Add(this.pkgRightPanel);
+            this.pkgPanel.Controls.Add(this.pkgLeftPanel);
+            this.pkgPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pkgPanel.Name = "pkgPanel";
+            //
             // pkgRightPanel
-            // 
+            //
             this.pkgRightPanel.Controls.Add(this.packageListBox);
             this.pkgRightPanel.Controls.Add(this.pkgSearchBox);
             this.pkgRightPanel.Controls.Add(this.pkgListLabel);
             this.pkgRightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pkgRightPanel.Location = new System.Drawing.Point(350, 0);
             this.pkgRightPanel.Name = "pkgRightPanel";
             this.pkgRightPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.pkgRightPanel.Size = new System.Drawing.Size(442, 574);
-            this.pkgRightPanel.TabIndex = 1;
-            // 
+            //
             // packageListBox
-            // 
+            //
             this.packageListBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.packageListBox.Font = new System.Drawing.Font("Consolas", 9F);
             this.packageListBox.FormattingEnabled = true;
-            this.packageListBox.Location = new System.Drawing.Point(10, 32);
             this.packageListBox.Name = "packageListBox";
-            this.packageListBox.Size = new System.Drawing.Size(422, 532);
-            this.packageListBox.TabIndex = 0;
-            // 
+            //
             // pkgListLabel
-            // 
+            //
             this.pkgListLabel.Dock = System.Windows.Forms.DockStyle.Top;
             this.pkgListLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.pkgListLabel.Location = new System.Drawing.Point(10, 10);
             this.pkgListLabel.Name = "pkgListLabel";
             this.pkgListLabel.Size = new System.Drawing.Size(422, 22);
-            this.pkgListLabel.TabIndex = 1;
             this.pkgListLabel.Text = "Installed Packages:";
-            // 
+            //
             // pkgSearchBox
-            // 
+            //
             this.pkgSearchBox.Dock = System.Windows.Forms.DockStyle.Top;
             this.pkgSearchBox.Font = new System.Drawing.Font("Consolas", 9F);
-            this.pkgSearchBox.Location = new System.Drawing.Point(10, 32);
             this.pkgSearchBox.Name = "pkgSearchBox";
-            this.pkgSearchBox.Size = new System.Drawing.Size(422, 22);
-            this.pkgSearchBox.TabIndex = 2;
             this.pkgSearchBox.TextChanged += new System.EventHandler(this.OnPkgSearchChanged);
-            // 
+            //
             // pkgLeftPanel
-            // 
+            //
             this.pkgLeftPanel.Controls.Add(this.refreshBtn);
             this.pkgLeftPanel.Controls.Add(this.installGroup);
             this.pkgLeftPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.pkgLeftPanel.Location = new System.Drawing.Point(0, 0);
             this.pkgLeftPanel.Name = "pkgLeftPanel";
             this.pkgLeftPanel.Padding = new System.Windows.Forms.Padding(10);
             this.pkgLeftPanel.Size = new System.Drawing.Size(350, 574);
-            this.pkgLeftPanel.TabIndex = 0;
-            // 
+            //
             // refreshBtn
-            // 
+            //
             this.refreshBtn.Dock = System.Windows.Forms.DockStyle.Top;
-            this.refreshBtn.Location = new System.Drawing.Point(10, 170);
             this.refreshBtn.Name = "refreshBtn";
             this.refreshBtn.Size = new System.Drawing.Size(330, 30);
-            this.refreshBtn.TabIndex = 1;
             this.refreshBtn.Text = "Refresh Installed Packages";
             this.refreshBtn.Click += new System.EventHandler(this.OnRefreshPackages);
-            // 
+            //
             // installGroup
-            // 
+            //
             this.installGroup.Controls.Add(this.quickInstallBtn);
             this.installGroup.Controls.Add(this.quickCombo);
             this.installGroup.Controls.Add(this.quickInstallLabel);
@@ -432,24 +312,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.installGroup.Controls.Add(this.packageNameBox);
             this.installGroup.Controls.Add(this.pkgLabel);
             this.installGroup.Dock = System.Windows.Forms.DockStyle.Top;
-            this.installGroup.Location = new System.Drawing.Point(10, 10);
             this.installGroup.Name = "installGroup";
             this.installGroup.Padding = new System.Windows.Forms.Padding(10);
             this.installGroup.Size = new System.Drawing.Size(330, 160);
-            this.installGroup.TabIndex = 0;
             this.installGroup.Text = "Install / Uninstall Packages";
-            // 
+            //
             // quickInstallBtn
-            // 
+            //
             this.quickInstallBtn.Location = new System.Drawing.Point(220, 99);
             this.quickInstallBtn.Name = "quickInstallBtn";
             this.quickInstallBtn.Size = new System.Drawing.Size(90, 23);
-            this.quickInstallBtn.TabIndex = 6;
             this.quickInstallBtn.Text = "Install";
             this.quickInstallBtn.Click += new System.EventHandler(this.OnQuickInstall);
-            // 
+            //
             // quickCombo
-            // 
+            //
             this.quickCombo.DropDownStyle = RadDropDownStyle.DropDownList;
             this.quickCombo.Items.Add("scipy");
             this.quickCombo.Items.Add("scikit-learn");
@@ -466,56 +343,50 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.quickCombo.Location = new System.Drawing.Point(15, 100);
             this.quickCombo.Name = "quickCombo";
             this.quickCombo.Size = new System.Drawing.Size(200, 21);
-            this.quickCombo.TabIndex = 5;
-            // 
+            //
             // quickInstallLabel
-            // 
+            //
             this.quickInstallLabel.AutoSize = true;
             this.quickInstallLabel.Location = new System.Drawing.Point(15, 80);
             this.quickInstallLabel.Name = "quickInstallLabel";
             this.quickInstallLabel.Size = new System.Drawing.Size(69, 13);
-            this.quickInstallLabel.TabIndex = 4;
             this.quickInstallLabel.Text = "Quick install:";
-            // 
+            //
             // uninstallBtn
-            // 
+            //
             this.uninstallBtn.Location = new System.Drawing.Point(220, 74);
             this.uninstallBtn.Name = "uninstallBtn";
             this.uninstallBtn.Size = new System.Drawing.Size(90, 23);
-            this.uninstallBtn.TabIndex = 3;
             this.uninstallBtn.Text = "Uninstall";
             this.uninstallBtn.Click += new System.EventHandler(this.OnUninstallPackage);
-            // 
+            //
             // installBtn
-            // 
+            //
             this.installBtn.Location = new System.Drawing.Point(220, 44);
             this.installBtn.Name = "installBtn";
             this.installBtn.Size = new System.Drawing.Size(90, 23);
-            this.installBtn.TabIndex = 2;
             this.installBtn.Text = "Install";
             this.installBtn.Click += new System.EventHandler(this.OnInstallPackage);
-            // 
+            //
             // packageNameBox
-            // 
+            //
             this.packageNameBox.Location = new System.Drawing.Point(15, 45);
             this.packageNameBox.Name = "packageNameBox";
             this.packageNameBox.Size = new System.Drawing.Size(200, 20);
-            this.packageNameBox.TabIndex = 1;
-            // 
+            //
             // pkgLabel
-            // 
+            //
             this.pkgLabel.AutoSize = true;
             this.pkgLabel.Location = new System.Drawing.Point(15, 25);
             this.pkgLabel.Name = "pkgLabel";
             this.pkgLabel.Size = new System.Drawing.Size(80, 13);
-            this.pkgLabel.TabIndex = 0;
             this.pkgLabel.Text = "Package name:";
-            // 
+            //
             // DataScienceControl
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.mainTabs);
+            this.Controls.Add(this.dockPanel);
             this.Name = "DataScienceControl";
             this.Size = new System.Drawing.Size(800, 600);
             this.fileListButtonPanel.ResumeLayout(false);
@@ -523,6 +394,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.editorPanel.ResumeLayout(false);
             this.editorPanel.PerformLayout();
             this.outputPanel.ResumeLayout(false);
+            this.refPanel.ResumeLayout(false);
+            this.pkgPanel.ResumeLayout(false);
             this.pkgRightPanel.ResumeLayout(false);
             this.pkgLeftPanel.ResumeLayout(false);
             this.installGroup.ResumeLayout(false);
@@ -532,11 +405,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         #endregion
 
-        private Telerik.WinControls.UI.RadPageView mainTabs;
-        private Telerik.WinControls.UI.RadPageViewPage editorTab;
-        private Telerik.WinControls.UI.RadSplitContainer mainSplit;
-        private Telerik.WinControls.UI.SplitPanel mainSplitEditorPanel;
-        private Telerik.WinControls.UI.SplitPanel mainSplitOutputPanel;
+        private WeifenLuo.WinFormsUI.Docking.DockPanel dockPanel;
         private Telerik.WinControls.UI.RadPanel editorPanel;
         private CodeEditor.CodeTextBox pythonEditor;
         private Telerik.WinControls.UI.RadMenu editorMenuBar;
@@ -544,14 +413,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadPanel outputPanel;
         private System.Windows.Forms.RichTextBox outputBox;
         private Telerik.WinControls.UI.RadLabel outputLabel;
-        private Telerik.WinControls.UI.RadPageViewPage referenceTab;
+        private Telerik.WinControls.UI.RadPanel refPanel;
         private Telerik.WinControls.UI.RadSplitContainer refSplit;
         private Telerik.WinControls.UI.SplitPanel refSplitTreePanel;
         private Telerik.WinControls.UI.SplitPanel refSplitDetailPanel;
         private Telerik.WinControls.UI.RadTreeView refTreeView;
         private Telerik.WinControls.UI.RadTextBox refSearchBox;
         private System.Windows.Forms.RichTextBox refDetailBox;
-        private Telerik.WinControls.UI.RadPageViewPage packagesTab;
+        private Telerik.WinControls.UI.RadPanel pkgPanel;
         private Telerik.WinControls.UI.RadPanel pkgRightPanel;
         private System.Windows.Forms.ListBox packageListBox;
         private Telerik.WinControls.UI.RadLabel pkgListLabel;
@@ -573,6 +442,5 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadButton fileNewBtn;
         private Telerik.WinControls.UI.RadButton fileOpenBtn;
         private Telerik.WinControls.UI.RadButton fileCloseBtn;
-        private System.Windows.Forms.Splitter fileListSplitter;
     }
 }

@@ -53,6 +53,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Progress\Telerik UI for WinForms R3 2019\Bin\TelerikCommon.dll</HintPath>
     </Reference>
+    <Reference Include="WeifenLuo.WinFormsUI.Docking">
+      <HintPath>..\packages\DockPanelSuite.3.1.0\lib\net40\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="WeifenLuo.WinFormsUI.Docking.ThemeVS2015">
+      <HintPath>..\packages\DockPanelSuite.ThemeVS2015.3.1.0\lib\net40\WeifenLuo.WinFormsUI.Docking.ThemeVS2015.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonWorkbenchData\DataModels.cs" />
@@ -63,6 +69,7 @@
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonWorkbench\DataSciencePythonCompletionProvider.cs" />
+    <Compile Include="PythonWorkbench\DockPanelContent.cs" />
     <Compile Include="PythonWorkbench\PlotViewerForm.cs">
       <SubType>Form</SubType>
     </Compile>
