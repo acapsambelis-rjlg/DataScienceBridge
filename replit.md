@@ -61,4 +61,4 @@ Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWork
 
 ## External Dependencies
 - **System:** Mono runtime, libgdiplus, X11 libraries, gtk2, cairo, pango, fontconfig
-- **Python Libraries (Pre-installed in venv):** pandas, numpy, matplotlib, pillow (PIL)
+- **Python Libraries (Pre-installed in venv):** pandas, numpy, matplotlib, pillow (PIL), scikit-learn

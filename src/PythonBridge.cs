@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
@@ -170,7 +171,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void InstallBasePackages()
         {
-            string[] basePackages = { "pandas", "numpy", "matplotlib" };
+            string[] basePackages = { "pandas", "numpy", "matplotlib", "scikit-learn" };
             foreach (var pkg in basePackages)
             {
                 RaiseProgress("Installing " + pkg + "...");
@@ -726,6 +727,100 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 return CreateProcessErrorResult("uninstall package", ex);
             }
+        }
+
+        public void InstallPackageAsync(string packageName, Action<string> onOutput, Action<PythonResult> onComplete)
+        {
+            if (!pythonAvailable)
+            {
+                onComplete(CreateUnavailableResult("install package '" + packageName + "'"));
+                return;
+            }
+
+            RunPipAsync("-m pip install --progress-bar off " + packageName, "install package", 300000, onOutput, onComplete);
+        }
+
+        public void UninstallPackageAsync(string packageName, Action<string> onOutput, Action<PythonResult> onComplete)
+        {
+            if (!pythonAvailable)
+            {
+                onComplete(CreateUnavailableResult("uninstall package '" + packageName + "'"));
+                return;
+            }
+
+            RunPipAsync("-m pip uninstall -y " + packageName, "uninstall package", 120000, onOutput, onComplete);
+        }
+
+        private void RunPipAsync(string arguments, string operationName, int timeoutMs, Action<string> onOutput, Action<PythonResult> onComplete)
+        {
+            var thread = new Thread(new ThreadStart(delegate
+            {
+                try
+                {
+                    var psi = new ProcessStartInfo
+                    {
+                        FileName = pythonPath,
+                        Arguments = arguments,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    ConfigurePipEnvironment(psi);
+
+                    var proc = Process.Start(psi);
+                    var stdoutBuilder = new StringBuilder();
+                    var stderrBuilder = new StringBuilder();
+
+                    proc.OutputDataReceived += delegate(object s, DataReceivedEventArgs e)
+                    {
+                        if (e.Data != null)
+                        {
+                            stdoutBuilder.AppendLine(e.Data);
+                            onOutput(e.Data);
+                        }
+                    };
+                    proc.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e)
+                    {
+                        if (e.Data != null)
+                        {
+                            stderrBuilder.AppendLine(e.Data);
+                            onOutput(e.Data);
+                        }
+                    };
+
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
+                    bool exited = proc.WaitForExit(timeoutMs);
+
+                    if (!exited)
+                    {
+                        try { proc.Kill(); } catch { }
+                        onComplete(new PythonResult
+                        {
+                            ExitCode = -1,
+                            Output = stdoutBuilder.ToString(),
+                            Error = "Operation timed out after " + (timeoutMs / 1000) + " seconds.",
+                            Success = false
+                        });
+                        return;
+                    }
+
+                    onComplete(new PythonResult
+                    {
+                        ExitCode = proc.ExitCode,
+                        Output = stdoutBuilder.ToString(),
+                        Error = stderrBuilder.ToString(),
+                        Success = proc.ExitCode == 0
+                    });
+                }
+                catch (Exception ex)
+                {
+                    onComplete(CreateProcessErrorResult(operationName, ex));
+                }
+            }));
+            thread.IsBackground = true;
+            thread.Start();
         }
 
         public PythonResult CheckSyntax(string script)

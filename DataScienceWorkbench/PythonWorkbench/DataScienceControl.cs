@@ -2883,6 +2883,15 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             RefreshFileList();
         }
 
+        private bool packageOperationInProgress = false;
+
+        private void SetPackageControlsEnabled(bool enabled)
+        {
+            installBtn.Enabled = enabled;
+            uninstallBtn.Enabled = enabled;
+            packageNameBox.Enabled = enabled;
+        }
+
         private void OnInstallPackage(object sender, EventArgs e)
         {
             string pkg = packageNameBox.Text.Trim();
@@ -2894,6 +2903,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
+            if (packageOperationInProgress)
+            {
+                AppendOutput("A package operation is already in progress. Please wait...\n", Color.FromArgb(180, 140, 0));
+                return;
+            }
+
             if (!pythonRunner.PythonAvailable)
             {
                 AppendOutput("Cannot install packages: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
@@ -2901,23 +2916,37 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
-            RaiseStatus("Installing " + pkg + "...");
-            Application.DoEvents();
-
-            var result = pythonRunner.InstallPackage(pkg);
-            if (result.Success)
-            {
-                AppendOutput("Successfully installed: " + pkg + "\n", Color.FromArgb(0, 128, 0));
-                RaiseStatus(pkg + " installed successfully.");
-            }
-            else
-            {
-                AppendOutput("Failed to install " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
-                RaiseStatus("Installation failed for " + pkg);
-            }
-
+            packageOperationInProgress = true;
+            SetPackageControlsEnabled(false);
             mainTabs.SelectedPage = editorTab;
-            OnRefreshPackages(null, null);
+
+            AppendOutput("Installing " + pkg + "...\n", Color.FromArgb(100, 100, 100));
+            RaiseStatus("Installing " + pkg + "...");
+
+            pythonRunner.InstallPackageAsync(pkg,
+                line => RunOnUIThread(() =>
+                {
+                    AppendOutput("  " + line + "\n", Color.FromArgb(100, 100, 100));
+                }),
+                result => RunOnUIThread(() =>
+                {
+                    packageOperationInProgress = false;
+                    SetPackageControlsEnabled(true);
+
+                    if (result.Success)
+                    {
+                        AppendOutput("Successfully installed: " + pkg + "\n", Color.FromArgb(0, 128, 0));
+                        RaiseStatus(pkg + " installed successfully.");
+                    }
+                    else
+                    {
+                        AppendOutput("Failed to install " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
+                        RaiseStatus("Installation failed for " + pkg);
+                    }
+
+                    OnRefreshPackages(null, null);
+                })
+            );
         }
 
         private void OnUninstallPackage(object sender, EventArgs e)
@@ -2931,6 +2960,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
+            if (packageOperationInProgress)
+            {
+                AppendOutput("A package operation is already in progress. Please wait...\n", Color.FromArgb(180, 140, 0));
+                return;
+            }
+
             var confirm = MessageBox.Show("Uninstall " + pkg + "?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirm != DialogResult.Yes) return;
 
@@ -2941,21 +2976,36 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
-            RaiseStatus("Uninstalling " + pkg + "...");
-            Application.DoEvents();
+            packageOperationInProgress = true;
+            SetPackageControlsEnabled(false);
 
-            var result = pythonRunner.UninstallPackage(pkg);
-            if (result.Success)
-            {
-                AppendOutput("Successfully uninstalled: " + pkg + "\n", Color.FromArgb(0, 128, 0));
-                RaiseStatus(pkg + " uninstalled.");
-            }
-            else
-            {
-                AppendOutput("Failed to uninstall " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
-                RaiseStatus("Uninstall failed for " + pkg);
-            }
-            OnRefreshPackages(null, null);
+            AppendOutput("Uninstalling " + pkg + "...\n", Color.FromArgb(100, 100, 100));
+            RaiseStatus("Uninstalling " + pkg + "...");
+
+            pythonRunner.UninstallPackageAsync(pkg,
+                line => RunOnUIThread(() =>
+                {
+                    AppendOutput("  " + line + "\n", Color.FromArgb(100, 100, 100));
+                }),
+                result => RunOnUIThread(() =>
+                {
+                    packageOperationInProgress = false;
+                    SetPackageControlsEnabled(true);
+
+                    if (result.Success)
+                    {
+                        AppendOutput("Successfully uninstalled: " + pkg + "\n", Color.FromArgb(0, 128, 0));
+                        RaiseStatus(pkg + " uninstalled.");
+                    }
+                    else
+                    {
+                        AppendOutput("Failed to uninstall " + pkg + ":\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
+                        RaiseStatus("Uninstall failed for " + pkg);
+                    }
+
+                    OnRefreshPackages(null, null);
+                })
+            );
         }
 
         private void OnQuickInstall(object sender, EventArgs e)
