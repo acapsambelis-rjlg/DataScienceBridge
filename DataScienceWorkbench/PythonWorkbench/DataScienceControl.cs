@@ -41,6 +41,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private const float DefaultFontSize = 10f;
         private HashSet<int> bookmarks = new HashSet<int>();
 
+        private readonly object _pendingUILock = new object();
+        private List<Action> _pendingUIActions = new List<Action>();
+
         private class FileTab
         {
             public string FilePath;
@@ -58,6 +61,25 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private int untitledCounter = 0;
 
         public event EventHandler<string> StatusChanged;
+
+        private void RunOnUIThread(Action action)
+        {
+            if (!IsHandleCreated)
+            {
+                lock (_pendingUILock)
+                {
+                    if (_pendingUIActions != null)
+                    {
+                        _pendingUIActions.Add(action);
+                        return;
+                    }
+                }
+            }
+            if (InvokeRequired)
+                BeginInvoke(action);
+            else
+                action();
+        }
 
         private static Font ResolveMonoFont(float size)
         {
@@ -168,6 +190,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             this.HandleCreated += (s, e) =>
             {
+                List<Action> pending;
+                lock (_pendingUILock)
+                {
+                    pending = _pendingUIActions;
+                    _pendingUIActions = null;
+                }
+                if (pending != null)
+                {
+                    foreach (var act in pending)
+                        BeginInvoke(act);
+                }
+
                 BeginInvoke((Action)(() =>
                 {
                     if (activeFile != null && !string.IsNullOrEmpty(activeFile.Content))
@@ -879,13 +913,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void OnPythonSetupProgress(string message)
         {
-            if (InvokeRequired)
+            RunOnUIThread(() =>
             {
-                try { BeginInvoke((Action)(() => OnPythonSetupProgress(message))); } catch { }
-                return;
-            }
-            AppendOutput(message + "\n", Color.FromArgb(100, 100, 100));
-            RaiseStatus(message);
+                AppendOutput(message + "\n", Color.FromArgb(100, 100, 100));
+                RaiseStatus(message);
+            });
         }
 
         public string ScriptText
@@ -896,35 +928,23 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public void ClearOutput()
         {
-            if (outputBox.InvokeRequired)
-            {
-                outputBox.Invoke(new Action(ClearOutput));
-                return;
-            }
-            outputBox.Clear();
+            RunOnUIThread(() => outputBox.Clear());
         }
 
         private void OnClearOutput(object sender, EventArgs e)
         {
-            if (outputBox.InvokeRequired)
-            {
-                outputBox.Invoke(new Action(() => OnClearOutput(sender, e)));
-                return;
-            }
-            outputBox.Clear();
+            RunOnUIThread(() => outputBox.Clear());
         }
 
         public string OutputText
         {
             get
             {
-                if (outputBox.InvokeRequired)
-                {
-                    string result = null;
-                    outputBox.Invoke(new Action(() => result = outputBox.Text));
-                    return result;
-                }
-                return outputBox.Text;
+                if (!IsHandleCreated || !InvokeRequired)
+                    return outputBox.Text;
+                string result = null;
+                Invoke(new Action(() => result = outputBox.Text));
+                return result;
             }
         }
 
@@ -1144,26 +1164,22 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 {
                     pythonRunner.EnsureVenv();
 
-                    try
+                    RunOnUIThread(() =>
                     {
-                        BeginInvoke((Action)(() =>
+                        pythonRunner.SetupProgress -= OnPythonSetupProgress;
+                        venvInitializing = false;
+
+                        if (pythonRunner.VenvReady)
+                            RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
+                        else
                         {
-                            pythonRunner.SetupProgress -= OnPythonSetupProgress;
-                            venvInitializing = false;
+                            AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
+                            AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
+                            RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
+                        }
 
-                            if (pythonRunner.VenvReady)
-                                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
-                            else
-                            {
-                                AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
-                                AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
-                                RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
-                            }
-
-                            LoadPackagesAsync();
-                        }));
-                    }
-                    catch { }
+                        LoadPackagesAsync();
+                    });
                 });
                 venvThread.IsBackground = true;
                 venvThread.Start();
@@ -2922,7 +2938,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 try
                 {
-                    BeginInvoke((Action)(() =>
+                    RunOnUIThread(() =>
                     {
                         allPackageItems.Clear();
                         allPackageItems.AddRange(items);
@@ -2935,7 +2951,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                         packagesLoaded = true;
                         packagesLoading = false;
-                    }));
+                    });
                 }
                 catch (InvalidOperationException)
                 {
@@ -3146,16 +3162,14 @@ PLOT VIEWER
 
         public void AppendOutput(string text, Color color)
         {
-            if (outputBox.InvokeRequired)
+            RunOnUIThread(() =>
             {
-                outputBox.Invoke(new Action(() => AppendOutput(text, color)));
-                return;
-            }
-            outputBox.SelectionStart = outputBox.TextLength;
-            outputBox.SelectionLength = 0;
-            outputBox.SelectionColor = color;
-            outputBox.AppendText(text);
-            outputBox.ScrollToCaret();
+                outputBox.SelectionStart = outputBox.TextLength;
+                outputBox.SelectionLength = 0;
+                outputBox.SelectionColor = color;
+                outputBox.AppendText(text);
+                outputBox.ScrollToCaret();
+            });
         }
 
         private void RaiseStatus(string msg)
