@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using CodeEditor;
+using WeifenLuo.WinFormsUI.Docking;
 using RJLG.IntelliSEM.Data.PythonDataScience;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
@@ -15,6 +16,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private PythonRunner pythonRunner;
         private List<Customer> customers;
         private List<Employee> employees;
+
+        private DocumentDockContent editorDockContent;
+        private ToolDockContent filesDockContent;
+        private ToolDockContent outputDockContent;
+        private ToolDockContent referenceDockContent;
+        private ToolDockContent packagesDockContent;
 
         private bool packagesLoaded;
         private bool packagesLoading;
