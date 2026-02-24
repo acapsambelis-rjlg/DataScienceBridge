@@ -135,8 +135,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private static readonly Regex TripleSingleQuoteRegex = new Regex("'''[\\s\\S]*?'''", RegexOptions.Compiled);
         private static readonly Regex DoubleQuoteRegex = new Regex("\"(?:[^\"\\\\\\r\\n]|\\\\[^\\r\\n])*\"", RegexOptions.Compiled);
         private static readonly Regex SingleQuoteRegex = new Regex("'(?:[^'\\\\\\r\\n]|\\\\[^\\r\\n])*'", RegexOptions.Compiled);
-        private static readonly Regex FStringRegex = new Regex("[fFrRbBuU]{1,2}\"(?:[^\"\\\\\\r\\n]|\\\\[^\\r\\n])*\"", RegexOptions.Compiled);
-        private static readonly Regex FSingleRegex = new Regex("[fFrRbBuU]{1,2}'(?:[^'\\\\\\r\\n]|\\\\[^\\r\\n])*'", RegexOptions.Compiled);
+        private static readonly Regex FStringRegex = new Regex("(?<![a-zA-Z0-9_])[fFrRbBuU]{1,2}\"(?:[^\"\\\\\\r\\n]|\\\\[^\\r\\n])*\"", RegexOptions.Compiled);
+        private static readonly Regex FSingleRegex = new Regex("(?<![a-zA-Z0-9_])[fFrRbBuU]{1,2}'(?:[^'\\\\\\r\\n]|\\\\[^\\r\\n])*'", RegexOptions.Compiled);
         private static readonly Regex CommentRegex = new Regex("#[^\\r\\n]*", RegexOptions.Compiled);
 
         public List<SymbolError> Analyze(string code)
