@@ -201,6 +201,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public DataScienceControl()
         {
             InitializeComponent();
+            InitializeDocking();
             CreateFileTreeIcons();
             ResolveRuntimeFonts();
             InitializeData();
@@ -243,6 +244,50 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         RefreshFileList();
                     }
                 }));
+            };
+        }
+
+        private void InitializeDocking()
+        {
+            dockPanel.Theme = new WeifenLuo.WinFormsUI.Docking.VS2015LightTheme();
+            dockPanel.DockLeftPortion = 0.18;
+            dockPanel.DockBottomPortion = 0.25;
+            dockPanel.DockRightPortion = 0.35;
+
+            editorDockContent = new DocumentDockContent();
+            editorDockContent.Text = "Python Editor";
+            editorDockContent.Controls.Add(editorPanel);
+            editorDockContent.Show(dockPanel, DockState.Document);
+
+            filesDockContent = new ToolDockContent();
+            filesDockContent.Text = "Files";
+            filesDockContent.Controls.Add(fileListPanel);
+            filesDockContent.Show(dockPanel, DockState.DockLeft);
+
+            outputDockContent = new ToolDockContent();
+            outputDockContent.Text = "Output";
+            outputDockContent.Controls.Add(outputPanel);
+            outputDockContent.Show(dockPanel, DockState.DockBottom);
+
+            referenceDockContent = new ToolDockContent();
+            referenceDockContent.Text = "Data Reference";
+            referenceDockContent.Controls.Add(refPanel);
+            referenceDockContent.Show(dockPanel, DockState.DockRight);
+
+            packagesDockContent = new ToolDockContent();
+            packagesDockContent.Text = "Package Manager";
+            packagesDockContent.Controls.Add(pkgPanel);
+            packagesDockContent.Show(referenceDockContent.Pane, null);
+
+            dockPanel.ActiveDocumentChanged += (s, e) => { };
+            packagesDockContent.DockStateChanged += (s, e) =>
+            {
+                if (packagesDockContent.DockState != DockState.Hidden &&
+                    packagesDockContent.DockState != DockState.Unknown &&
+                    !packagesLoaded && !packagesLoading)
+                {
+                    LoadPackagesAsync();
+                }
             };
         }
 
@@ -1119,6 +1164,24 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
             runMenu.DropDownItems.Add(resetEnvItem);
 
+            var viewMenu = new ToolStripMenuItem("&View");
+            var showFilesItem = new ToolStripMenuItem("Files Panel");
+            showFilesItem.Click += (s, e) => ShowDockPanel(filesDockContent);
+            viewMenu.DropDownItems.Add(showFilesItem);
+            var showOutputItem = new ToolStripMenuItem("Output Panel");
+            showOutputItem.Click += (s, e) => ShowDockPanel(outputDockContent);
+            viewMenu.DropDownItems.Add(showOutputItem);
+            var showRefItem = new ToolStripMenuItem("Data Reference");
+            showRefItem.Click += (s, e) => ShowDockPanel(referenceDockContent);
+            viewMenu.DropDownItems.Add(showRefItem);
+            var showPkgItem = new ToolStripMenuItem("Package Manager");
+            showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
+            viewMenu.DropDownItems.Add(showPkgItem);
+            viewMenu.DropDownItems.Add(new ToolStripSeparator());
+            var resetLayoutItem = new ToolStripMenuItem("Reset Layout");
+            resetLayoutItem.Click += (s, e) => ResetDockLayout();
+            viewMenu.DropDownItems.Add(resetLayoutItem);
+
             var helpMenu = new ToolStripMenuItem("Help");
             var quickStartItem = new ToolStripMenuItem("Quick Start Guide");
             quickStartItem.Click += OnShowHelp;
@@ -1142,6 +1205,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editorMenuBar.Items.Insert(0, fileMenu);
             editorMenuBar.Items.Insert(1, editMenu);
             editorMenuBar.Items.Insert(2, runMenu);
+            editorMenuBar.Items.Insert(3, viewMenu);
             editorMenuBar.Items.Add(helpMenu);
         }
 
@@ -2032,12 +2096,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
-        private void mainTabs_SelectedIndexChanged(object sender, EventArgs e)
+        private void ShowDockPanel(ToolDockContent panel)
         {
-            if (mainTabs.SelectedTab == packagesTab && !packagesLoaded && !packagesLoading)
-            {
-                LoadPackagesAsync();
-            }
+            if (panel.DockState == DockState.Hidden)
+                panel.Show(dockPanel);
+            else
+                panel.Activate();
+        }
+
+        private void ResetDockLayout()
+        {
+            filesDockContent.Show(dockPanel, DockState.DockLeft);
+            outputDockContent.Show(dockPanel, DockState.DockBottom);
+            referenceDockContent.Show(dockPanel, DockState.DockRight);
+            packagesDockContent.Show(referenceDockContent.Pane, null);
         }
 
         private void OnRunScript(object sender, EventArgs e)
@@ -2872,7 +2944,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             packageOperationInProgress = true;
             SetPackageControlsEnabled(false);
-            mainTabs.SelectedTab = editorTab;
+            ShowDockPanel(outputDockContent);
 
             AppendOutput("Installing " + pkg + "...\n", Color.FromArgb(100, 100, 100));
             RaiseStatus("Installing " + pkg + "...");

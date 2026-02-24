@@ -13,7 +13,7 @@ mcs $REFS \
 
 echo "Building Data Science Workbench..."
 
-REFS="-r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.dll -r:System.Data.dll -r:System.Core.dll -r:System.Xml.dll -r:SyntaxEditor.dll"
+REFS="-r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.dll -r:System.Data.dll -r:System.Core.dll -r:System.Xml.dll -r:SyntaxEditor.dll -r:lib/WeifenLuo.WinFormsUI.Docking.dll -r:lib/WeifenLuo.WinFormsUI.Docking.ThemeVS2015.dll"
 
 mcs $REFS \
     -target:winexe \
@@ -25,6 +25,7 @@ mcs $REFS \
     src/PythonSymbolAnalyzer.cs \
     src/SyntaxEditorHelper.cs \
     src/DataSciencePythonCompletionProvider.cs \
+    src/DockPanelContent.cs \
     src/DataScienceControl.Designer.cs \
     src/DataScienceControl.cs \
     src/PlotViewerForm.Designer.cs \

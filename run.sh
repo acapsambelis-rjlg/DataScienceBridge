@@ -2,6 +2,9 @@
 
 GDIPLUS_DIR="/nix/store/mq1lzh05pkdbdgksad4y6s57g62vsskf-libgdiplus-6.1/lib"
 export LD_LIBRARY_PATH="${GDIPLUS_DIR}:${LD_LIBRARY_PATH}"
+export MONO_PATH="lib:${MONO_PATH}"
+export MONO_REGISTRY_PATH="$HOME/.mono/registry"
+mkdir -p "$MONO_REGISTRY_PATH"
 
 if [ ! -f DataScienceWorkbench.exe ]; then
     echo "Building..."
