@@ -27,7 +27,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileNewBtn = new System.Windows.Forms.Button();
             this.fileOpenBtn = new System.Windows.Forms.Button();
             this.fileCloseBtn = new System.Windows.Forms.Button();
-            this.fileListSeparator = new System.Windows.Forms.Panel();
+            this.fileListSplitter = new System.Windows.Forms.Splitter();
             this.editorPanel = new System.Windows.Forms.Panel();
             this.pythonEditor = new CodeEditor.CodeTextBox();
             this.editorMenuBar = new System.Windows.Forms.MenuStrip();
@@ -110,6 +110,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // mainSplit.Panel1
             // 
             this.mainSplit.Panel1.Controls.Add(this.editorPanel);
+            this.mainSplit.Panel1.Controls.Add(this.fileListSplitter);
             this.mainSplit.Panel1.Controls.Add(this.fileListPanel);
             // 
             // mainSplit.Panel2
@@ -120,18 +121,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.mainSplit.SplitterWidth = 6;
             this.mainSplit.TabIndex = 0;
             // 
-            // fileListSeparator
+            // fileListSplitter
             // 
-            this.fileListSeparator.Dock = System.Windows.Forms.DockStyle.Right;
-            this.fileListSeparator.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
-            this.fileListSeparator.Size = new System.Drawing.Size(1, 380);
-            this.fileListSeparator.Name = "fileListSeparator";
-            this.fileListSeparator.TabIndex = 4;
+            this.fileListSplitter.Dock = System.Windows.Forms.DockStyle.Left;
+            this.fileListSplitter.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
+            this.fileListSplitter.Location = new System.Drawing.Point(200, 0);
+            this.fileListSplitter.MinExtra = 200;
+            this.fileListSplitter.MinSize = 120;
+            this.fileListSplitter.Size = new System.Drawing.Size(4, 380);
+            this.fileListSplitter.Name = "fileListSplitter";
+            this.fileListSplitter.TabIndex = 4;
+            this.fileListSplitter.TabStop = false;
             // 
             // fileListPanel
             // 
             this.fileListPanel.Controls.Add(this.fileTreeView);
-            this.fileListPanel.Controls.Add(this.fileListSeparator);
             this.fileListPanel.Controls.Add(this.fileListButtonPanel);
             this.fileListPanel.Controls.Add(this.fileListLabel);
             this.fileListPanel.Dock = System.Windows.Forms.DockStyle.Left;
@@ -590,6 +594,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private System.Windows.Forms.Button fileNewBtn;
         private System.Windows.Forms.Button fileOpenBtn;
         private System.Windows.Forms.Button fileCloseBtn;
-        private System.Windows.Forms.Panel fileListSeparator;
+        private System.Windows.Forms.Splitter fileListSplitter;
     }
 }

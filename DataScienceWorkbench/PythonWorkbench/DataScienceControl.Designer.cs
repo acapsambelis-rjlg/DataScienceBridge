@@ -32,7 +32,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileNewBtn = new Telerik.WinControls.UI.RadButton();
             this.fileOpenBtn = new Telerik.WinControls.UI.RadButton();
             this.fileCloseBtn = new Telerik.WinControls.UI.RadButton();
-            this.fileListSeparator = new Telerik.WinControls.UI.RadPanel();
+            this.fileListSplitter = new System.Windows.Forms.Splitter();
             this.editorPanel = new Telerik.WinControls.UI.RadPanel();
             this.pythonEditor = new CodeEditor.CodeTextBox();
             this.editorMenuBar = new Telerik.WinControls.UI.RadMenu();
@@ -105,6 +105,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // mainSplitEditorPanel
             // 
             this.mainSplitEditorPanel.Controls.Add(this.editorPanel);
+            this.mainSplitEditorPanel.Controls.Add(this.fileListSplitter);
             this.mainSplitEditorPanel.Controls.Add(this.fileListPanel);
             this.mainSplitEditorPanel.SizeInfo.SizeMode = Telerik.WinControls.UI.Docking.SplitPanelSizeMode.Absolute;
             this.mainSplitEditorPanel.SizeInfo.AbsoluteSize = new System.Drawing.Size(792, 380);
@@ -121,18 +122,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // 
             this.mainSplit.SplitPanels.AddRange(new Telerik.WinControls.UI.SplitPanel[] { this.mainSplitEditorPanel, this.mainSplitOutputPanel });
             // 
-            // fileListSeparator
+            // fileListSplitter
             // 
-            this.fileListSeparator.Dock = System.Windows.Forms.DockStyle.Right;
-            this.fileListSeparator.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
-            this.fileListSeparator.Size = new System.Drawing.Size(1, 380);
-            this.fileListSeparator.Name = "fileListSeparator";
-            this.fileListSeparator.TabIndex = 4;
+            this.fileListSplitter.Dock = System.Windows.Forms.DockStyle.Left;
+            this.fileListSplitter.BackColor = System.Drawing.Color.FromArgb(200, 200, 200);
+            this.fileListSplitter.Location = new System.Drawing.Point(200, 0);
+            this.fileListSplitter.MinExtra = 200;
+            this.fileListSplitter.MinSize = 120;
+            this.fileListSplitter.Size = new System.Drawing.Size(4, 380);
+            this.fileListSplitter.Name = "fileListSplitter";
+            this.fileListSplitter.TabIndex = 4;
+            this.fileListSplitter.TabStop = false;
             // 
             // fileListPanel
             // 
             this.fileListPanel.Controls.Add(this.fileTreeView);
-            this.fileListPanel.Controls.Add(this.fileListSeparator);
             this.fileListPanel.Controls.Add(this.fileListButtonPanel);
             this.fileListPanel.Controls.Add(this.fileListLabel);
             this.fileListPanel.Dock = System.Windows.Forms.DockStyle.Left;
@@ -569,6 +573,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadButton fileNewBtn;
         private Telerik.WinControls.UI.RadButton fileOpenBtn;
         private Telerik.WinControls.UI.RadButton fileCloseBtn;
-        private Telerik.WinControls.UI.RadPanel fileListSeparator;
+        private System.Windows.Forms.Splitter fileListSplitter;
     }
 }

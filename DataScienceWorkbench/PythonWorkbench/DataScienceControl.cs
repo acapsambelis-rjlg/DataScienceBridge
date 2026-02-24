@@ -170,9 +170,75 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             fileListLabel.Font = uiFontBold;
         }
 
+        private Image folderIcon;
+        private Image folderOpenIcon;
+        private Image pythonFileIcon;
+
+        private void CreateFileTreeIcons()
+        {
+            folderIcon = DrawFolderIcon(false);
+            folderOpenIcon = DrawFolderIcon(true);
+            pythonFileIcon = DrawPythonFileIcon();
+        }
+
+        private static Bitmap DrawFolderIcon(bool open)
+        {
+            var bmp = new Bitmap(16, 16);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                var body = Color.FromArgb(220, 180, 60);
+                var outline = Color.FromArgb(180, 140, 30);
+                using (var brush = new SolidBrush(body))
+                using (var pen = new Pen(outline, 1f))
+                {
+                    if (open)
+                    {
+                        g.FillRectangle(brush, 1, 3, 14, 10);
+                        g.DrawRectangle(pen, 1, 3, 13, 9);
+                        g.FillRectangle(brush, 1, 1, 6, 3);
+                        g.DrawRectangle(pen, 1, 1, 5, 2);
+                    }
+                    else
+                    {
+                        g.FillRectangle(brush, 1, 3, 13, 10);
+                        g.DrawRectangle(pen, 1, 3, 12, 9);
+                        g.FillRectangle(brush, 1, 1, 6, 3);
+                        g.DrawRectangle(pen, 1, 1, 5, 2);
+                    }
+                }
+            }
+            return bmp;
+        }
+
+        private static Bitmap DrawPythonFileIcon()
+        {
+            var bmp = new Bitmap(16, 16);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                using (var pageBrush = new SolidBrush(Color.White))
+                using (var pagePen = new Pen(Color.FromArgb(150, 150, 150), 1f))
+                {
+                    g.FillRectangle(pageBrush, 2, 1, 11, 14);
+                    g.DrawRectangle(pagePen, 2, 1, 10, 13);
+                    var fold = new Point[] { new Point(9, 1), new Point(13, 5), new Point(9, 5) };
+                    g.FillPolygon(pageBrush, fold);
+                    g.DrawPolygon(pagePen, fold);
+                }
+                using (var pyFont = new Font("Arial", 7f, FontStyle.Bold))
+                using (var pyBrush = new SolidBrush(Color.FromArgb(55, 118, 171)))
+                {
+                    g.DrawString("Py", pyFont, pyBrush, 2, 5);
+                }
+            }
+            return bmp;
+        }
+
         public DataScienceControl()
         {
             InitializeComponent();
+            CreateFileTreeIcons();
             ResolveRuntimeFonts();
             InitializeData();
             SetupEditorMenuBar();
@@ -2518,6 +2584,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 string dirName = Path.GetFileName(subDir);
                 var dirNode = new RadTreeNode(dirName);
                 dirNode.Tag = subDir;
+                dirNode.Image = folderIcon;
                 parentNodes.Add(dirNode);
                 SetNodeForeColor(dirNode, Color.FromArgb(80, 80, 80));
                 PopulateTreeNode(dirNode.Nodes, subDir);
@@ -2539,6 +2606,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 var fileNode = new RadTreeNode(displayName);
                 fileNode.Tag = filePath;
+                fileNode.Image = pythonFileIcon;
 
                 Color nodeColor;
                 if (isActive)
@@ -2562,6 +2630,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         : ft.FileName;
                     var node = new RadTreeNode(displayName);
                     node.Tag = "UNSAVED:" + ft.FileName;
+                    node.Image = pythonFileIcon;
                     fileTreeView.Nodes.Add(node);
                     SetNodeForeColor(node, isActive ? Color.FromArgb(0, 90, 180) : Color.FromArgb(128, 128, 128));
                 }
