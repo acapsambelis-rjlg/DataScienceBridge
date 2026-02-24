@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
@@ -18,29 +19,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private HashSet<string> dynamicKnownSymbols = new HashSet<string>();
         private Dictionary<string, HashSet<string>> datasetColumns = new Dictionary<string, HashSet<string>>();
 
-        private static readonly HashSet<string> DataFrameBuiltins = new HashSet<string> {
-            "df", "head", "tail", "describe", "info", "shape", "dtypes", "columns",
-            "index", "values", "iloc", "loc", "at", "iat", "T",
-            "mean", "sum", "min", "max", "std", "var", "median", "count",
-            "sort_values", "sort_index", "reset_index", "set_index",
-            "groupby", "merge", "join", "concat", "append", "drop", "dropna", "fillna",
-            "apply", "map", "applymap", "transform", "agg", "aggregate",
-            "filter", "query", "where", "mask", "clip",
-            "astype", "copy", "rename", "replace", "sample",
-            "to_csv", "to_json", "to_excel", "to_dict", "to_numpy", "to_list",
-            "plot", "hist", "corr", "cov", "unique", "nunique", "value_counts",
-            "isnull", "notnull", "isna", "notna", "any", "all", "empty", "size",
-            "iterrows", "itertuples", "items",
-            "str", "dt", "cat", "sparse",
-            "rolling", "expanding", "ewm", "resample", "pipe",
-            "assign", "eval", "melt", "pivot", "pivot_table", "stack", "unstack",
-            "nlargest", "nsmallest", "idxmin", "idxmax", "pct_change", "diff", "shift",
-            "cumsum", "cumprod", "cummin", "cummax",
-            "between", "isin", "duplicated", "drop_duplicates",
-            "add_prefix", "add_suffix", "equals", "abs", "round",
-            "to_string", "to_markdown", "to_frame",
-            "name", "dtype", "ndim", "nbytes"
-        };
+        private HashSet<string> knownModules;
+        private HashSet<string> knownMembers;
+        private HashSet<string> magicNames;
+        private Dictionary<string, HashSet<string>> moduleSymbols = new Dictionary<string, HashSet<string>>();
+
+        public PythonSymbolAnalyzer()
+        {
+            knownModules = new HashSet<string>(DefaultModules);
+            knownMembers = new HashSet<string>(DefaultMembers);
+            magicNames = new HashSet<string>(DefaultMagicNames);
+        }
 
         public void SetDynamicKnownSymbols(IEnumerable<string> symbols)
         {
@@ -54,6 +43,92 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             foreach (var kvp in columns)
                 datasetColumns[kvp.Key] = new HashSet<string>(kvp.Value);
         }
+
+        public void AddKnownModules(IEnumerable<string> modules)
+        {
+            foreach (var m in modules)
+                knownModules.Add(m);
+        }
+
+        public void RemoveKnownModules(IEnumerable<string> modules)
+        {
+            foreach (var m in modules)
+                knownModules.Remove(m);
+        }
+
+        public void SetKnownModules(IEnumerable<string> modules)
+        {
+            knownModules = new HashSet<string>(modules);
+        }
+
+        public void AddKnownMembers(IEnumerable<string> members)
+        {
+            foreach (var m in members)
+                knownMembers.Add(m);
+        }
+
+        public void RemoveKnownMembers(IEnumerable<string> members)
+        {
+            foreach (var m in members)
+                knownMembers.Remove(m);
+        }
+
+        public void SetKnownMembers(IEnumerable<string> members)
+        {
+            knownMembers = new HashSet<string>(members);
+        }
+
+        public void AddMagicNames(IEnumerable<string> names)
+        {
+            foreach (var n in names)
+                magicNames.Add(n);
+        }
+
+        public void LoadModuleSymbols(string moduleName, IEnumerable<string> symbols)
+        {
+            knownModules.Add(moduleName);
+            var set = new HashSet<string>(symbols);
+            moduleSymbols[moduleName] = set;
+            foreach (var s in set)
+                knownMembers.Add(s);
+        }
+
+        public void LoadSymbolsFromVenv(string venvPath)
+        {
+            if (string.IsNullOrEmpty(venvPath)) return;
+
+            string libDir = Path.Combine(venvPath, "lib");
+            if (!Directory.Exists(libDir)) return;
+
+            foreach (string pyDir in Directory.GetDirectories(libDir, "python*"))
+            {
+                string sitePackages = Path.Combine(pyDir, "site-packages");
+                if (!Directory.Exists(sitePackages)) continue;
+
+                foreach (string dir in Directory.GetDirectories(sitePackages))
+                {
+                    string dirName = Path.GetFileName(dir);
+                    if (dirName.StartsWith(".") || dirName.StartsWith("_") ||
+                        dirName.EndsWith(".dist-info") || dirName.EndsWith(".egg-info") ||
+                        dirName == "__pycache__")
+                        continue;
+                    if (File.Exists(Path.Combine(dir, "__init__.py")) ||
+                        Directory.GetFiles(dir, "*.py").Length > 0)
+                        knownModules.Add(dirName);
+                }
+
+                foreach (string file in Directory.GetFiles(sitePackages, "*.py"))
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(file);
+                    if (!fileName.StartsWith("_"))
+                        knownModules.Add(fileName);
+                }
+            }
+        }
+
+        public IReadOnlyCollection<string> KnownModules { get { return knownModules; } }
+        public IReadOnlyCollection<string> KnownMembers { get { return knownMembers; } }
+        public IReadOnlyDictionary<string, HashSet<string>> ModuleSymbols { get { return moduleSymbols; } }
 
         private static readonly HashSet<string> Builtins = new HashSet<string> {
             "abs", "all", "any", "ascii", "bin", "bool", "breakpoint", "bytearray",
@@ -98,7 +173,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             "try", "while", "with", "yield"
         };
 
-        private static readonly HashSet<string> CommonModules = new HashSet<string> {
+        private static readonly HashSet<string> DefaultModules = new HashSet<string> {
             "pd", "np", "plt", "sns", "scipy", "sklearn", "tf", "torch",
             "os", "sys", "re", "json", "csv", "math", "random", "datetime",
             "time", "collections", "itertools", "functools", "pathlib",
@@ -120,7 +195,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             "self", "cls"
         };
 
-        private static readonly HashSet<string> MagicNames = new HashSet<string> {
+        private static readonly HashSet<string> DefaultMagicNames = new HashSet<string> {
             "__init__", "__str__", "__repr__", "__len__", "__getitem__",
             "__setitem__", "__delitem__", "__iter__", "__next__", "__call__",
             "__enter__", "__exit__", "__eq__", "__ne__", "__lt__", "__gt__",
@@ -128,6 +203,30 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             "__floordiv__", "__mod__", "__pow__", "__contains__", "__hash__",
             "__bool__", "__del__", "__new__", "__class__", "__dict__",
             "__slots__", "__all__", "_"
+        };
+
+        private static readonly HashSet<string> DefaultMembers = new HashSet<string> {
+            "df", "head", "tail", "describe", "info", "shape", "dtypes", "columns",
+            "index", "values", "iloc", "loc", "at", "iat", "T",
+            "mean", "sum", "min", "max", "std", "var", "median", "count",
+            "sort_values", "sort_index", "reset_index", "set_index",
+            "groupby", "merge", "join", "concat", "append", "drop", "dropna", "fillna",
+            "apply", "map", "applymap", "transform", "agg", "aggregate",
+            "filter", "query", "where", "mask", "clip",
+            "astype", "copy", "rename", "replace", "sample",
+            "to_csv", "to_json", "to_excel", "to_dict", "to_numpy", "to_list",
+            "plot", "hist", "corr", "cov", "unique", "nunique", "value_counts",
+            "isnull", "notnull", "isna", "notna", "any", "all", "empty", "size",
+            "iterrows", "itertuples", "items",
+            "str", "dt", "cat", "sparse",
+            "rolling", "expanding", "ewm", "resample", "pipe",
+            "assign", "eval", "melt", "pivot", "pivot_table", "stack", "unstack",
+            "nlargest", "nsmallest", "idxmin", "idxmax", "pct_change", "diff", "shift",
+            "cumsum", "cumprod", "cummin", "cummax",
+            "between", "isin", "duplicated", "drop_duplicates",
+            "add_prefix", "add_suffix", "equals", "abs", "round",
+            "to_string", "to_markdown", "to_frame",
+            "name", "dtype", "ndim", "nbytes"
         };
 
         private static readonly Regex WordRegex = new Regex(@"\b[a-zA-Z_]\w*\b", RegexOptions.Compiled);
@@ -368,9 +467,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 if (Keywords.Contains(name)) continue;
                 if (Builtins.Contains(name)) continue;
-                if (CommonModules.Contains(name)) continue;
+                if (knownModules.Contains(name)) continue;
                 if (dynamicKnownSymbols.Contains(name)) continue;
-                if (MagicNames.Contains(name)) continue;
+                if (magicNames.Contains(name)) continue;
                 if (defined.Contains(name)) continue;
                 if (name.StartsWith("__") && name.EndsWith("__")) continue;
                 if (name.StartsWith("_")) continue;
@@ -492,7 +591,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var columns = datasetColumns[datasetName];
 
                 if (columns.Contains(attrName)) continue;
-                if (DataFrameBuiltins.Contains(attrName)) continue;
+                if (knownMembers.Contains(attrName)) continue;
                 if (attrName.StartsWith("_")) continue;
 
                 int attrStart = m.Groups[2].Index;

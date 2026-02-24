@@ -1187,7 +1187,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         venvInitializing = false;
 
                         if (pythonRunner.VenvReady)
+                        {
+                            symbolAnalyzer.LoadSymbolsFromVenv(pythonRunner.VenvPath);
                             RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
+                        }
                         else
                         {
                             AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
@@ -2881,6 +2884,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     {
                         AppendOutput("Successfully installed: " + pkg + "\n", Color.FromArgb(0, 128, 0));
                         RaiseStatus(pkg + " installed successfully.");
+                        if (pythonRunner.VenvReady)
+                            symbolAnalyzer.LoadSymbolsFromVenv(pythonRunner.VenvPath);
                     }
                     else
                     {
