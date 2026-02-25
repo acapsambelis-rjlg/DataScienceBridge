@@ -264,6 +264,15 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             this.HandleCreated += (s, e) =>
             {
+                filesDockContent.Show(dockPanel, DockState.Float);
+                filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
+                outputDockContent.Show(dockPanel, DockState.Float);
+                outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
+                referenceDockContent.Show(dockPanel, DockState.Float);
+                referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
+                packagesDockContent.Show(dockPanel, DockState.Float);
+                packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
+
                 List<Action> pending;
                 lock (_pendingUILock)
                 {
@@ -328,15 +337,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             packagesDockContent.Text = "Package Manager";
             packagesDockContent.Icon = DockIcons.CreatePackageIcon();
             packagesDockContent.Controls.Add(pkgPanel);
-            packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
-
-            filesDockContent.Show(dockPanel, DockState.Float);
-            filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
-            outputDockContent.Show(dockPanel, DockState.Float);
-            outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
-            referenceDockContent.Show(dockPanel, DockState.Float);
-            referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
-            packagesDockContent.Show(dockPanel, DockState.Float);
             packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
             dockPanel.ActiveDocumentChanged += (s, e) => { };
