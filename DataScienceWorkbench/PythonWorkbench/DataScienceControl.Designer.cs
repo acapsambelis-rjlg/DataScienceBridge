@@ -174,51 +174,53 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             //
             // runToolBtn
             //
-            this.runToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.runToolBtn.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.runToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
+            this.runToolBtn.Image = DockIcons.CreatePlayBitmap();
+            this.runToolBtn.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.runToolBtn.ForeColor = System.Drawing.Color.FromArgb(34, 139, 34);
             this.runToolBtn.Name = "runToolBtn";
-            this.runToolBtn.Text = "\u25B6 Run";
+            this.runToolBtn.Text = "Run";
             this.runToolBtn.ToolTipText = "Execute Script (F5)";
             this.runToolBtn.Click += new System.EventHandler(this.OnRunScript);
             //
             // syntaxCheckToolBtn
             //
-            this.syntaxCheckToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.syntaxCheckToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
+            this.syntaxCheckToolBtn.Image = DockIcons.CreateCheckBitmap();
             this.syntaxCheckToolBtn.Name = "syntaxCheckToolBtn";
-            this.syntaxCheckToolBtn.Text = "Check Syntax";
+            this.syntaxCheckToolBtn.Text = "Check";
             this.syntaxCheckToolBtn.ToolTipText = "Check Python syntax for errors";
             this.syntaxCheckToolBtn.Click += new System.EventHandler(this.OnCheckSyntax);
             //
             // saveToolBtn
             //
-            this.saveToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.saveToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.saveToolBtn.Image = DockIcons.CreateSaveBitmap();
             this.saveToolBtn.Name = "saveToolBtn";
-            this.saveToolBtn.Text = "Save";
             this.saveToolBtn.ToolTipText = "Save (Ctrl+S)";
             this.saveToolBtn.Click += new System.EventHandler(this.OnSaveFile);
             //
             // undoToolBtn
             //
-            this.undoToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.undoToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.undoToolBtn.Image = DockIcons.CreateUndoBitmap();
             this.undoToolBtn.Name = "undoToolBtn";
-            this.undoToolBtn.Text = "Undo";
             this.undoToolBtn.ToolTipText = "Undo (Ctrl+Z)";
             this.undoToolBtn.Click += new System.EventHandler(this.OnToolbarUndo);
             //
             // redoToolBtn
             //
-            this.redoToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.redoToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.redoToolBtn.Image = DockIcons.CreateRedoBitmap();
             this.redoToolBtn.Name = "redoToolBtn";
-            this.redoToolBtn.Text = "Redo";
             this.redoToolBtn.ToolTipText = "Redo (Ctrl+Y)";
             this.redoToolBtn.Click += new System.EventHandler(this.OnToolbarRedo);
             //
             // findToolBtn
             //
-            this.findToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.findToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.findToolBtn.Image = DockIcons.CreateFindBitmap();
             this.findToolBtn.Name = "findToolBtn";
-            this.findToolBtn.Text = "Find";
             this.findToolBtn.ToolTipText = "Find && Replace (Ctrl+F)";
             this.findToolBtn.Click += new System.EventHandler(this.OnToolbarFind);
             //

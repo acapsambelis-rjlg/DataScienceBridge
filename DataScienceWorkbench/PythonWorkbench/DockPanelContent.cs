@@ -137,6 +137,94 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             });
         }
 
+        public static Bitmap CreatePlayBitmap()
+        {
+            return RenderBitmap((g, r) =>
+            {
+                var brush = new SolidBrush(Color.FromArgb(34, 139, 34));
+                Point[] tri = { new Point(4, 2), new Point(13, 8), new Point(4, 14) };
+                g.FillPolygon(brush, tri);
+                brush.Dispose();
+            });
+        }
+
+        public static Bitmap CreateCheckBitmap()
+        {
+            return RenderBitmap((g, r) =>
+            {
+                var pen = new Pen(Color.FromArgb(0, 122, 204), 2f);
+                g.DrawLine(pen, 3, 8, 6, 12);
+                g.DrawLine(pen, 6, 12, 13, 3);
+                pen.Dispose();
+            });
+        }
+
+        public static Bitmap CreateSaveBitmap()
+        {
+            return RenderBitmap((g, r) =>
+            {
+                var pen = new Pen(Color.FromArgb(80, 80, 80), 1f);
+                var brush = new SolidBrush(Color.FromArgb(100, 160, 220));
+                g.FillRectangle(brush, 2, 1, 12, 14);
+                g.DrawRectangle(pen, 2, 1, 12, 14);
+                var labelBrush = new SolidBrush(Color.FromArgb(60, 60, 60));
+                g.FillRectangle(labelBrush, 4, 1, 8, 5);
+                var diskBrush = new SolidBrush(Color.FromArgb(240, 240, 240));
+                g.FillRectangle(diskBrush, 5, 9, 6, 6);
+                brush.Dispose(); pen.Dispose(); labelBrush.Dispose(); diskBrush.Dispose();
+            });
+        }
+
+        public static Bitmap CreateUndoBitmap()
+        {
+            return RenderBitmap((g, r) =>
+            {
+                var pen = new Pen(Color.FromArgb(80, 80, 80), 1.5f);
+                g.DrawArc(pen, 4, 4, 9, 9, 180, 230);
+                var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
+                Point[] arrow = { new Point(3, 3), new Point(7, 3), new Point(5, 7) };
+                g.FillPolygon(brush, arrow);
+                pen.Dispose(); brush.Dispose();
+            });
+        }
+
+        public static Bitmap CreateRedoBitmap()
+        {
+            return RenderBitmap((g, r) =>
+            {
+                var pen = new Pen(Color.FromArgb(80, 80, 80), 1.5f);
+                g.DrawArc(pen, 3, 4, 9, 9, 180, -230);
+                var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
+                Point[] arrow = { new Point(13, 3), new Point(9, 3), new Point(11, 7) };
+                g.FillPolygon(brush, arrow);
+                pen.Dispose(); brush.Dispose();
+            });
+        }
+
+        public static Bitmap CreateFindBitmap()
+        {
+            return RenderBitmap((g, r) =>
+            {
+                var pen = new Pen(Color.FromArgb(80, 80, 80), 1.5f);
+                g.DrawEllipse(pen, 2, 1, 8, 8);
+                var handlePen = new Pen(Color.FromArgb(80, 80, 80), 2.5f);
+                g.DrawLine(handlePen, 9, 9, 14, 14);
+                pen.Dispose(); handlePen.Dispose();
+            });
+        }
+
+        private static Bitmap RenderBitmap(Action<Graphics, Rectangle> draw)
+        {
+            var bmp = new Bitmap(16, 16, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+                draw(g, new Rectangle(0, 0, 16, 16));
+            }
+            return bmp;
+        }
+
         private static Icon RenderIcon(Action<Graphics, Rectangle> draw)
         {
             using (var bmp = new Bitmap(16, 16, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
