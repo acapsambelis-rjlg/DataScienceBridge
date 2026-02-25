@@ -349,6 +349,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             panel.Activate();
         }
 
+        private void FloatPanel(ToolDockContent panel)
+        {
+            panel.Show(dockPanel, DockState.Float);
+            panel.Activate();
+        }
+
         private void ResetDockLayout()
         {
             filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
@@ -1246,6 +1252,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var showPkgItem = new RadMenuItem("Package Manager");
             showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
             viewMenu.Items.Add(showPkgItem);
+            viewMenu.Items.Add(new RadMenuSeparatorItem());
+            var floatFilesItem = new RadMenuItem("Float Files Panel");
+            floatFilesItem.Click += (s, e) => FloatPanel(filesDockContent);
+            viewMenu.Items.Add(floatFilesItem);
+            var floatOutputItem = new RadMenuItem("Float Output Panel");
+            floatOutputItem.Click += (s, e) => FloatPanel(outputDockContent);
+            viewMenu.Items.Add(floatOutputItem);
+            var floatRefItem = new RadMenuItem("Float Data Reference");
+            floatRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
+            viewMenu.Items.Add(floatRefItem);
+            var floatPkgItem = new RadMenuItem("Float Package Manager");
+            floatPkgItem.Click += (s, e) => FloatPanel(packagesDockContent);
+            viewMenu.Items.Add(floatPkgItem);
             viewMenu.Items.Add(new RadMenuSeparatorItem());
             var resetLayoutItem = new RadMenuItem("Reset Layout");
             resetLayoutItem.Click += (s, e) => ResetDockLayout();

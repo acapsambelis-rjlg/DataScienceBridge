@@ -1184,6 +1184,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
             viewMenu.DropDownItems.Add(showPkgItem);
             viewMenu.DropDownItems.Add(new ToolStripSeparator());
+            var floatFilesItem = new ToolStripMenuItem("Float Files Panel");
+            floatFilesItem.Click += (s, e) => FloatPanel(filesDockContent);
+            viewMenu.DropDownItems.Add(floatFilesItem);
+            var floatOutputItem = new ToolStripMenuItem("Float Output Panel");
+            floatOutputItem.Click += (s, e) => FloatPanel(outputDockContent);
+            viewMenu.DropDownItems.Add(floatOutputItem);
+            var floatRefItem = new ToolStripMenuItem("Float Data Reference");
+            floatRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
+            viewMenu.DropDownItems.Add(floatRefItem);
+            var floatPkgItem = new ToolStripMenuItem("Float Package Manager");
+            floatPkgItem.Click += (s, e) => FloatPanel(packagesDockContent);
+            viewMenu.DropDownItems.Add(floatPkgItem);
+            viewMenu.DropDownItems.Add(new ToolStripSeparator());
             var resetLayoutItem = new ToolStripMenuItem("Reset Layout");
             resetLayoutItem.Click += (s, e) => ResetDockLayout();
             viewMenu.DropDownItems.Add(resetLayoutItem);
@@ -2106,6 +2119,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (panel.DockState == DockState.Hidden)
                 panel.Show(dockPanel);
+            panel.Activate();
+        }
+
+        private void FloatPanel(ToolDockContent panel)
+        {
+            panel.Show(dockPanel, DockState.Float);
             panel.Activate();
         }
 
