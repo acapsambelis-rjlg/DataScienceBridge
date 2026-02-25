@@ -434,6 +434,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void DuplicateLine()
         {
+            if (pythonEditor == null) return;
             suppressHighlight = true;
             pythonEditor.DuplicateLine();
             suppressHighlight = false;
@@ -445,6 +446,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void MoveLine(bool up)
         {
+            if (pythonEditor == null) return;
             int pos = pythonEditor.GetCaretIndex();
             int lineIndex = pythonEditor.GetLineFromCharIndex(pos);
             var lines = new List<string>(pythonEditor.GetLines());
@@ -476,6 +478,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void ToggleBookmarkAtCursor()
         {
+            if (pythonEditor == null) return;
             int line = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
             if (bookmarks.Contains(line))
                 bookmarks.Remove(line);
@@ -510,6 +513,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void GoToLine(int lineIndex)
         {
+            if (pythonEditor == null) return;
             if (lineIndex < 0 || lineIndex >= pythonEditor.GetLineCount()) return;
             int charIdx = pythonEditor.GetFirstCharIndexFromLine(lineIndex);
             pythonEditor.SetCaretIndex(charIdx);
@@ -522,6 +526,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void UpdateCursorPositionStatus()
         {
+            if (pythonEditor == null) return;
             int pos = pythonEditor.GetCaretIndex();
             int line = pythonEditor.GetLineFromCharIndex(pos) + 1;
             int firstChar = pythonEditor.GetFirstCharIndexFromLine(line - 1);
@@ -562,6 +567,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void RunSymbolAnalysis()
         {
+            if (pythonEditor == null) return;
             try
             {
                 string code = pythonEditor.GetText();
@@ -608,6 +614,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void RunLiveSyntaxCheck()
         {
+            if (pythonEditor == null) return;
             if (venvInitializing || !pythonRunner.PythonAvailable) return;
 
             string script = pythonEditor.GetText();
@@ -1051,8 +1058,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public string ScriptText
         {
-            get { return pythonEditor.GetText(); }
-            set { pythonEditor.SetText(value); }
+            get { return pythonEditor != null ? pythonEditor.GetText() : activeFile?.Content ?? ""; }
+            set
+            {
+                if (pythonEditor != null)
+                    pythonEditor.SetText(value);
+                else if (activeFile != null)
+                    activeFile.Content = value;
+            }
         }
 
         public void ClearOutput()
@@ -1108,41 +1121,41 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var editMenu = new ToolStripMenuItem("&Edit");
 
             var undoItem = new ToolStripMenuItem("Undo");
-            undoItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) pythonEditor.PerformUndo(); };
+            undoItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformUndo(); };
             undoItem.ShortcutKeyDisplayString = "Ctrl+Z";
             editMenu.DropDownItems.Add(undoItem);
 
             var redoItem = new ToolStripMenuItem("Redo");
-            redoItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) pythonEditor.PerformRedo(); };
+            redoItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformRedo(); };
             redoItem.ShortcutKeyDisplayString = "Ctrl+Y";
             editMenu.DropDownItems.Add(redoItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var cutItem = new ToolStripMenuItem("Cut");
-            cutItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) pythonEditor.PerformCut(); };
+            cutItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformCut(); };
             cutItem.ShortcutKeyDisplayString = "Ctrl+X";
             editMenu.DropDownItems.Add(cutItem);
 
             var copyItem = new ToolStripMenuItem("Copy");
-            copyItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) pythonEditor.PerformCopy(); };
+            copyItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformCopy(); };
             copyItem.ShortcutKeyDisplayString = "Ctrl+C";
             editMenu.DropDownItems.Add(copyItem);
 
             var pasteItem = new ToolStripMenuItem("Paste");
-            pasteItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) pythonEditor.PerformPaste(); };
+            pasteItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformPaste(); };
             pasteItem.ShortcutKeyDisplayString = "Ctrl+V";
             editMenu.DropDownItems.Add(pasteItem);
 
             var deleteItem = new ToolStripMenuItem("Delete");
-            deleteItem.Click += (s, e) => { if (pythonEditor.ContainsFocus && pythonEditor.SelectionLength > 0) pythonEditor.DeleteSelectionText(); };
+            deleteItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus && pythonEditor.SelectionLength > 0) pythonEditor.DeleteSelectionText(); };
             deleteItem.ShortcutKeyDisplayString = "Del";
             editMenu.DropDownItems.Add(deleteItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var selectAllItem = new ToolStripMenuItem("Select All");
-            selectAllItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) pythonEditor.PerformSelectAll(); };
+            selectAllItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformSelectAll(); };
             selectAllItem.ShortcutKeyDisplayString = "Ctrl+A";
             editMenu.DropDownItems.Add(selectAllItem);
 
@@ -1156,24 +1169,24 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var dupLineItem = new ToolStripMenuItem("Duplicate Line");
-            dupLineItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) DuplicateLine(); };
+            dupLineItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) DuplicateLine(); };
             dupLineItem.ShortcutKeyDisplayString = "Ctrl+D";
             editMenu.DropDownItems.Add(dupLineItem);
 
             var moveUpItem = new ToolStripMenuItem("Move Line Up");
-            moveUpItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) MoveLine(true); };
+            moveUpItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) MoveLine(true); };
             moveUpItem.ShortcutKeyDisplayString = "Alt+Up";
             editMenu.DropDownItems.Add(moveUpItem);
 
             var moveDownItem = new ToolStripMenuItem("Move Line Down");
-            moveDownItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) MoveLine(false); };
+            moveDownItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) MoveLine(false); };
             moveDownItem.ShortcutKeyDisplayString = "Alt+Down";
             editMenu.DropDownItems.Add(moveDownItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var toggleBookmarkItem = new ToolStripMenuItem("Toggle Bookmark");
-            toggleBookmarkItem.Click += (s, e) => { if (pythonEditor.ContainsFocus) ToggleBookmarkAtCursor(); };
+            toggleBookmarkItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) ToggleBookmarkAtCursor(); };
             toggleBookmarkItem.ShortcutKeyDisplayString = "Ctrl+B";
             editMenu.DropDownItems.Add(toggleBookmarkItem);
 
@@ -1194,9 +1207,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             editMenu.DropDownOpening += (s, e) =>
             {
-                undoItem.Enabled = pythonEditor.ContainsFocus;
-                redoItem.Enabled = pythonEditor.ContainsFocus;
-                bool hasSelection = pythonEditor.ContainsFocus && pythonEditor.SelectionLength > 0;
+                bool editorFocused = pythonEditor != null && pythonEditor.ContainsFocus;
+                undoItem.Enabled = editorFocused;
+                redoItem.Enabled = editorFocused;
+                bool hasSelection = editorFocused && pythonEditor.SelectionLength > 0;
                 cutItem.Enabled = hasSelection;
                 copyItem.Enabled = hasSelection;
                 deleteItem.Enabled = hasSelection;
@@ -2196,6 +2210,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void OnRunScript(object sender, EventArgs e)
         {
+            if (pythonEditor == null) return;
             string script = pythonEditor.GetText();
             if (string.IsNullOrWhiteSpace(script))
             {
@@ -2255,6 +2270,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void OnCheckSyntax(object sender, EventArgs e)
         {
+            if (pythonEditor == null) return;
             string script = pythonEditor.GetText();
             if (string.IsNullOrWhiteSpace(script))
             {
@@ -3474,6 +3490,7 @@ PLOT VIEWER
 
         private void InsertSnippet(string code)
         {
+            if (pythonEditor == null) return;
             int pos = pythonEditor.GetCaretIndex();
             suppressHighlight = true;
             pythonEditor.SetCaretIndex(pos);
