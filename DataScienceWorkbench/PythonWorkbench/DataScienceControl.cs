@@ -296,32 +296,38 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private void InitializeDocking()
         {
             dockPanel.Theme = new WeifenLuo.WinFormsUI.Docking.VS2015LightTheme();
+            dockPanel.ShowDocumentIcon = true;
             dockPanel.DockLeftPortion = 0.18;
             dockPanel.DockBottomPortion = 0.25;
             dockPanel.DockRightPortion = 0.35;
 
             editorDockContent = new DocumentDockContent();
             editorDockContent.Text = "Python Editor";
+            editorDockContent.Icon = DockIcons.CreateEditorIcon();
             editorDockContent.Controls.Add(editorPanel);
             editorDockContent.Show(dockPanel, DockState.Document);
 
             filesDockContent = new ToolDockContent();
             filesDockContent.Text = "Files";
+            filesDockContent.Icon = DockIcons.CreateFilesIcon();
             filesDockContent.Controls.Add(fileListPanel);
             filesDockContent.Show(dockPanel, DockState.DockLeft);
 
             outputDockContent = new ToolDockContent();
             outputDockContent.Text = "Output";
+            outputDockContent.Icon = DockIcons.CreateOutputIcon();
             outputDockContent.Controls.Add(outputPanel);
             outputDockContent.Show(dockPanel, DockState.DockBottom);
 
             referenceDockContent = new ToolDockContent();
             referenceDockContent.Text = "Data Reference";
+            referenceDockContent.Icon = DockIcons.CreateReferenceIcon();
             referenceDockContent.Controls.Add(refPanel);
             referenceDockContent.Show(dockPanel, DockState.DockRight);
 
             packagesDockContent = new ToolDockContent();
             packagesDockContent.Text = "Package Manager";
+            packagesDockContent.Icon = DockIcons.CreatePackageIcon();
             packagesDockContent.Controls.Add(pkgPanel);
             packagesDockContent.Show(referenceDockContent.Pane, null);
 

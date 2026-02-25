@@ -45,8 +45,8 @@ Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWork
 
 **Docking Layout (WeifenLuo DockPanel Suite v3.1.0):**
 - `lib/WeifenLuo.WinFormsUI.Docking.dll` + `lib/WeifenLuo.WinFormsUI.Docking.ThemeVS2015.dll` — WeifenLuo DockPanel Suite with VS2015 Light theme
-- `src/DockPanelContent.cs` — `ToolDockContent` (draggable tool panels, HideOnClose) and `DocumentDockContent` (fixed editor panel)
-- Mono project uses DockPanel as root container. The Python editor is a fixed Document-area panel. Files, Output, Data Reference, and Package Manager are all draggable/dockable ToolDockContent panels that can be repositioned, floated, tabbed together, or hidden.
+- `src/DockPanelContent.cs` — `ToolDockContent` (draggable tool panels, HideOnClose), `DocumentDockContent` (fixed editor panel), and `DockIcons` (programmatic 16×16 ICO generation for tab icons using BMP XOR/AND format for Mono compatibility)
+- Mono project uses DockPanel as root container with `ShowDocumentIcon = true`. The Python editor is a fixed Document-area panel. Files, Output, Data Reference, and Package Manager are all draggable/dockable ToolDockContent panels that can be repositioned, floated, tabbed together, or hidden. All tabs are pinned (docked, not auto-hidden) by default and display relevant icons (folder for Files, terminal for Output, graph for Data Reference, box for Package Manager, code brackets for Editor).
 - View menu provides show/hide toggles for all tool panels plus a Reset Layout option.
 - `MONO_PATH=lib` in run.sh for runtime assembly resolution. `MONO_REGISTRY_PATH` set to writable path for WeifenLuo's PatchController registry access on Linux.
 
