@@ -317,6 +317,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             referenceDockContent = new ToolDockContent();
             referenceDockContent.Text = "Data Reference";
             referenceDockContent.Icon = DockIcons.CreateReferenceIcon();
+            referenceDockContent.CloseButtonVisible = true;
             referenceDockContent.Controls.Add(refPanel);
 
             packagesDockContent = new ToolDockContent();
