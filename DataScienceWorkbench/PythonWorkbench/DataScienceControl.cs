@@ -295,7 +295,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void InitializeDocking()
         {
-            dockPanel.Theme = new WeifenLuo.WinFormsUI.Docking.VS2015LightTheme();
             dockPanel.ShowDocumentIcon = true;
             dockPanel.DockLeftPortion = 0.18;
             dockPanel.DockBottomPortion = 0.25;
