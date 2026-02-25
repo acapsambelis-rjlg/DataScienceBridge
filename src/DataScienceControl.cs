@@ -17,7 +17,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private List<Customer> customers;
         private List<Employee> employees;
 
-        private DocumentDockContent editorDockContent;
         private ToolDockContent filesDockContent;
         private ToolDockContent outputDockContent;
         private ToolDockContent referenceDockContent;
@@ -43,7 +42,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private const float MinFontSize = 6f;
         private const float MaxFontSize = 28f;
         private const float DefaultFontSize = 10f;
+        private Font editorFont;
         private HashSet<int> bookmarks = new HashSet<int>();
+        private CodeTextBox pythonEditor => activeFile?.Editor;
 
         private readonly object _pendingUILock = new object();
         private List<Action> _pendingUIActions = new List<Action>();
@@ -57,6 +58,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             public int ScrollPosition;
             public HashSet<int> Bookmarks = new HashSet<int>();
             public bool IsModified;
+            public CodeTextBox Editor;
+            public FileDockContent DockContent;
         }
 
         private List<FileTab> openFiles = new List<FileTab>();
@@ -115,11 +118,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void ResolveRuntimeFonts()
         {
-            var monoFont10 = ResolveMonoFont(10f);
+            editorFont = ResolveMonoFont(10f);
             var monoFont9 = ResolveMonoFont(9f);
             var uiFontBold = ResolveUIFont(9f, FontStyle.Bold);
 
-            pythonEditor.EditorFont = monoFont10;
             outputBox.Font = monoFont9;
             packageListBox.Font = monoFont9;
 
@@ -227,6 +229,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 packagesDockContent.Show(dockPanel, DockState.Float);
                 packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
+                foreach (var tab in openFiles)
+                    CreateEditorForTab(tab);
+
+                if (activeFile?.DockContent != null)
+                    activeFile.DockContent.Activate();
+
                 List<Action> pending;
                 lock (_pendingUILock)
                 {
@@ -241,17 +249,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 BeginInvoke((Action)(() =>
                 {
-                    if (activeFile != null && !string.IsNullOrEmpty(activeFile.Content))
-                    {
-                        suppressHighlight = true;
-                        pythonEditor.SetText(activeFile.Content);
-                        pythonEditor.SetCaretIndex(0);
-                        pythonEditor.ClearSelection();
-                        suppressHighlight = false;
-                        ApplySyntaxHighlighting();
-                        activeFile.IsModified = false;
-                        RefreshFileList();
-                    }
+                    ApplySyntaxHighlighting();
+                    if (activeFile != null) activeFile.IsModified = false;
+                    RefreshFileList();
                 }));
             };
         }
@@ -263,12 +263,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             dockPanel.DockLeftPortion = 0.18;
             dockPanel.DockBottomPortion = 0.25;
             dockPanel.DockRightPortion = 0.35;
-
-            editorDockContent = new DocumentDockContent();
-            editorDockContent.Text = "Python Editor";
-            editorDockContent.Icon = DockIcons.CreateEditorIcon();
-            editorDockContent.Controls.Add(editorPanel);
-            editorDockContent.Show(dockPanel, DockState.Document);
 
             filesDockContent = new ToolDockContent();
             filesDockContent.Text = "Files";
@@ -294,7 +288,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             packagesDockContent.Controls.Add(pkgPanel);
             packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
-            dockPanel.ActiveDocumentChanged += (s, e) => { };
+            dockPanel.ActiveDocumentChanged += (s, e) =>
+            {
+                var content = dockPanel.ActiveDocument as FileDockContent;
+                if (content == null) return;
+                var tab = openFiles.Find(f => f.DockContent == content);
+                if (tab == null || tab == activeFile) return;
+                if (activeFile != null)
+                    activeFile.Bookmarks = new HashSet<int>(bookmarks);
+                activeFile = tab;
+                bookmarks = new HashSet<int>(tab.Bookmarks);
+                if (pythonEditor != null) UpdateCursorPositionStatus();
+                RefreshFileList();
+                RaiseStatus("Editing: " + tab.FileName);
+            };
             packagesDockContent.DockStateChanged += (s, e) =>
             {
                 if (packagesDockContent.DockState != DockState.Hidden &&
@@ -308,11 +315,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SetupSyntaxHighlighting()
         {
-            pythonEditor.Ruleset = SyntaxRuleset.CreatePythonRuleset();
-            pythonEditor.FoldingProvider = new IndentFoldingProvider();
-
             completionProvider = new DataSciencePythonCompletionProvider();
-            pythonEditor.CompletionProvider = completionProvider;
             UpdateDynamicSymbols();
 
             highlightTimer = new System.Windows.Forms.Timer();
@@ -325,8 +328,40 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 RunSymbolAnalysis();
                 RunLiveSyntaxCheck();
             };
+        }
 
-            pythonEditor.TextChanged += (s, e) =>
+        private void CreateEditorForTab(FileTab tab)
+        {
+            var editor = new CodeTextBox();
+            editor.Dock = DockStyle.Fill;
+            if (editorFont != null) editor.EditorFont = editorFont;
+            editor.Ruleset = SyntaxRuleset.CreatePythonRuleset();
+            editor.FoldingProvider = new IndentFoldingProvider();
+            editor.CompletionProvider = completionProvider;
+
+            suppressHighlight = true;
+            editor.SetText(tab.Content ?? "");
+            editor.SetCaretIndex(Math.Min(tab.CursorPosition, (tab.Content ?? "").Length));
+            editor.ClearSelection();
+            suppressHighlight = false;
+
+            tab.Editor = editor;
+
+            var content = new FileDockContent();
+            content.Text = tab.IsModified ? "\u2022 " + tab.FileName : tab.FileName;
+            content.Icon = DockIcons.CreateEditorIcon();
+            content.Controls.Add(editor);
+            content.CloseRequested += (s, e) => OnCloseFileTab(tab);
+            tab.DockContent = content;
+
+            SetupEditorEvents(tab, editor);
+
+            content.Show(dockPanel, DockState.Document);
+        }
+
+        private void SetupEditorEvents(FileTab tab, CodeTextBox editor)
+        {
+            editor.TextChanged += (s, e) =>
             {
                 if (!suppressHighlight)
                 {
@@ -334,33 +369,36 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     highlightTimer.Stop();
                     highlightTimer.Start();
 
-                    if (activeFile != null && !activeFile.IsModified)
+                    if (tab != null && !tab.IsModified)
                     {
-                        activeFile.IsModified = true;
-                        if (activeFile.FilePath != null)
+                        tab.IsModified = true;
+                        if (tab.DockContent != null)
+                            tab.DockContent.Text = "\u2022 " + tab.FileName;
+                        if (tab.FilePath != null)
                         {
-                            var node = FindNodeByPath(fileTreeView.Nodes, activeFile.FilePath);
+                            var node = FindNodeByPath(fileTreeView.Nodes, tab.FilePath);
                             if (node != null)
-                                node.Text = "\u2022 " + activeFile.FileName;
+                                node.Text = "\u2022 " + tab.FileName;
                         }
                     }
                 }
             };
 
-            pythonEditor.KeyUp += (s, e) =>
+            editor.KeyUp += (s, e) =>
             {
-                if (!suppressHighlight)
+                if (!suppressHighlight && tab == activeFile)
                     UpdateCursorPositionStatus();
             };
 
-            pythonEditor.MouseClick += (s, e) =>
+            editor.MouseClick += (s, e) =>
             {
-                if (!suppressHighlight)
+                if (!suppressHighlight && tab == activeFile)
                     UpdateCursorPositionStatus();
             };
 
-            pythonEditor.KeyDown += (s, e) =>
+            editor.KeyDown += (s, e) =>
             {
+                if (tab != activeFile) return;
                 if (e.Control && e.KeyCode == Keys.D && !e.Shift)
                 {
                     e.Handled = true;
@@ -508,10 +546,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (Math.Abs(newSize - editorFontSize) < 0.01f) return;
 
             editorFontSize = newSize;
+            editorFont = ResolveMonoFont(editorFontSize);
 
-            pythonEditor.EditorFont = ResolveMonoFont(editorFontSize);
+            foreach (var tab in openFiles)
+                if (tab.Editor != null)
+                    tab.Editor.EditorFont = editorFont;
 
-            UpdateCursorPositionStatus();
+            if (pythonEditor != null) UpdateCursorPositionStatus();
         }
 
         private void ApplySyntaxHighlighting()
@@ -610,6 +651,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void MergeDiagnostics()
         {
+            if (pythonEditor == null) return;
             var all = new List<Diagnostic>();
             all.AddRange(symbolDiagnostics);
             all.AddRange(syntaxDiagnostics);
@@ -1107,7 +1149,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editMenu.DropDownItems.Add(new ToolStripSeparator());
 
             var findItem = new ToolStripMenuItem("Find && Replace...");
-            findItem.Click += (s, e) => pythonEditor.ShowReplace();
+            findItem.Click += (s, e) => pythonEditor?.ShowReplace();
             findItem.ShortcutKeyDisplayString = "Ctrl+H";
             editMenu.DropDownItems.Add(findItem);
 
@@ -2143,6 +2185,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
             referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
             packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
+
+            foreach (var tab in openFiles)
+                if (tab.DockContent != null && !tab.DockContent.IsDisposed)
+                    tab.DockContent.Show(dockPanel, DockState.Document);
+
+            if (activeFile?.DockContent != null)
+                activeFile.DockContent.Activate();
         }
 
         private void OnRunScript(object sender, EventArgs e)
@@ -2491,7 +2540,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var toClose = openFiles.FindAll(f => f.FilePath != null &&
                     f.FilePath.StartsWith(path + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
                 foreach (var ft in toClose)
+                {
                     openFiles.Remove(ft);
+                    CloseDockContent(ft);
+                }
 
                 Directory.Delete(path, true);
             }
@@ -2502,6 +2554,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 if (openTab != null)
                 {
                     openFiles.Remove(openTab);
+                    CloseDockContent(openTab);
                 }
 
                 File.Delete(path);
@@ -2523,7 +2576,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             if (activeFile == null || !openFiles.Contains(activeFile))
             {
-                LoadFileIntoEditor(openFiles[0]);
+                activeFile = null;
+                SwitchToFile(openFiles[0]);
             }
 
             RefreshFileList();
@@ -2600,6 +2654,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         {
                             ft.FilePath = newPath + ft.FilePath.Substring(oldPath.Length);
                             ft.FileName = Path.GetFileName(ft.FilePath);
+                            if (ft.DockContent != null)
+                                ft.DockContent.Text = ft.IsModified ? "\u2022 " + ft.FileName : ft.FileName;
                         }
                     }
                 }
@@ -2613,6 +2669,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     {
                         openTab.FilePath = newPath;
                         openTab.FileName = newName;
+                        if (openTab.DockContent != null)
+                            openTab.DockContent.Text = openTab.IsModified ? "\u2022 " + newName : newName;
                     }
                 }
 
@@ -2727,36 +2785,34 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SaveCurrentFileState()
         {
-            if (activeFile == null) return;
-            activeFile.Content = pythonEditor.GetText();
-            activeFile.CursorPosition = pythonEditor.GetCaretIndex();
-            activeFile.ScrollPosition = 0;
+            if (activeFile == null || activeFile.Editor == null) return;
+            activeFile.CursorPosition = activeFile.Editor.GetCaretIndex();
             activeFile.Bookmarks = new HashSet<int>(bookmarks);
-        }
-
-        private void LoadFileIntoEditor(FileTab tab)
-        {
-            suppressHighlight = true;
-
-            pythonEditor.SetText(tab.Content);
-            pythonEditor.SetCaretIndex(Math.Min(tab.CursorPosition, pythonEditor.GetText().Length));
-            pythonEditor.ClearSelection();
-
-            bookmarks = new HashSet<int>(tab.Bookmarks);
-
-            suppressHighlight = false;
-            RunSymbolAnalysis();
-
-            pythonEditor.ScrollToCaretPosition();
-
-            activeFile = tab;
         }
 
         private void SwitchToFile(FileTab tab)
         {
-            if (tab == activeFile) return;
+            if (tab == null) return;
+            if (tab == activeFile)
+            {
+                tab.DockContent?.Activate();
+                return;
+            }
+
             SaveCurrentFileState();
-            LoadFileIntoEditor(tab);
+
+            if (activeFile != null)
+                activeFile.Bookmarks = new HashSet<int>(bookmarks);
+
+            if (tab.DockContent == null || tab.DockContent.IsDisposed)
+                CreateEditorForTab(tab);
+
+            activeFile = tab;
+            bookmarks = new HashSet<int>(tab.Bookmarks);
+
+            tab.DockContent.Activate();
+
+            if (pythonEditor != null) UpdateCursorPositionStatus();
             RefreshFileList();
             RaiseStatus("Editing: " + tab.FileName);
         }
@@ -2846,16 +2902,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (activeFile == null) return;
 
-            activeFile.Content = pythonEditor.GetText();
-
             if (activeFile.FilePath == null)
             {
                 OnSaveFileAs(sender, e);
                 return;
             }
 
-            File.WriteAllText(activeFile.FilePath, activeFile.Content);
+            string content = activeFile.Editor != null ? activeFile.Editor.GetText() : activeFile.Content ?? "";
+            File.WriteAllText(activeFile.FilePath, content);
+            activeFile.Content = content;
             activeFile.IsModified = false;
+            if (activeFile.DockContent != null)
+                activeFile.DockContent.Text = activeFile.FileName;
             RefreshFileList();
             RaiseStatus("Saved: " + activeFile.FileName);
         }
@@ -2886,11 +2944,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     if (!Directory.Exists(parentDir))
                         Directory.CreateDirectory(parentDir);
 
-                    activeFile.Content = pythonEditor.GetText();
-                    File.WriteAllText(targetPath, activeFile.Content);
+                    string saveContent = activeFile.Editor != null ? activeFile.Editor.GetText() : activeFile.Content ?? "";
+                    File.WriteAllText(targetPath, saveContent);
+                    activeFile.Content = saveContent;
                     activeFile.FilePath = targetPath;
                     activeFile.FileName = fileName;
                     activeFile.IsModified = false;
+                    if (activeFile.DockContent != null)
+                        activeFile.DockContent.Text = fileName;
                     RefreshFileList();
                     RaiseStatus("Saved: " + fileName);
                 }
@@ -2899,29 +2960,60 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void OnCloseFile(object sender, EventArgs e)
         {
-            if (activeFile == null || openFiles.Count <= 1)
+            if (activeFile != null)
+                OnCloseFileTab(activeFile);
+        }
+
+        private void CloseDockContent(FileTab tab)
+        {
+            if (tab?.DockContent == null) return;
+            tab.DockContent.AllowClose = true;
+            tab.DockContent.Close();
+            tab.DockContent = null;
+            tab.Editor = null;
+        }
+
+        private void OnCloseFileTab(FileTab tab)
+        {
+            if (tab == null) return;
+            if (openFiles.Count <= 1)
             {
                 RaiseStatus("Cannot close the last file.");
                 return;
             }
 
-            if (activeFile.IsModified)
+            if (tab.IsModified)
             {
                 var result = MessageBox.Show(
-                    "Save changes to " + activeFile.FileName + "?",
+                    "Save changes to " + tab.FileName + "?",
                     "Unsaved Changes",
                     MessageBoxButtons.YesNoCancel,
                     MessageBoxIcon.Question);
 
                 if (result == DialogResult.Cancel) return;
-                if (result == DialogResult.Yes) OnSaveFile(sender, e);
+                if (result == DialogResult.Yes)
+                {
+                    string content = tab.Editor != null ? tab.Editor.GetText() : tab.Content ?? "";
+                    if (tab.FilePath != null)
+                        File.WriteAllText(tab.FilePath, content);
+                }
             }
 
-            int idx = openFiles.IndexOf(activeFile);
-            openFiles.Remove(activeFile);
+            int idx = openFiles.IndexOf(tab);
+            openFiles.Remove(tab);
+
+            tab.DockContent.AllowClose = true;
+            tab.DockContent.Close();
+            tab.DockContent = null;
+            tab.Editor = null;
 
             int newIdx = Math.Min(idx, openFiles.Count - 1);
-            LoadFileIntoEditor(openFiles[newIdx]);
+            var next = openFiles[newIdx];
+            if (tab == activeFile)
+            {
+                activeFile = null;
+                SwitchToFile(next);
+            }
             RefreshFileList();
         }
 
@@ -2929,15 +3021,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             foreach (var ft in openFiles)
             {
-                if (ft == activeFile)
-                    ft.Content = pythonEditor.GetText();
+                string content = ft.Editor != null ? ft.Editor.GetText() : ft.Content ?? "";
+                ft.Content = content;
 
                 if (ft.FilePath == null)
-                {
                     ft.FilePath = Path.Combine(scriptsDir, ft.FileName);
-                }
-                File.WriteAllText(ft.FilePath, ft.Content);
+
+                File.WriteAllText(ft.FilePath, content);
                 ft.IsModified = false;
+                if (ft.DockContent != null)
+                    ft.DockContent.Text = ft.FileName;
             }
             RefreshFileList();
         }
@@ -3173,7 +3266,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             tips.InitialDelay = 400;
             tips.ReshowDelay = 200;
 
-            tips.SetToolTip(pythonEditor, "Python code editor  |  Press F5 to run  |  Ctrl+H to find & replace");
             tips.SetToolTip(installBtn, "Install the named package from PyPI into the virtual environment");
             tips.SetToolTip(uninstallBtn, "Remove the selected package from the virtual environment");
             tips.SetToolTip(refreshBtn, "Reload the list of installed packages");

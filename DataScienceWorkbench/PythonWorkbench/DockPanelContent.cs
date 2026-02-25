@@ -37,6 +37,35 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         }
     }
 
+    internal class FileDockContent : DockContent
+    {
+        public bool AllowClose { get; set; } = false;
+        public event EventHandler CloseRequested;
+
+        public FileDockContent()
+        {
+            DockAreas = DockAreas.Document | DockAreas.Float;
+            CloseButton = true;
+            CloseButtonVisible = true;
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (!AllowClose)
+            {
+                e.Cancel = true;
+                CloseRequested?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+            base.OnFormClosing(e);
+        }
+
+        protected override string GetPersistString()
+        {
+            return "File:" + Text;
+        }
+    }
+
     internal static class DockIcons
     {
         public static Icon CreateEditorIcon()

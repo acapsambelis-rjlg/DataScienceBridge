@@ -25,8 +25,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileNewBtn = new System.Windows.Forms.Button();
             this.fileOpenBtn = new System.Windows.Forms.Button();
             this.fileCloseBtn = new System.Windows.Forms.Button();
-            this.editorPanel = new System.Windows.Forms.Panel();
-            this.pythonEditor = new CodeEditor.CodeTextBox();
             this.editorMenuBar = new System.Windows.Forms.MenuStrip();
             this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.outputPanel = new System.Windows.Forms.Panel();
@@ -54,7 +52,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.pkgLabel = new System.Windows.Forms.Label();
             this.fileListPanel.SuspendLayout();
             this.fileListButtonPanel.SuspendLayout();
-            this.editorPanel.SuspendLayout();
             this.editorMenuBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
             this.refPanel.SuspendLayout();
@@ -149,18 +146,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileCloseBtn.Size = new System.Drawing.Size(44, 24);
             this.fileCloseBtn.Text = "\u00d7";
             this.fileCloseBtn.UseVisualStyleBackColor = true;
-            //
-            // editorPanel
-            //
-            this.editorPanel.Controls.Add(this.pythonEditor);
-            this.editorPanel.Controls.Add(this.editorMenuBar);
-            this.editorPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.editorPanel.Name = "editorPanel";
-            //
-            // pythonEditor
-            //
-            this.pythonEditor.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pythonEditor.Name = "pythonEditor";
             //
             // editorMenuBar
             //
@@ -399,12 +384,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.dockPanel);
+            this.Controls.Add(this.editorMenuBar);
             this.Name = "DataScienceControl";
             this.Size = new System.Drawing.Size(800, 600);
             this.fileListButtonPanel.ResumeLayout(false);
             this.fileListPanel.ResumeLayout(false);
-            this.editorPanel.ResumeLayout(false);
-            this.editorPanel.PerformLayout();
             this.editorMenuBar.ResumeLayout(false);
             this.editorMenuBar.PerformLayout();
             this.outputPanel.ResumeLayout(false);
@@ -424,8 +408,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         #endregion
 
         private WeifenLuo.WinFormsUI.Docking.DockPanel dockPanel;
-        private System.Windows.Forms.Panel editorPanel;
-        private CodeEditor.CodeTextBox pythonEditor;
         private System.Windows.Forms.MenuStrip editorMenuBar;
         private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
         private System.Windows.Forms.Panel outputPanel;
