@@ -3630,6 +3630,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
+# Salary is generated from: DeptBase + YearsEmployed*$2800 + TitleLevel*12% + noise
+# This model should recover those relationships with high R²
+
 df = employees.df.copy()
 
 features = pd.get_dummies(df[['YearsEmployed', 'PerformanceScore', 'IsRemote', 'Department']], drop_first=True)
@@ -3642,27 +3645,52 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 
 print('=== Salary Prediction — Linear Regression ===')
+print()
+print('Known data correlations (built into the dataset):')
+print('  Salary = DepartmentBase + YearsEmployed * ~$2,800 + TitleLevel * 12%')
+print('  Engineering base ~$115K, Support base ~$60K')
+print()
 print(f'R² Score:           {r2_score(y_test, y_pred):.4f}')
 print(f'Mean Absolute Error: ${mean_absolute_error(y_test, y_pred):,.2f}')
 print()
 
 coefs = pd.Series(model.coef_, index=features.columns).sort_values()
-print('Feature Coefficients (impact on salary):')
+print('Recovered Coefficients (compare to known structure):')
+tenure_coef = coefs.get('YearsEmployed', 0)
+print(f'  YearsEmployed coefficient: ${tenure_coef:+,.0f}/yr  (expected ~$2,800/yr)')
+print()
+print('All feature coefficients:')
 for name, val in coefs.items():
     print(f'  {name:30s} {val:+,.2f}')
 
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+# Show the actual correlations in the raw data
+print()
+print('Raw correlation matrix (key columns):')
+corr_cols = ['Salary', 'YearsEmployed', 'PerformanceScore', 'IsRemote']
+print(df[corr_cols].corr().round(3).to_string())
 
-axes[0].scatter(y_test, y_pred, alpha=0.5, edgecolors='black', linewidth=0.5)
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+axes[0].scatter(df['YearsEmployed'], df['Salary'], alpha=0.4, c='steelblue', edgecolors='black', linewidth=0.3)
+z = np.polyfit(df['YearsEmployed'], df['Salary'], 1)
+x_line = np.linspace(df['YearsEmployed'].min(), df['YearsEmployed'].max(), 100)
+axes[0].plot(x_line, np.polyval(z, x_line), 'r-', linewidth=2, label=f'slope=${z[0]:,.0f}/yr')
+axes[0].set_xlabel('Years Employed')
+axes[0].set_ylabel('Salary ($)')
+axes[0].set_title('Tenure → Salary (Known Correlation)')
+axes[0].legend()
+
+axes[1].scatter(y_test, y_pred, alpha=0.5, edgecolors='black', linewidth=0.5)
 mn, mx = min(y_test.min(), y_pred.min()), max(y_test.max(), y_pred.max())
-axes[0].plot([mn, mx], [mn, mx], 'r--', linewidth=1)
-axes[0].set_xlabel('Actual Salary ($)')
-axes[0].set_ylabel('Predicted Salary ($)')
-axes[0].set_title('Actual vs Predicted')
+axes[1].plot([mn, mx], [mn, mx], 'r--', linewidth=1)
+axes[1].set_xlabel('Actual Salary ($)')
+axes[1].set_ylabel('Predicted Salary ($)')
+axes[1].set_title(f'Actual vs Predicted (R²={r2_score(y_test, y_pred):.3f})')
 
-coefs.plot.barh(ax=axes[1], color=['#d9534f' if v < 0 else '#5cb85c' for v in coefs])
-axes[1].set_xlabel('Coefficient Value')
-axes[1].set_title('Feature Importance')
+top_coefs = coefs.abs().nlargest(10).index
+coefs[top_coefs].sort_values().plot.barh(ax=axes[2], color=['#d9534f' if v < 0 else '#5cb85c' for v in coefs[top_coefs].sort_values()])
+axes[2].set_xlabel('Coefficient Value')
+axes[2].set_title('Top 10 Feature Coefficients')
 
 plt.tight_layout()
 plt.show()
@@ -3680,7 +3708,22 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
+# Each department has distinct salary ranges, remote rates, and performance profiles:
+#   Engineering: base $115K, 60% remote  |  Support: base $60K, 65% remote
+#   Finance: base $95K, 25% remote       |  Sales: base $75K, 40% remote
+# Salary is the strongest signal since each dept has a unique base salary.
+
 df = employees.df.copy()
+
+# Show the correlations the classifier will exploit
+print('=== Department Classification — Random Forest ===')
+print()
+print('Department salary ranges (the key signal):')
+dept_stats = df.groupby('Department')['Salary'].agg(['mean', 'std']).sort_values('mean', ascending=False)
+for dept, row in dept_stats.iterrows():
+    remote_pct = df[df['Department'] == dept]['IsRemote'].mean() * 100
+    print(f'  {dept:15s}  avg ${row[""mean""]:>9,.0f} ± ${row[""std""]:>7,.0f}   remote: {remote_pct:.0f}%')
+print()
 
 feature_cols = ['Salary', 'PerformanceScore', 'YearsEmployed', 'IsRemote']
 X = df[feature_cols].copy()
@@ -3693,32 +3736,43 @@ model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 
-print('=== Department Classification — Random Forest ===')
 print(f'Accuracy: {model.score(X_test, y_test):.2%}')
 print()
 print(classification_report(y_test, y_pred, zero_division=0))
 
 importances = pd.Series(model.feature_importances_, index=feature_cols).sort_values()
+print('Feature importance (Salary dominates because each dept has a unique base):')
+for feat, imp in importances.sort_values(ascending=False).items():
+    print(f'  {feat:20s} {imp:.3f}')
 
-fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
 importances.plot.barh(ax=axes[0], color='steelblue')
 axes[0].set_xlabel('Importance')
 axes[0].set_title('Feature Importance')
 
+for dept in sorted(df['Department'].unique()):
+    mask = df['Department'] == dept
+    axes[1].scatter(df.loc[mask, 'Salary'], df.loc[mask, 'IsRemote'].astype(int) + np.random.uniform(-0.15, 0.15, mask.sum()),
+                    alpha=0.5, label=dept, s=20)
+axes[1].set_xlabel('Salary ($)')
+axes[1].set_ylabel('Is Remote (jittered)')
+axes[1].set_title('Dept Separation by Salary & Remote')
+axes[1].legend(fontsize=6, ncol=2, loc='center right')
+
 labels = sorted(y.unique())
 cm = confusion_matrix(y_test, y_pred, labels=labels)
-im = axes[1].imshow(cm, cmap='Blues')
-axes[1].set_xticks(range(len(labels)))
-axes[1].set_yticks(range(len(labels)))
-axes[1].set_xticklabels(labels, rotation=45, ha='right', fontsize=7)
-axes[1].set_yticklabels(labels, fontsize=7)
-axes[1].set_xlabel('Predicted')
-axes[1].set_ylabel('Actual')
-axes[1].set_title('Confusion Matrix')
+im = axes[2].imshow(cm, cmap='Blues')
+axes[2].set_xticks(range(len(labels)))
+axes[2].set_yticks(range(len(labels)))
+axes[2].set_xticklabels(labels, rotation=45, ha='right', fontsize=7)
+axes[2].set_yticklabels(labels, fontsize=7)
+axes[2].set_xlabel('Predicted')
+axes[2].set_ylabel('Actual')
+axes[2].set_title('Confusion Matrix')
 for i in range(len(labels)):
     for j in range(len(labels)):
-        axes[1].text(j, i, str(cm[i, j]), ha='center', va='center',
+        axes[2].text(j, i, str(cm[i, j]), ha='center', va='center',
                      color='white' if cm[i, j] > cm.max() / 2 else 'black', fontsize=7)
 
 plt.tight_layout()
