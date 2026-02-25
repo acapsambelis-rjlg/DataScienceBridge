@@ -222,7 +222,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
                 outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
-                referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
                 packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
                 foreach (var tab in openFiles)
@@ -1235,7 +1234,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             showOutputItem.Click += (s, e) => ShowDockPanel(outputDockContent);
             viewMenu.DropDownItems.Add(showOutputItem);
             var showRefItem = new ToolStripMenuItem("Data Reference");
-            showRefItem.Click += (s, e) => ShowDockPanel(referenceDockContent);
+            showRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
             viewMenu.DropDownItems.Add(showRefItem);
             var showPkgItem = new ToolStripMenuItem("Package Manager");
             showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
@@ -1247,9 +1246,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var floatOutputItem = new ToolStripMenuItem("Float Output Panel");
             floatOutputItem.Click += (s, e) => FloatPanel(outputDockContent);
             viewMenu.DropDownItems.Add(floatOutputItem);
-            var floatRefItem = new ToolStripMenuItem("Float Data Reference");
-            floatRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
-            viewMenu.DropDownItems.Add(floatRefItem);
             var floatPkgItem = new ToolStripMenuItem("Float Package Manager");
             floatPkgItem.Click += (s, e) => FloatPanel(packagesDockContent);
             viewMenu.DropDownItems.Add(floatPkgItem);
@@ -2189,7 +2185,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
             outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
-            referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
+            referenceDockContent.DockPanel = null;
             packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
             foreach (var tab in openFiles)

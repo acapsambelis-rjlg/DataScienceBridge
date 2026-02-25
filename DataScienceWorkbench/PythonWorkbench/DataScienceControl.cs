@@ -268,7 +268,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
                 outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
-                referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
                 packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
                 List<Action> pending;
@@ -367,7 +366,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
             outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
-            referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
+            referenceDockContent.DockPanel = null;
             packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
             foreach (var tab in openFiles)
@@ -1311,7 +1310,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             showOutputItem.Click += (s, e) => ShowDockPanel(outputDockContent);
             viewMenu.Items.Add(showOutputItem);
             var showRefItem = new RadMenuItem("Data Reference");
-            showRefItem.Click += (s, e) => ShowDockPanel(referenceDockContent);
+            showRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
             viewMenu.Items.Add(showRefItem);
             var showPkgItem = new RadMenuItem("Package Manager");
             showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
@@ -1323,9 +1322,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var floatOutputItem = new RadMenuItem("Float Output Panel");
             floatOutputItem.Click += (s, e) => FloatPanel(outputDockContent);
             viewMenu.Items.Add(floatOutputItem);
-            var floatRefItem = new RadMenuItem("Float Data Reference");
-            floatRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
-            viewMenu.Items.Add(floatRefItem);
             var floatPkgItem = new RadMenuItem("Float Package Manager");
             floatPkgItem.Click += (s, e) => FloatPanel(packagesDockContent);
             viewMenu.Items.Add(floatPkgItem);
