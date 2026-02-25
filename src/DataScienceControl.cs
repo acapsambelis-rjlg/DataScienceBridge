@@ -283,7 +283,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             packagesDockContent.Text = "Package Manager";
             packagesDockContent.Icon = DockIcons.CreatePackageIcon();
             packagesDockContent.Controls.Add(pkgPanel);
-            packagesDockContent.Show(referenceDockContent.Pane, null);
+            packagesDockContent.Show(dockPanel, DockState.DockRight);
 
             dockPanel.ActiveDocumentChanged += (s, e) => { };
             packagesDockContent.DockStateChanged += (s, e) =>
@@ -2114,7 +2114,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             filesDockContent.Show(dockPanel, DockState.DockLeft);
             outputDockContent.Show(dockPanel, DockState.DockBottom);
             referenceDockContent.Show(dockPanel, DockState.DockRight);
-            packagesDockContent.Show(referenceDockContent.Pane, null);
+            packagesDockContent.Show(dockPanel, DockState.DockRight);
         }
 
         private void OnRunScript(object sender, EventArgs e)
