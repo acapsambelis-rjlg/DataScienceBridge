@@ -30,6 +30,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.editorToolBar = new System.Windows.Forms.ToolStrip();
             this.runToolBtn = new System.Windows.Forms.ToolStripButton();
             this.syntaxCheckToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.saveToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.undoToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.redoToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.findToolBtn = new System.Windows.Forms.ToolStripButton();
             this.outputPanel = new System.Windows.Forms.Panel();
             this.outputBox = new System.Windows.Forms.RichTextBox();
             this.outputLabel = new System.Windows.Forms.Label();
@@ -166,8 +170,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             //
             this.editorToolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.runToolBtn,
+            this.syntaxCheckToolBtn,
             new System.Windows.Forms.ToolStripSeparator(),
-            this.syntaxCheckToolBtn});
+            this.saveToolBtn,
+            new System.Windows.Forms.ToolStripSeparator(),
+            this.undoToolBtn,
+            this.redoToolBtn,
+            new System.Windows.Forms.ToolStripSeparator(),
+            this.findToolBtn});
             this.editorToolBar.Dock = System.Windows.Forms.DockStyle.Top;
             this.editorToolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.editorToolBar.Name = "editorToolBar";
@@ -191,6 +201,38 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.syntaxCheckToolBtn.Text = "Check Syntax";
             this.syntaxCheckToolBtn.ToolTipText = "Check Python syntax for errors";
             this.syntaxCheckToolBtn.Click += new System.EventHandler(this.OnCheckSyntax);
+            //
+            // saveToolBtn
+            //
+            this.saveToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.saveToolBtn.Name = "saveToolBtn";
+            this.saveToolBtn.Text = "Save";
+            this.saveToolBtn.ToolTipText = "Save (Ctrl+S)";
+            this.saveToolBtn.Click += new System.EventHandler(this.OnSaveFile);
+            //
+            // undoToolBtn
+            //
+            this.undoToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.undoToolBtn.Name = "undoToolBtn";
+            this.undoToolBtn.Text = "Undo";
+            this.undoToolBtn.ToolTipText = "Undo (Ctrl+Z)";
+            this.undoToolBtn.Click += new System.EventHandler(this.OnToolbarUndo);
+            //
+            // redoToolBtn
+            //
+            this.redoToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.redoToolBtn.Name = "redoToolBtn";
+            this.redoToolBtn.Text = "Redo";
+            this.redoToolBtn.ToolTipText = "Redo (Ctrl+Y)";
+            this.redoToolBtn.Click += new System.EventHandler(this.OnToolbarRedo);
+            //
+            // findToolBtn
+            //
+            this.findToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.findToolBtn.Name = "findToolBtn";
+            this.findToolBtn.Text = "Find";
+            this.findToolBtn.ToolTipText = "Find && Replace (Ctrl+F)";
+            this.findToolBtn.Click += new System.EventHandler(this.OnToolbarFind);
             //
             // outputPanel
             //
@@ -433,6 +475,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private System.Windows.Forms.ToolStrip editorToolBar;
         private System.Windows.Forms.ToolStripButton runToolBtn;
         private System.Windows.Forms.ToolStripButton syntaxCheckToolBtn;
+        private System.Windows.Forms.ToolStripButton saveToolBtn;
+        private System.Windows.Forms.ToolStripButton undoToolBtn;
+        private System.Windows.Forms.ToolStripButton redoToolBtn;
+        private System.Windows.Forms.ToolStripButton findToolBtn;
         private System.Windows.Forms.Panel outputPanel;
         private System.Windows.Forms.RichTextBox outputBox;
         private System.Windows.Forms.Label outputLabel;

@@ -1317,16 +1317,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
             viewMenu.Items.Add(showPkgItem);
             viewMenu.Items.Add(new RadMenuSeparatorItem());
-            var floatFilesItem = new RadMenuItem("Float Files Panel");
-            floatFilesItem.Click += (s, e) => FloatPanel(filesDockContent);
-            viewMenu.Items.Add(floatFilesItem);
-            var floatOutputItem = new RadMenuItem("Float Output Panel");
-            floatOutputItem.Click += (s, e) => FloatPanel(outputDockContent);
-            viewMenu.Items.Add(floatOutputItem);
-            var floatPkgItem = new RadMenuItem("Float Package Manager");
-            floatPkgItem.Click += (s, e) => FloatPanel(packagesDockContent);
-            viewMenu.Items.Add(floatPkgItem);
-            viewMenu.Items.Add(new RadMenuSeparatorItem());
             var resetLayoutItem = new RadMenuItem("Reset Layout");
             resetLayoutItem.Click += (s, e) => ResetDockLayout();
             viewMenu.Items.Add(resetLayoutItem);
@@ -2367,6 +2357,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 RaiseStatus("Syntax error on line " + errorLine);
             }
+        }
+
+        private void OnToolbarUndo(object sender, EventArgs e)
+        {
+            if (pythonEditor != null) pythonEditor.PerformUndo();
+        }
+
+        private void OnToolbarRedo(object sender, EventArgs e)
+        {
+            if (pythonEditor != null) pythonEditor.PerformRedo();
+        }
+
+        private void OnToolbarFind(object sender, EventArgs e)
+        {
+            if (pythonEditor != null) pythonEditor.ShowFind();
         }
 
         private int ParseErrorLine(string error)

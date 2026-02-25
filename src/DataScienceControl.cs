@@ -1241,16 +1241,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
             viewMenu.DropDownItems.Add(showPkgItem);
             viewMenu.DropDownItems.Add(new ToolStripSeparator());
-            var floatFilesItem = new ToolStripMenuItem("Float Files Panel");
-            floatFilesItem.Click += (s, e) => FloatPanel(filesDockContent);
-            viewMenu.DropDownItems.Add(floatFilesItem);
-            var floatOutputItem = new ToolStripMenuItem("Float Output Panel");
-            floatOutputItem.Click += (s, e) => FloatPanel(outputDockContent);
-            viewMenu.DropDownItems.Add(floatOutputItem);
-            var floatPkgItem = new ToolStripMenuItem("Float Package Manager");
-            floatPkgItem.Click += (s, e) => FloatPanel(packagesDockContent);
-            viewMenu.DropDownItems.Add(floatPkgItem);
-            viewMenu.DropDownItems.Add(new ToolStripSeparator());
             var resetLayoutItem = new ToolStripMenuItem("Reset Layout");
             resetLayoutItem.Click += (s, e) => ResetDockLayout();
             viewMenu.DropDownItems.Add(resetLayoutItem);
@@ -2302,6 +2292,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 RaiseStatus("Syntax error on line " + errorLine);
             }
+        }
+
+        private void OnToolbarUndo(object sender, EventArgs e)
+        {
+            if (pythonEditor != null) pythonEditor.PerformUndo();
+        }
+
+        private void OnToolbarRedo(object sender, EventArgs e)
+        {
+            if (pythonEditor != null) pythonEditor.PerformRedo();
+        }
+
+        private void OnToolbarFind(object sender, EventArgs e)
+        {
+            if (pythonEditor != null) pythonEditor.ShowFind();
         }
 
         private int ParseErrorLine(string error)
