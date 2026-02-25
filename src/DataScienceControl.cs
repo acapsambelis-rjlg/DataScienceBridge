@@ -220,13 +220,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             this.HandleCreated += (s, e) =>
             {
-                filesDockContent.Show(dockPanel, DockState.DockLeft);
                 filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
-                outputDockContent.Show(dockPanel, DockState.DockBottom);
                 outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
-                referenceDockContent.Show(dockPanel, DockState.DockRight);
                 referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
-                packagesDockContent.Show(dockPanel, DockState.DockRight);
                 packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
                 foreach (var tab in openFiles)
@@ -268,25 +264,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             filesDockContent.Text = "Files";
             filesDockContent.Icon = DockIcons.CreateFilesIcon();
             filesDockContent.Controls.Add(fileListPanel);
-            filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
 
             outputDockContent = new ToolDockContent();
             outputDockContent.Text = "Output";
             outputDockContent.Icon = DockIcons.CreateOutputIcon();
             outputDockContent.Controls.Add(outputPanel);
-            outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
 
             referenceDockContent = new ToolDockContent();
             referenceDockContent.Text = "Data Reference";
             referenceDockContent.Icon = DockIcons.CreateReferenceIcon();
             referenceDockContent.Controls.Add(refPanel);
-            referenceDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
             packagesDockContent = new ToolDockContent();
             packagesDockContent.Text = "Package Manager";
             packagesDockContent.Icon = DockIcons.CreatePackageIcon();
             packagesDockContent.Controls.Add(pkgPanel);
-            packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
             dockPanel.ActiveDocumentChanged += (s, e) =>
             {
