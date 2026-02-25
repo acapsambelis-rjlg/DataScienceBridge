@@ -30,6 +30,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileCloseBtn = new Telerik.WinControls.UI.RadButton();
             this.editorMenuBar = new Telerik.WinControls.UI.RadMenu();
             this.insertSnippetBtn = new Telerik.WinControls.UI.RadMenuItem();
+            this.editorToolBar = new System.Windows.Forms.ToolStrip();
+            this.runToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.syntaxCheckToolBtn = new System.Windows.Forms.ToolStripButton();
             this.outputPanel = new Telerik.WinControls.UI.RadPanel();
             this.outputBox = new System.Windows.Forms.RichTextBox();
             this.outputLabel = new Telerik.WinControls.UI.RadLabel();
@@ -146,6 +149,36 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.insertSnippetBtn.Name = "insertSnippetBtn";
             this.insertSnippetBtn.Size = new System.Drawing.Size(95, 20);
             this.insertSnippetBtn.Text = "Insert Snippet";
+            //
+            // editorToolBar
+            //
+            this.editorToolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.runToolBtn,
+            new System.Windows.Forms.ToolStripSeparator(),
+            this.syntaxCheckToolBtn});
+            this.editorToolBar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.editorToolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.editorToolBar.Name = "editorToolBar";
+            this.editorToolBar.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            this.editorToolBar.BackColor = System.Drawing.SystemColors.Control;
+            //
+            // runToolBtn
+            //
+            this.runToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.runToolBtn.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.runToolBtn.ForeColor = System.Drawing.Color.FromArgb(34, 139, 34);
+            this.runToolBtn.Name = "runToolBtn";
+            this.runToolBtn.Text = "\u25B6 Run";
+            this.runToolBtn.ToolTipText = "Execute Script (F5)";
+            this.runToolBtn.Click += new System.EventHandler(this.OnRunScript);
+            //
+            // syntaxCheckToolBtn
+            //
+            this.syntaxCheckToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.syntaxCheckToolBtn.Name = "syntaxCheckToolBtn";
+            this.syntaxCheckToolBtn.Text = "Check Syntax";
+            this.syntaxCheckToolBtn.ToolTipText = "Check Python syntax for errors";
+            this.syntaxCheckToolBtn.Click += new System.EventHandler(this.OnCheckSyntax);
             //
             // outputPanel
             //
@@ -359,6 +392,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.dockPanel);
+            this.Controls.Add(this.editorToolBar);
             this.Controls.Add(this.editorMenuBar);
             this.Name = "DataScienceControl";
             this.Size = new System.Drawing.Size(800, 600);
@@ -378,6 +412,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private WeifenLuo.WinFormsUI.Docking.DockPanel dockPanel;
         private Telerik.WinControls.UI.RadMenu editorMenuBar;
         private Telerik.WinControls.UI.RadMenuItem insertSnippetBtn;
+        private System.Windows.Forms.ToolStrip editorToolBar;
+        private System.Windows.Forms.ToolStripButton runToolBtn;
+        private System.Windows.Forms.ToolStripButton syntaxCheckToolBtn;
         private Telerik.WinControls.UI.RadPanel outputPanel;
         private System.Windows.Forms.RichTextBox outputBox;
         private Telerik.WinControls.UI.RadLabel outputLabel;

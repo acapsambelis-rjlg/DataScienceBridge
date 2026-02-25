@@ -27,6 +27,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileCloseBtn = new System.Windows.Forms.Button();
             this.editorMenuBar = new System.Windows.Forms.MenuStrip();
             this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
+            this.editorToolBar = new System.Windows.Forms.ToolStrip();
+            this.runToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.syntaxCheckToolBtn = new System.Windows.Forms.ToolStripButton();
             this.outputPanel = new System.Windows.Forms.Panel();
             this.outputBox = new System.Windows.Forms.RichTextBox();
             this.outputLabel = new System.Windows.Forms.Label();
@@ -158,6 +161,36 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.insertSnippetBtn.Name = "insertSnippetBtn";
             this.insertSnippetBtn.Size = new System.Drawing.Size(95, 20);
             this.insertSnippetBtn.Text = "Insert Snippet";
+            //
+            // editorToolBar
+            //
+            this.editorToolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.runToolBtn,
+            new System.Windows.Forms.ToolStripSeparator(),
+            this.syntaxCheckToolBtn});
+            this.editorToolBar.Dock = System.Windows.Forms.DockStyle.Top;
+            this.editorToolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.editorToolBar.Name = "editorToolBar";
+            this.editorToolBar.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            this.editorToolBar.BackColor = System.Drawing.SystemColors.Control;
+            //
+            // runToolBtn
+            //
+            this.runToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.runToolBtn.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.runToolBtn.ForeColor = System.Drawing.Color.FromArgb(34, 139, 34);
+            this.runToolBtn.Name = "runToolBtn";
+            this.runToolBtn.Text = "\u25B6 Run";
+            this.runToolBtn.ToolTipText = "Execute Script (F5)";
+            this.runToolBtn.Click += new System.EventHandler(this.OnRunScript);
+            //
+            // syntaxCheckToolBtn
+            //
+            this.syntaxCheckToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.syntaxCheckToolBtn.Name = "syntaxCheckToolBtn";
+            this.syntaxCheckToolBtn.Text = "Check Syntax";
+            this.syntaxCheckToolBtn.ToolTipText = "Check Python syntax for errors";
+            this.syntaxCheckToolBtn.Click += new System.EventHandler(this.OnCheckSyntax);
             //
             // outputPanel
             //
@@ -371,6 +404,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.dockPanel);
+            this.Controls.Add(this.editorToolBar);
             this.Controls.Add(this.editorMenuBar);
             this.Name = "DataScienceControl";
             this.Size = new System.Drawing.Size(800, 600);
@@ -396,6 +430,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private WeifenLuo.WinFormsUI.Docking.DockPanel dockPanel;
         private System.Windows.Forms.MenuStrip editorMenuBar;
         private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
+        private System.Windows.Forms.ToolStrip editorToolBar;
+        private System.Windows.Forms.ToolStripButton runToolBtn;
+        private System.Windows.Forms.ToolStripButton syntaxCheckToolBtn;
         private System.Windows.Forms.Panel outputPanel;
         private System.Windows.Forms.RichTextBox outputBox;
         private System.Windows.Forms.Label outputLabel;
