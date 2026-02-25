@@ -36,13 +36,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.refSearchBox = new System.Windows.Forms.TextBox();
             this.refDetailBox = new System.Windows.Forms.RichTextBox();
             this.pkgPanel = new System.Windows.Forms.Panel();
-            this.pkgRightPanel = new System.Windows.Forms.Panel();
             this.packageListBox = new System.Windows.Forms.ListBox();
             this.pkgListLabel = new System.Windows.Forms.Label();
             this.pkgSearchBox = new System.Windows.Forms.TextBox();
-            this.pkgLeftPanel = new System.Windows.Forms.Panel();
             this.refreshBtn = new System.Windows.Forms.Button();
             this.installGroup = new System.Windows.Forms.GroupBox();
+            this.pkgBtnPanel = new System.Windows.Forms.Panel();
             this.quickInstallBtn = new System.Windows.Forms.Button();
             this.quickCombo = new System.Windows.Forms.ComboBox();
             this.quickInstallLabel = new System.Windows.Forms.Label();
@@ -60,8 +59,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.refSplit.Panel2.SuspendLayout();
             this.refSplit.SuspendLayout();
             this.pkgPanel.SuspendLayout();
-            this.pkgRightPanel.SuspendLayout();
-            this.pkgLeftPanel.SuspendLayout();
+            this.pkgBtnPanel.SuspendLayout();
             this.installGroup.SuspendLayout();
             this.SuspendLayout();
             //
@@ -240,19 +238,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             //
             // pkgPanel
             //
-            this.pkgPanel.Controls.Add(this.pkgRightPanel);
-            this.pkgPanel.Controls.Add(this.pkgLeftPanel);
+            this.pkgPanel.Controls.Add(this.packageListBox);
+            this.pkgPanel.Controls.Add(this.pkgSearchBox);
+            this.pkgPanel.Controls.Add(this.pkgListLabel);
+            this.pkgPanel.Controls.Add(this.refreshBtn);
+            this.pkgPanel.Controls.Add(this.installGroup);
             this.pkgPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pkgPanel.Name = "pkgPanel";
-            //
-            // pkgRightPanel
-            //
-            this.pkgRightPanel.Controls.Add(this.packageListBox);
-            this.pkgRightPanel.Controls.Add(this.pkgSearchBox);
-            this.pkgRightPanel.Controls.Add(this.pkgListLabel);
-            this.pkgRightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pkgRightPanel.Name = "pkgRightPanel";
-            this.pkgRightPanel.Padding = new System.Windows.Forms.Padding(10);
+            this.pkgPanel.Padding = new System.Windows.Forms.Padding(8);
             //
             // packageListBox
             //
@@ -261,14 +254,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.packageListBox.FormattingEnabled = true;
             this.packageListBox.Name = "packageListBox";
             //
-            // pkgListLabel
-            //
-            this.pkgListLabel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pkgListLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.pkgListLabel.Name = "pkgListLabel";
-            this.pkgListLabel.Size = new System.Drawing.Size(422, 22);
-            this.pkgListLabel.Text = "Installed Packages:";
-            //
             // pkgSearchBox
             //
             this.pkgSearchBox.Dock = System.Windows.Forms.DockStyle.Top;
@@ -276,21 +261,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.pkgSearchBox.Name = "pkgSearchBox";
             this.pkgSearchBox.TextChanged += new System.EventHandler(this.OnPkgSearchChanged);
             //
-            // pkgLeftPanel
+            // pkgListLabel
             //
-            this.pkgLeftPanel.Controls.Add(this.refreshBtn);
-            this.pkgLeftPanel.Controls.Add(this.installGroup);
-            this.pkgLeftPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            this.pkgLeftPanel.Name = "pkgLeftPanel";
-            this.pkgLeftPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.pkgLeftPanel.Size = new System.Drawing.Size(350, 574);
+            this.pkgListLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pkgListLabel.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.pkgListLabel.Name = "pkgListLabel";
+            this.pkgListLabel.Size = new System.Drawing.Size(200, 22);
+            this.pkgListLabel.Text = "Installed Packages:";
             //
             // refreshBtn
             //
             this.refreshBtn.Dock = System.Windows.Forms.DockStyle.Top;
             this.refreshBtn.Name = "refreshBtn";
-            this.refreshBtn.Size = new System.Drawing.Size(330, 30);
-            this.refreshBtn.Text = "Refresh Installed Packages";
+            this.refreshBtn.Size = new System.Drawing.Size(200, 28);
+            this.refreshBtn.Text = "Refresh";
             this.refreshBtn.UseVisualStyleBackColor = true;
             this.refreshBtn.Click += new System.EventHandler(this.OnRefreshPackages);
             //
@@ -299,28 +283,64 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.installGroup.Controls.Add(this.quickInstallBtn);
             this.installGroup.Controls.Add(this.quickCombo);
             this.installGroup.Controls.Add(this.quickInstallLabel);
-            this.installGroup.Controls.Add(this.uninstallBtn);
-            this.installGroup.Controls.Add(this.installBtn);
+            this.installGroup.Controls.Add(this.pkgBtnPanel);
             this.installGroup.Controls.Add(this.packageNameBox);
             this.installGroup.Controls.Add(this.pkgLabel);
             this.installGroup.Dock = System.Windows.Forms.DockStyle.Top;
             this.installGroup.Name = "installGroup";
-            this.installGroup.Padding = new System.Windows.Forms.Padding(10);
-            this.installGroup.Size = new System.Drawing.Size(330, 160);
+            this.installGroup.Padding = new System.Windows.Forms.Padding(8, 20, 8, 4);
+            this.installGroup.Size = new System.Drawing.Size(200, 175);
             this.installGroup.TabStop = false;
-            this.installGroup.Text = "Install / Uninstall Packages";
+            this.installGroup.Text = "Install / Uninstall";
             //
-            // quickInstallBtn
+            // pkgLabel
             //
-            this.quickInstallBtn.Location = new System.Drawing.Point(220, 99);
-            this.quickInstallBtn.Name = "quickInstallBtn";
-            this.quickInstallBtn.Size = new System.Drawing.Size(90, 23);
-            this.quickInstallBtn.Text = "Install";
-            this.quickInstallBtn.UseVisualStyleBackColor = true;
-            this.quickInstallBtn.Click += new System.EventHandler(this.OnQuickInstall);
+            this.pkgLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pkgLabel.Name = "pkgLabel";
+            this.pkgLabel.Size = new System.Drawing.Size(184, 20);
+            this.pkgLabel.Text = "Package name:";
+            //
+            // packageNameBox
+            //
+            this.packageNameBox.Dock = System.Windows.Forms.DockStyle.Top;
+            this.packageNameBox.Name = "packageNameBox";
+            //
+            // pkgBtnPanel
+            //
+            this.pkgBtnPanel.Controls.Add(this.uninstallBtn);
+            this.pkgBtnPanel.Controls.Add(this.installBtn);
+            this.pkgBtnPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pkgBtnPanel.Name = "pkgBtnPanel";
+            this.pkgBtnPanel.Size = new System.Drawing.Size(184, 28);
+            //
+            // installBtn
+            //
+            this.installBtn.Dock = System.Windows.Forms.DockStyle.Left;
+            this.installBtn.Name = "installBtn";
+            this.installBtn.Size = new System.Drawing.Size(90, 28);
+            this.installBtn.Text = "Install";
+            this.installBtn.UseVisualStyleBackColor = true;
+            this.installBtn.Click += new System.EventHandler(this.OnInstallPackage);
+            //
+            // uninstallBtn
+            //
+            this.uninstallBtn.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.uninstallBtn.Name = "uninstallBtn";
+            this.uninstallBtn.Size = new System.Drawing.Size(94, 28);
+            this.uninstallBtn.Text = "Uninstall";
+            this.uninstallBtn.UseVisualStyleBackColor = true;
+            this.uninstallBtn.Click += new System.EventHandler(this.OnUninstallPackage);
+            //
+            // quickInstallLabel
+            //
+            this.quickInstallLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.quickInstallLabel.Name = "quickInstallLabel";
+            this.quickInstallLabel.Size = new System.Drawing.Size(184, 20);
+            this.quickInstallLabel.Text = "Quick install:";
             //
             // quickCombo
             //
+            this.quickCombo.Dock = System.Windows.Forms.DockStyle.Top;
             this.quickCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.quickCombo.Items.AddRange(new object[] {
             "scipy",
@@ -335,49 +355,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             "beautifulsoup4",
             "sympy",
             "networkx"});
-            this.quickCombo.Location = new System.Drawing.Point(15, 100);
             this.quickCombo.Name = "quickCombo";
-            this.quickCombo.Size = new System.Drawing.Size(200, 21);
             //
-            // quickInstallLabel
+            // quickInstallBtn
             //
-            this.quickInstallLabel.AutoSize = true;
-            this.quickInstallLabel.Location = new System.Drawing.Point(15, 80);
-            this.quickInstallLabel.Name = "quickInstallLabel";
-            this.quickInstallLabel.Size = new System.Drawing.Size(69, 13);
-            this.quickInstallLabel.Text = "Quick install:";
-            //
-            // uninstallBtn
-            //
-            this.uninstallBtn.Location = new System.Drawing.Point(220, 74);
-            this.uninstallBtn.Name = "uninstallBtn";
-            this.uninstallBtn.Size = new System.Drawing.Size(90, 23);
-            this.uninstallBtn.Text = "Uninstall";
-            this.uninstallBtn.UseVisualStyleBackColor = true;
-            this.uninstallBtn.Click += new System.EventHandler(this.OnUninstallPackage);
-            //
-            // installBtn
-            //
-            this.installBtn.Location = new System.Drawing.Point(220, 44);
-            this.installBtn.Name = "installBtn";
-            this.installBtn.Size = new System.Drawing.Size(90, 23);
-            this.installBtn.Text = "Install";
-            this.installBtn.UseVisualStyleBackColor = true;
-            this.installBtn.Click += new System.EventHandler(this.OnInstallPackage);
-            //
-            // packageNameBox
-            //
-            this.packageNameBox.Location = new System.Drawing.Point(15, 45);
-            this.packageNameBox.Name = "packageNameBox";
-            this.packageNameBox.Size = new System.Drawing.Size(200, 20);
-            //
-            // pkgLabel
-            //
-            this.pkgLabel.AutoSize = true;
-            this.pkgLabel.Location = new System.Drawing.Point(15, 25);
-            this.pkgLabel.Name = "pkgLabel";
-            this.pkgLabel.Size = new System.Drawing.Size(80, 13);
-            this.pkgLabel.Text = "Package name:";
+            this.quickInstallBtn.Dock = System.Windows.Forms.DockStyle.Top;
+            this.quickInstallBtn.Name = "quickInstallBtn";
+            this.quickInstallBtn.Size = new System.Drawing.Size(184, 28);
+            this.quickInstallBtn.Text = "Quick Install";
+            this.quickInstallBtn.UseVisualStyleBackColor = true;
+            this.quickInstallBtn.Click += new System.EventHandler(this.OnQuickInstall);
             //
             // DataScienceControl
             //
@@ -398,8 +385,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             ((System.ComponentModel.ISupportInitialize)(this.refSplit)).EndInit();
             this.refSplit.ResumeLayout(false);
             this.pkgPanel.ResumeLayout(false);
-            this.pkgRightPanel.ResumeLayout(false);
-            this.pkgLeftPanel.ResumeLayout(false);
+            this.pkgBtnPanel.ResumeLayout(false);
             this.installGroup.ResumeLayout(false);
             this.installGroup.PerformLayout();
             this.ResumeLayout(false);
@@ -419,10 +405,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private System.Windows.Forms.TextBox refSearchBox;
         private System.Windows.Forms.RichTextBox refDetailBox;
         private System.Windows.Forms.Panel pkgPanel;
-        private System.Windows.Forms.Panel pkgRightPanel;
+        private System.Windows.Forms.Panel pkgBtnPanel;
         private System.Windows.Forms.ListBox packageListBox;
         private System.Windows.Forms.Label pkgListLabel;
-        private System.Windows.Forms.Panel pkgLeftPanel;
         private System.Windows.Forms.Button refreshBtn;
         private System.Windows.Forms.GroupBox installGroup;
         private System.Windows.Forms.Button quickInstallBtn;
