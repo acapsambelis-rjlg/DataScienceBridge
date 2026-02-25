@@ -179,10 +179,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             return RenderBitmap((g, r) =>
             {
-                var pen = new Pen(Color.FromArgb(80, 80, 80), 1.5f);
-                g.DrawArc(pen, 4, 4, 9, 9, 180, 230);
+                var pen = new Pen(Color.FromArgb(80, 80, 80), 2f);
+                g.DrawArc(pen, 3, 5, 10, 8, 200, 160);
                 var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
-                Point[] arrow = { new Point(3, 3), new Point(7, 3), new Point(5, 7) };
+                Point[] arrow = { new Point(2, 4), new Point(7, 4), new Point(4, 9) };
                 g.FillPolygon(brush, arrow);
                 pen.Dispose(); brush.Dispose();
             });
@@ -192,10 +192,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             return RenderBitmap((g, r) =>
             {
-                var pen = new Pen(Color.FromArgb(80, 80, 80), 1.5f);
-                g.DrawArc(pen, 3, 4, 9, 9, 180, -230);
+                var pen = new Pen(Color.FromArgb(80, 80, 80), 2f);
+                g.DrawArc(pen, 3, 5, 10, 8, -20, 160);
                 var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
-                Point[] arrow = { new Point(13, 3), new Point(9, 3), new Point(11, 7) };
+                Point[] arrow = { new Point(14, 4), new Point(9, 4), new Point(12, 9) };
                 g.FillPolygon(brush, arrow);
                 pen.Dispose(); brush.Dispose();
             });
