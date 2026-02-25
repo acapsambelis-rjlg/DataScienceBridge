@@ -179,12 +179,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             return RenderBitmap((g, r) =>
             {
-                var pen = new Pen(Color.FromArgb(80, 80, 80), 2f);
-                g.DrawArc(pen, 3, 5, 10, 8, 200, 160);
                 var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
-                Point[] arrow = { new Point(2, 4), new Point(7, 4), new Point(4, 9) };
-                g.FillPolygon(brush, arrow);
-                pen.Dispose(); brush.Dispose();
+                var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                g.DrawString("\u21B6", new Font("Segoe UI Symbol", 11f, FontStyle.Bold), brush, r, fmt);
+                brush.Dispose();
             });
         }
 
@@ -192,12 +190,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             return RenderBitmap((g, r) =>
             {
-                var pen = new Pen(Color.FromArgb(80, 80, 80), 2f);
-                g.DrawArc(pen, 3, 5, 10, 8, -20, 160);
                 var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
-                Point[] arrow = { new Point(14, 4), new Point(9, 4), new Point(12, 9) };
-                g.FillPolygon(brush, arrow);
-                pen.Dispose(); brush.Dispose();
+                var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                g.DrawString("\u21B7", new Font("Segoe UI Symbol", 11f, FontStyle.Bold), brush, r, fmt);
+                brush.Dispose();
             });
         }
 
