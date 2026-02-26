@@ -2177,6 +2177,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (panel.DockState == DockState.Hidden)
                 panel.Show(dockPanel);
+            else if (panel.DockState == DockState.DockBottomAutoHide)
+                panel.DockState = DockState.DockBottom;
+            else if (panel.DockState == DockState.DockLeftAutoHide)
+                panel.DockState = DockState.DockLeft;
+            else if (panel.DockState == DockState.DockRightAutoHide)
+                panel.DockState = DockState.DockRight;
+            else if (panel.DockState == DockState.DockTopAutoHide)
+                panel.DockState = DockState.DockTop;
             panel.Activate();
         }
 
