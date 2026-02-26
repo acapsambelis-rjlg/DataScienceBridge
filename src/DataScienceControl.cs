@@ -326,6 +326,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void CreateEditorForTab(FileTab tab)
         {
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[CreateTab] START tab={tab.FileName}, tab.Content.Length={tab.Content?.Length ?? -1}\n");
+
             var editor = new CodeTextBox();
             editor.Dock = DockStyle.Fill;
             if (editorFont != null) editor.EditorFont = editorFont;
@@ -348,10 +350,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             suppressHighlight = true;
             editor.SetText(tab.Content ?? "");
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[CreateTab] AFTER SetText tab={tab.FileName}, editor.Text.Length={editor.Text?.Length ?? -1}, editor.LineCount={editor.LineCount}\n");
             editor.SetCaretIndex(Math.Min(tab.CursorPosition, (tab.Content ?? "").Length));
             editor.ClearSelection();
             suppressHighlight = false;
             editor.Refresh();
+
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[CreateTab] END tab={tab.FileName}, editor.Text.Length={editor.Text?.Length ?? -1}\n");
         }
 
         private void SetupEditorEvents(FileTab tab, CodeTextBox editor)
@@ -2332,6 +2337,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (!Directory.Exists(scriptsDir))
                 Directory.CreateDirectory(scriptsDir);
 
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] scriptsDir={scriptsDir}\n");
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] BaseDirectory={AppDomain.CurrentDomain.BaseDirectory}\n");
+
             symbolAnalyzer.ScriptsDirectory = scriptsDir;
             symbolAnalyzer.SetFileContentResolver(moduleName =>
             {
@@ -2348,9 +2356,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             });
 
             var existingFiles = Directory.GetFiles(scriptsDir, "*.py", SearchOption.AllDirectories);
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] existingFiles.Length={existingFiles.Length}\n");
+            foreach (var ef in existingFiles)
+                System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS]   existingFile={ef}\n");
 
             if (existingFiles.Length == 0)
             {
+                System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] BRANCH: no files, creating default main.py\n");
                 var mainTab = new FileTab
                 {
                     FilePath = Path.Combine(scriptsDir, "main.py"),
@@ -2361,17 +2373,22 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 };
                 openFiles.Add(mainTab);
                 File.WriteAllText(mainTab.FilePath, mainTab.Content);
+                System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] default content length={mainTab.Content.Length}\n");
             }
             else
             {
+                System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] BRANCH: loading existing files\n");
                 var rootFiles = Directory.GetFiles(scriptsDir, "*.py");
+                System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] rootFiles.Length={rootFiles.Length}\n");
                 foreach (var fp in rootFiles.OrderBy(f => f))
                 {
+                    string fileContent = File.ReadAllText(fp);
+                    System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS]   loading {fp}, content.Length={fileContent.Length}, preview='{(fileContent.Length > 60 ? fileContent.Substring(0, 60) : fileContent).Replace("\n", "\\n")}'\n");
                     var tab = new FileTab
                     {
                         FilePath = fp,
                         FileName = Path.GetFileName(fp),
-                        Content = File.ReadAllText(fp),
+                        Content = fileContent,
                         CursorPosition = 0,
                         IsModified = false
                     };
@@ -2394,6 +2411,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             activeFile = openFiles[0];
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[InitFS] activeFile={activeFile.FileName}, content.Length={activeFile.Content?.Length ?? -1}\n");
             RefreshFileList();
         }
 
