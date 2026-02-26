@@ -2287,8 +2287,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             SaveAllFilesToDisk();
             ShowDockPanel(outputDockContent);
 
-            RaiseStatus("Running script...");
-            AppendOutput("--- Running script at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
+            string runFileName = activeFile != null ? activeFile.FileName : "untitled";
+            RaiseStatus("Running " + runFileName + "...");
+            AppendOutput("--- Running [" + runFileName + "] as __main__ at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
 
             Application.DoEvents();
 
