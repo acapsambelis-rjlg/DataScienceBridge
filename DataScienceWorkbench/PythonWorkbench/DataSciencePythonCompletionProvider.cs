@@ -28,77 +28,55 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             "staticmethod", "str", "sum", "super", "tuple", "type", "vars", "zip"
         };
 
-        private static readonly List<string> DataFrameMethods = new List<string> {
-            "head()", "tail()", "info()", "describe()", "shape",
-            "columns", "dtypes", "index", "values", "iloc", "loc",
-            "groupby()", "sort_values()", "sort_index()",
-            "merge()", "join()",
-            "drop()", "dropna()", "fillna()", "isna()", "notna()",
-            "apply()", "map()", "applymap()",
-            "value_counts()", "unique()", "nunique()",
-            "mean()", "median()", "std()", "sum()", "min()", "max()", "count()",
-            "agg()", "transform()",
-            "reset_index()", "set_index()", "rename()",
-            "astype()", "copy()", "replace()",
-            "to_csv()", "to_excel()", "to_json()",
-            "plot()", "plot.bar()", "plot.hist()", "plot.scatter()",
-            "corr()", "cov()", "sample()", "nlargest()", "nsmallest()",
-            "str.contains()", "str.replace()", "str.split()", "str.lower()", "str.upper()",
-            "dt.year", "dt.month", "dt.day", "dt.hour",
-            "df", "query()", "isin()", "between()", "clip()",
-            "pivot_table()", "melt()", "stack()", "unstack()",
-            "rolling()", "expanding()", "shift()", "diff()", "pct_change()",
-            "nrows", "select_dtypes()", "memory_usage()"
-        };
-
-        private static readonly string[] PandasMethods = {
-            "pd.read_csv", "pd.DataFrame", "pd.Series", "pd.concat", "pd.merge",
-            "pd.to_datetime", "pd.to_numeric", "pd.get_dummies", "pd.cut", "pd.qcut",
-            "pd.pivot_table", "pd.crosstab", "pd.melt"
-        };
-
-        private static readonly string[] NumpyMethods = {
-            "np.array", "np.zeros", "np.ones", "np.arange", "np.linspace",
-            "np.reshape", "np.concatenate", "np.stack", "np.split",
-            "np.mean", "np.median", "np.std", "np.var", "np.sum",
-            "np.min", "np.max", "np.argmin", "np.argmax",
-            "np.dot", "np.matmul", "np.transpose",
-            "np.random.rand", "np.random.randn", "np.random.randint",
-            "np.where", "np.unique", "np.sort", "np.argsort",
-            "np.sqrt", "np.exp", "np.log", "np.log2", "np.log10",
-            "np.abs", "np.round", "np.ceil", "np.floor",
-            "np.nan", "np.inf", "np.isnan", "np.isinf",
-            "np.corrcoef", "np.histogram", "np.percentile"
-        };
-
-        private static readonly string[] MatplotlibMethods = {
-            "plt.plot", "plt.scatter", "plt.bar", "plt.barh",
-            "plt.hist", "plt.boxplot", "plt.pie",
-            "plt.figure", "plt.subplot", "plt.subplots",
-            "plt.xlabel", "plt.ylabel", "plt.title", "plt.legend",
-            "plt.xlim", "plt.ylim", "plt.grid",
-            "plt.show", "plt.savefig", "plt.tight_layout",
-            "plt.colorbar", "plt.imshow", "plt.contour",
-            "plt.annotate", "plt.text", "plt.axhline", "plt.axvline"
-        };
-
-        private static readonly List<string> AllStaticItems;
-
-        static DataSciencePythonCompletionProvider()
-        {
-            AllStaticItems = new List<string>();
-            AllStaticItems.AddRange(PythonKeywords);
-            AllStaticItems.AddRange(PythonBuiltins);
-            AllStaticItems.AddRange(PandasMethods);
-            AllStaticItems.AddRange(NumpyMethods);
-            AllStaticItems.AddRange(MatplotlibMethods);
-            AllStaticItems.Sort(StringComparer.OrdinalIgnoreCase);
-        }
+        private Dictionary<string, ModuleIntrospection> _moduleData = new Dictionary<string, ModuleIntrospection>();
+        private Dictionary<string, string> _importAliases = new Dictionary<string, string>();
+        private List<string> _moduleTopLevelItems = new List<string>();
 
         private List<string> _dynamicSymbols = new List<string>();
         private Dictionary<string, List<string>> _datasetColumns = new Dictionary<string, List<string>>();
         private Dictionary<string, PythonClassInfo> _registeredClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> _contextVariables = new Dictionary<string, ContextVariable>();
+
+        public void SetModuleCompletions(Dictionary<string, ModuleIntrospection> moduleData)
+        {
+            _moduleData = new Dictionary<string, ModuleIntrospection>(moduleData);
+            RebuildModuleTopLevelItems();
+        }
+
+        public void SetImportAliases(Dictionary<string, string> aliases)
+        {
+            _importAliases = new Dictionary<string, string>(aliases);
+            if (_moduleData.Count > 0)
+                RebuildModuleTopLevelItems();
+        }
+
+        private void RebuildModuleTopLevelItems()
+        {
+            var items = new List<string>();
+            foreach (var kvp in _moduleData)
+            {
+                string moduleName = kvp.Key;
+                string alias = null;
+                foreach (var a in _importAliases)
+                {
+                    if (a.Value == moduleName)
+                    {
+                        alias = a.Key;
+                        break;
+                    }
+                }
+
+                string prefix = alias ?? moduleName;
+                foreach (var f in kvp.Value.Functions)
+                    items.Add(prefix + "." + f);
+                foreach (var c in kvp.Value.Constants)
+                    items.Add(prefix + "." + c);
+                foreach (var cls in kvp.Value.Classes.Keys)
+                    items.Add(prefix + "." + cls);
+            }
+            items.Sort(StringComparer.OrdinalIgnoreCase);
+            _moduleTopLevelItems = items;
+        }
 
         public void SetDynamicSymbols(IEnumerable<string> symbols)
         {
@@ -183,7 +161,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     items.Add(new CompletionItem(b, CompletionItemKind.Function, "builtin"));
             }
 
-            foreach (var item in AllStaticItems)
+            foreach (var item in _moduleTopLevelItems)
             {
                 if (item.StartsWith(partialWord, StringComparison.OrdinalIgnoreCase) && seen.Add(item))
                     items.Add(new CompletionItem(item, CompletionItemKind.Function, "library"));
@@ -240,7 +218,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             else if (_datasetColumns.ContainsKey(objectName))
             {
                 members.AddRange(_datasetColumns[objectName]);
-                members.AddRange(DataFrameMethods);
+                var dfMembers = ResolveClassMembers("DataFrame");
+                if (dfMembers.Count > 0)
+                    members.AddRange(dfMembers);
             }
             else if (objectName == "self")
             {
@@ -249,14 +229,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
             else
             {
-                var staticItems = AllStaticItems
-                    .Where(item => item.StartsWith(objectName + ".", StringComparison.OrdinalIgnoreCase))
-                    .Select(item => item.Substring(objectName.Length + 1))
-                    .ToList();
-
-                if (staticItems.Count > 0)
+                var moduleMembers = ResolveModuleMembers(objectName);
+                if (moduleMembers.Count > 0)
                 {
-                    members.AddRange(staticItems);
+                    members.AddRange(moduleMembers);
                 }
                 else
                 {
@@ -268,13 +244,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     else
                     {
                         string varType = FindVariableType(objectName, code);
-                        if (varType != null && classInfo.ContainsKey(varType))
+                        if (varType != null)
                         {
-                            members.AddRange(classInfo[varType]);
+                            var typeMembers = ResolveClassMembers(varType);
+                            if (typeMembers.Count > 0)
+                                members.AddRange(typeMembers);
+                            else if (classInfo.ContainsKey(varType))
+                                members.AddRange(classInfo[varType]);
                         }
                         else
                         {
-                            members.AddRange(DataFrameMethods);
+                            var dfMembers = ResolveClassMembers("DataFrame");
+                            if (dfMembers.Count > 0)
+                                members.AddRange(dfMembers);
                         }
                     }
                 }
@@ -300,6 +282,33 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         }
 
         private static readonly Regex BracketIndexRegex = new Regex(@"^(\w+)\[.+\]$", RegexOptions.Compiled);
+
+        private List<string> ResolveModuleMembers(string objectName)
+        {
+            string resolvedModule = null;
+            if (_importAliases.ContainsKey(objectName))
+                resolvedModule = _importAliases[objectName];
+            else if (_moduleData.ContainsKey(objectName))
+                resolvedModule = objectName;
+
+            if (resolvedModule != null && _moduleData.ContainsKey(resolvedModule))
+            {
+                return _moduleData[resolvedModule].GetAllMembers();
+            }
+
+            return new List<string>();
+        }
+
+        private List<string> ResolveClassMembers(string className)
+        {
+            foreach (var kvp in _moduleData)
+            {
+                if (kvp.Value.Classes.ContainsKey(className))
+                    return kvp.Value.Classes[className];
+            }
+
+            return new List<string>();
+        }
 
         private List<string> ExtractClassMembersForSelf(string code, int cursorPos)
         {

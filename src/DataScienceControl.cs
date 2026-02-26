@@ -977,6 +977,55 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return sb.ToString();
         }
 
+        private static readonly Dictionary<string, string> CommonImportAliases = new Dictionary<string, string>
+        {
+            { "pd", "pandas" },
+            { "np", "numpy" },
+            { "plt", "matplotlib.pyplot" },
+            { "sns", "seaborn" },
+            { "tf", "tensorflow" },
+            { "sk", "sklearn" },
+            { "sp", "scipy" },
+        };
+
+        private void IntrospectInstalledModules()
+        {
+            if (pythonRunner == null || !pythonRunner.PythonAvailable) return;
+
+            var modulesToIntrospect = new List<string>();
+            foreach (var mod in symbolAnalyzer.KnownModules)
+            {
+                if (CommonImportAliases.ContainsKey(mod)) continue;
+                modulesToIntrospect.Add(mod);
+            }
+            foreach (var alias in CommonImportAliases)
+            {
+                modulesToIntrospect.Add(alias.Value);
+            }
+
+            var distinct = new HashSet<string>(modulesToIntrospect);
+
+            pythonRunner.IntrospectModulesAsync(distinct, moduleData =>
+            {
+                RunOnUIThread(() =>
+                {
+                    if (completionProvider != null)
+                    {
+                        completionProvider.SetImportAliases(CommonImportAliases);
+                        completionProvider.SetModuleCompletions(moduleData);
+                    }
+
+                    foreach (var kvp in moduleData)
+                    {
+                        var symbols = new List<string>(kvp.Value.Functions);
+                        symbols.AddRange(kvp.Value.Constants);
+                        symbols.AddRange(kvp.Value.Classes.Keys);
+                        symbolAnalyzer.LoadModuleSymbols(kvp.Key, symbols);
+                    }
+                });
+            });
+        }
+
         private void UpdateDynamicSymbols()
         {
             var names = new List<string>();
@@ -1337,12 +1386,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         if (pythonRunner.VenvReady)
                         {
                             symbolAnalyzer.LoadSymbolsFromVenv(pythonRunner.VenvPath);
+                            IntrospectInstalledModules();
                             RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", venv)");
                         }
                         else
                         {
                             AppendOutput("Virtual environment setup failed: " + pythonRunner.VenvError + "\n", Color.FromArgb(200, 120, 0));
                             AppendOutput("Using system Python instead.\n\n", Color.FromArgb(140, 100, 0));
+                            IntrospectInstalledModules();
                             RaiseStatus("Ready (" + pythonRunner.PythonVersion + ", system)");
                         }
 
@@ -3139,6 +3190,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         RaiseStatus(pkg + " installed successfully.");
                         if (pythonRunner.VenvReady)
                             symbolAnalyzer.LoadSymbolsFromVenv(pythonRunner.VenvPath);
+                        IntrospectInstalledModules();
                     }
                     else
                     {

@@ -916,6 +916,73 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
+        public Dictionary<string, ModuleIntrospection> IntrospectModules(IEnumerable<string> moduleNames)
+        {
+            var result = new Dictionary<string, ModuleIntrospection>();
+            if (!pythonAvailable) return result;
+
+            var modules = new List<string>(moduleNames);
+            if (modules.Count == 0) return result;
+
+            string scriptPath = Path.Combine(FindPythonBaseDirectory(), "python", "introspect_modules.py");
+            if (!File.Exists(scriptPath)) return result;
+
+            string args = "\"" + scriptPath + "\"";
+            foreach (var m in modules)
+                args += " " + m;
+
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = pythonPath,
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                var proc = Process.Start(psi);
+                string stdout = null;
+                var readThread = new Thread(() => { stdout = proc.StandardOutput.ReadToEnd(); });
+                readThread.IsBackground = true;
+                readThread.Start();
+                bool exited = proc.WaitForExit(30000);
+
+                if (!exited)
+                {
+                    try { proc.Kill(); } catch { }
+                    return result;
+                }
+                readThread.Join(5000);
+
+                if (stdout == null || proc.ExitCode != 0) return result;
+
+                int startIdx = stdout.IndexOf("__INTROSPECT_START__");
+                int endIdx = stdout.IndexOf("__INTROSPECT_END__");
+                if (startIdx < 0 || endIdx < 0) return result;
+
+                startIdx += "__INTROSPECT_START__".Length;
+                string json = stdout.Substring(startIdx, endIdx - startIdx).Trim();
+                result = ModuleIntrospection.ParseJson(json);
+            }
+            catch { }
+
+            return result;
+        }
+
+        public void IntrospectModulesAsync(IEnumerable<string> moduleNames, Action<Dictionary<string, ModuleIntrospection>> onComplete)
+        {
+            var thread = new Thread(new ThreadStart(() =>
+            {
+                var result = IntrospectModules(moduleNames);
+                onComplete(result);
+            }));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
         public PythonResult ListPackages()
         {
             if (!pythonAvailable)
@@ -974,5 +1041,177 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public string Error { get; set; }
         public bool Success { get; set; }
         public List<string> PlotPaths { get; set; } = new List<string>();
+    }
+
+    public class ModuleIntrospection
+    {
+        public List<string> Functions { get; set; }
+        public Dictionary<string, List<string>> Classes { get; set; }
+        public List<string> Constants { get; set; }
+        public List<string> Submodules { get; set; }
+
+        public ModuleIntrospection()
+        {
+            Functions = new List<string>();
+            Classes = new Dictionary<string, List<string>>();
+            Constants = new List<string>();
+            Submodules = new List<string>();
+        }
+
+        public List<string> GetAllMembers()
+        {
+            var all = new List<string>();
+            foreach (var f in Functions)
+                all.Add(f + "()");
+            all.AddRange(Constants);
+            all.AddRange(Submodules);
+            foreach (var cls in Classes.Keys)
+                all.Add(cls);
+            all.Sort(StringComparer.OrdinalIgnoreCase);
+            return all;
+        }
+
+        public static Dictionary<string, ModuleIntrospection> ParseJson(string json)
+        {
+            var result = new Dictionary<string, ModuleIntrospection>();
+            if (string.IsNullOrEmpty(json)) return result;
+
+            try
+            {
+                int pos = 0;
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] != '{') return result;
+                pos++;
+
+                while (pos < json.Length)
+                {
+                    SkipWhitespace(json, ref pos);
+                    if (pos >= json.Length || json[pos] == '}') break;
+                    if (json[pos] == ',') { pos++; continue; }
+
+                    string moduleName = ReadJsonString(json, ref pos);
+                    if (moduleName == null) break;
+                    SkipWhitespace(json, ref pos);
+                    if (pos >= json.Length || json[pos] != ':') break;
+                    pos++;
+
+                    var intro = ParseModuleObject(json, ref pos);
+                    if (intro != null)
+                        result[moduleName] = intro;
+                }
+            }
+            catch { }
+
+            return result;
+        }
+
+        private static ModuleIntrospection ParseModuleObject(string json, ref int pos)
+        {
+            var intro = new ModuleIntrospection();
+            SkipWhitespace(json, ref pos);
+            if (pos >= json.Length || json[pos] != '{') return null;
+            pos++;
+
+            while (pos < json.Length)
+            {
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] == '}') { pos++; break; }
+                if (json[pos] == ',') { pos++; continue; }
+
+                string key = ReadJsonString(json, ref pos);
+                if (key == null) break;
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] != ':') break;
+                pos++;
+
+                if (key == "classes")
+                {
+                    intro.Classes = ReadJsonDictOfStringArrays(json, ref pos);
+                }
+                else
+                {
+                    var arr = ReadJsonStringArray(json, ref pos);
+                    if (key == "functions") intro.Functions = arr;
+                    else if (key == "constants") intro.Constants = arr;
+                    else if (key == "submodules") intro.Submodules = arr;
+                }
+            }
+
+            return intro;
+        }
+
+        private static void SkipWhitespace(string json, ref int pos)
+        {
+            while (pos < json.Length && char.IsWhiteSpace(json[pos])) pos++;
+        }
+
+        private static string ReadJsonString(string json, ref int pos)
+        {
+            SkipWhitespace(json, ref pos);
+            if (pos >= json.Length || json[pos] != '"') return null;
+            pos++;
+            var sb = new StringBuilder();
+            while (pos < json.Length && json[pos] != '"')
+            {
+                if (json[pos] == '\\' && pos + 1 < json.Length)
+                {
+                    pos++;
+                    sb.Append(json[pos]);
+                }
+                else
+                {
+                    sb.Append(json[pos]);
+                }
+                pos++;
+            }
+            if (pos < json.Length) pos++;
+            return sb.ToString();
+        }
+
+        private static List<string> ReadJsonStringArray(string json, ref int pos)
+        {
+            var list = new List<string>();
+            SkipWhitespace(json, ref pos);
+            if (pos >= json.Length || json[pos] != '[') return list;
+            pos++;
+
+            while (pos < json.Length)
+            {
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] == ']') { pos++; break; }
+                if (json[pos] == ',') { pos++; continue; }
+                string val = ReadJsonString(json, ref pos);
+                if (val != null) list.Add(val);
+                else break;
+            }
+
+            return list;
+        }
+
+        private static Dictionary<string, List<string>> ReadJsonDictOfStringArrays(string json, ref int pos)
+        {
+            var dict = new Dictionary<string, List<string>>();
+            SkipWhitespace(json, ref pos);
+            if (pos >= json.Length || json[pos] != '{') return dict;
+            pos++;
+
+            while (pos < json.Length)
+            {
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] == '}') { pos++; break; }
+                if (json[pos] == ',') { pos++; continue; }
+
+                string key = ReadJsonString(json, ref pos);
+                if (key == null) break;
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] != ':') break;
+                pos++;
+
+                var arr = ReadJsonStringArray(json, ref pos);
+                dict[key] = arr;
+            }
+
+            return dict;
+        }
     }
 }
