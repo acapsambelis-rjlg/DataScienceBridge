@@ -404,12 +404,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editor.FoldingProvider = new IndentFoldingProvider();
             editor.CompletionProvider = completionProvider;
 
-            suppressHighlight = true;
-            editor.SetText(tab.Content ?? "");
-            editor.SetCaretIndex(Math.Min(tab.CursorPosition, (tab.Content ?? "").Length));
-            editor.ClearSelection();
-            suppressHighlight = false;
-
             tab.Editor = editor;
 
             var content = new FileDockContent();
@@ -422,6 +416,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             SetupEditorEvents(tab, editor);
 
             content.Show(dockPanel, DockState.Document);
+
+            suppressHighlight = true;
+            editor.SetText(tab.Content ?? "");
+            editor.SetCaretIndex(Math.Min(tab.CursorPosition, (tab.Content ?? "").Length));
+            editor.ClearSelection();
+            suppressHighlight = false;
         }
 
         private void SetupEditorEvents(FileTab tab, CodeTextBox editor)
