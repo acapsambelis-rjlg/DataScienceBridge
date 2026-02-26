@@ -248,9 +248,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     if (activeFile != null) activeFile.IsModified = false;
                     RefreshFileList();
                     if (activeFile?.Editor != null)
-                    {
                         activeFile.Editor.Refresh();
-                    }
                 }));
             };
         }
