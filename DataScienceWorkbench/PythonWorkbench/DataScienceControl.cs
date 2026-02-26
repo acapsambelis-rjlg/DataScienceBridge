@@ -2394,6 +2394,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (!Directory.Exists(scriptsDir))
                 Directory.CreateDirectory(scriptsDir);
 
+            symbolAnalyzer.ScriptsDirectory = scriptsDir;
+            symbolAnalyzer.SetFileContentResolver(moduleName =>
+            {
+                string fileName = moduleName + ".py";
+                var tab = openFiles.Find(f =>
+                    f.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                if (tab != null)
+                {
+                    if (tab.Editor != null)
+                        return tab.Editor.GetText();
+                    return tab.Content;
+                }
+                return null;
+            });
+
             var existingFiles = Directory.GetFiles(scriptsDir, "*.py", SearchOption.AllDirectories);
 
             if (existingFiles.Length == 0)

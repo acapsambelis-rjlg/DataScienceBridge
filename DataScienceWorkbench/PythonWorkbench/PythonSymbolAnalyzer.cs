@@ -24,11 +24,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private HashSet<string> magicNames;
         private Dictionary<string, HashSet<string>> moduleSymbols = new Dictionary<string, HashSet<string>>();
 
+        public string ScriptsDirectory { get; set; }
+
+        private Func<string, string> fileContentResolver;
+
         public PythonSymbolAnalyzer()
         {
             knownModules = new HashSet<string>(DefaultModules);
             knownMembers = new HashSet<string>(DefaultMembers);
             magicNames = new HashSet<string>(DefaultMagicNames);
+        }
+
+        public void SetFileContentResolver(Func<string, string> resolver)
+        {
+            fileContentResolver = resolver;
         }
 
         public void SetDynamicKnownSymbols(IEnumerable<string> symbols)
@@ -341,21 +350,30 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 else if (trimmed.StartsWith("from "))
                 {
-                    var fromMatch = Regex.Match(cline, @"\bfrom\s+\S+\s+import\s+(.+)");
-                    if (fromMatch.Success)
+                    var fullFromMatch = Regex.Match(cline, @"\bfrom\s+(\S+)\s+import\s+(.+)");
+                    if (fullFromMatch.Success)
                     {
-                        foreach (string part in fromMatch.Groups[1].Value.Split(','))
+                        string fromModule = fullFromMatch.Groups[1].Value;
+                        string importList = fullFromMatch.Groups[2].Value.Trim();
+
+                        if (importList == "*")
                         {
-                            string item = part.Trim();
-                            if (item == "*") continue;
-                            var asMatch = Regex.Match(item, @"(\w+)\s+as\s+(\w+)");
-                            if (asMatch.Success)
-                                defined.Add(asMatch.Groups[2].Value);
-                            else
+                            ResolveStarImport(fromModule, defined);
+                        }
+                        else
+                        {
+                            foreach (string part in importList.Split(','))
                             {
-                                string name = item.Split('(')[0].Trim();
-                                if (Regex.IsMatch(name, @"^[a-zA-Z_]\w*$"))
-                                    defined.Add(name);
+                                string item = part.Trim();
+                                var asMatch = Regex.Match(item, @"(\w+)\s+as\s+(\w+)");
+                                if (asMatch.Success)
+                                    defined.Add(asMatch.Groups[2].Value);
+                                else
+                                {
+                                    string name = item.Split('(')[0].Trim();
+                                    if (Regex.IsMatch(name, @"^[a-zA-Z_]\w*$"))
+                                        defined.Add(name);
+                                }
                             }
                         }
                     }
@@ -451,6 +469,108 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             return defined;
+        }
+
+        private void ResolveStarImport(string moduleName, HashSet<string> defined)
+        {
+            if (moduleSymbols.ContainsKey(moduleName))
+            {
+                foreach (var sym in moduleSymbols[moduleName])
+                    defined.Add(sym);
+                return;
+            }
+
+            string fileContent = null;
+
+            if (fileContentResolver != null)
+            {
+                fileContent = fileContentResolver(moduleName);
+                if (fileContent == null && moduleName.Contains("."))
+                {
+                    string leafName = moduleName.Substring(moduleName.LastIndexOf('.') + 1);
+                    fileContent = fileContentResolver(leafName);
+                }
+            }
+
+            if (fileContent == null && ScriptsDirectory != null)
+            {
+                string modulePath = moduleName.Replace('.', Path.DirectorySeparatorChar);
+                string filePath = Path.Combine(ScriptsDirectory, modulePath + ".py");
+                if (File.Exists(filePath))
+                {
+                    try { fileContent = File.ReadAllText(filePath); }
+                    catch { }
+                }
+                else
+                {
+                    string pkgInit = Path.Combine(ScriptsDirectory, modulePath, "__init__.py");
+                    if (File.Exists(pkgInit))
+                    {
+                        try { fileContent = File.ReadAllText(pkgInit); }
+                        catch { }
+                    }
+                }
+            }
+
+            if (fileContent != null)
+            {
+                var exportedNames = ExtractTopLevelNames(fileContent);
+                moduleSymbols[moduleName] = exportedNames;
+                foreach (var name in exportedNames)
+                    defined.Add(name);
+            }
+        }
+
+        private HashSet<string> ExtractTopLevelNames(string code)
+        {
+            var allExport = ParseDunderAll(code);
+            if (allExport != null)
+                return allExport;
+
+            var names = new HashSet<string>();
+            string[] lines = code.Split('\n');
+            foreach (string rawLine in lines)
+            {
+                string trimmed = rawLine.TrimStart();
+                if (trimmed.Length == 0 || trimmed[0] == '#') continue;
+
+                if (rawLine.Length > 0 && rawLine[0] != ' ' && rawLine[0] != '\t')
+                {
+                    if (trimmed.StartsWith("def "))
+                    {
+                        var m = Regex.Match(trimmed, @"^def\s+(\w+)");
+                        if (m.Success && !m.Groups[1].Value.StartsWith("_"))
+                            names.Add(m.Groups[1].Value);
+                    }
+                    else if (trimmed.StartsWith("class "))
+                    {
+                        var m = Regex.Match(trimmed, @"^class\s+(\w+)");
+                        if (m.Success && !m.Groups[1].Value.StartsWith("_"))
+                            names.Add(m.Groups[1].Value);
+                    }
+                    else
+                    {
+                        var m = Regex.Match(trimmed, @"^([a-zA-Z_]\w*)\s*=");
+                        if (m.Success && !m.Groups[1].Value.StartsWith("_"))
+                            names.Add(m.Groups[1].Value);
+                    }
+                }
+            }
+            return names;
+        }
+
+        private HashSet<string> ParseDunderAll(string code)
+        {
+            var match = Regex.Match(code, @"^__all__\s*=\s*\[([^\]]*)\]", RegexOptions.Multiline);
+            if (!match.Success)
+                return null;
+
+            var names = new HashSet<string>();
+            foreach (Match nameMatch in Regex.Matches(match.Groups[1].Value, @"['""](\w+)['""]"))
+            {
+                names.Add(nameMatch.Groups[1].Value);
+            }
+            return names.Count > 0 ? names : null;
         }
 
         private List<SymbolError> FindUndefinedReferences(string code, string masked, HashSet<string> defined)
