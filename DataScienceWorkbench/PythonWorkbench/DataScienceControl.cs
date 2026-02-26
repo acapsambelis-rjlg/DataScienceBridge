@@ -2860,10 +2860,22 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             );
         }
 
+        private static readonly HashSet<string> ProtectedPackages = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "pandas", "numpy", "matplotlib", "pillow", "PIL", "pip", "setuptools"
+        };
+
         private void OnUninstallPackage(object sender, EventArgs e)
         {
             string pkg = packageNameBox.Text.Trim();
             if (string.IsNullOrEmpty(pkg)) return;
+
+            if (ProtectedPackages.Contains(pkg))
+            {
+                AppendOutput("Cannot uninstall '" + pkg + "': it is a core dependency required by the data science environment.\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("'" + pkg + "' is a protected package");
+                return;
+            }
 
             if (venvInitializing)
             {
