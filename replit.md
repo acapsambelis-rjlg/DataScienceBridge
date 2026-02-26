@@ -43,6 +43,9 @@ Both projects now use `CodeEditor.CodeTextBox` as the Python editor, replacing t
 
 Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` for non-Telerik files without namespace adjustments. The VS Designer.cs uses fully-qualified Telerik types for non-editor controls. The `CreateMenuStrip()` public API returns `RadMenu` in the VS project and `MenuStrip` in the Mono project.
 
+**Path Resolution (VS project):**
+- The VS project uses `FindScriptsDirectory()` (in DataScienceControl.cs) and `FindPythonBaseDirectory()` (in PythonBridge.cs) to locate the `python/` directory by walking up from `AppDomain.CurrentDomain.BaseDirectory` (which is `bin/Debug/` or `bin/Release/` in VS). This ensures scripts and venv are found relative to the project root, not the build output folder. The Mono project uses `BaseDirectory` directly since the exe runs from the workspace root.
+
 **Docking Layout (WeifenLuo DockPanel Suite v3.1.0):**
 - `lib/WeifenLuo.WinFormsUI.Docking.dll` + `lib/WeifenLuo.WinFormsUI.Docking.ThemeVS2015.dll` — WeifenLuo DockPanel Suite with VS2015 Light theme
 - `src/DockPanelContent.cs` — `ToolDockContent` (draggable tool panels, HideOnClose), `DocumentDockContent` (fixed editor panel), and `DockIcons` (programmatic 16×16 ICO generation for tab icons using BMP XOR/AND format for Mono compatibility)

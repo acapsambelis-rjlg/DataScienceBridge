@@ -39,13 +39,32 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public PythonRunner()
         {
-            string appDir = AppDomain.CurrentDomain.BaseDirectory;
+            string appDir = FindPythonBaseDirectory();
             venvPath = Path.Combine(appDir, _venvRelativePath);
             tempPath = Path.Combine(Path.GetDirectoryName(venvPath), "temp");
 
             systemPythonPath = FindPython();
             pythonPath = systemPythonPath;
             ValidatePython();
+        }
+
+        private static string FindPythonBaseDirectory()
+        {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            if (Directory.Exists(Path.Combine(baseDir, "python")))
+                return baseDir;
+
+            string dir = baseDir;
+            for (int i = 0; i < 5; i++)
+            {
+                string parent = Directory.GetParent(dir)?.FullName;
+                if (parent == null) break;
+                dir = parent;
+                if (Directory.Exists(Path.Combine(dir, "python")))
+                    return dir;
+            }
+
+            return baseDir;
         }
 
         public void EnsureVenv()

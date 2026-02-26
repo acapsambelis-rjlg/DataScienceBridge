@@ -1978,9 +1978,32 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return -1;
         }
 
+        private static string FindScriptsDirectory()
+        {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string candidate = Path.Combine(baseDir, "python", "scripts");
+            if (Directory.Exists(candidate))
+                return candidate;
+
+            string dir = baseDir;
+            for (int i = 0; i < 5; i++)
+            {
+                string parent = Directory.GetParent(dir)?.FullName;
+                if (parent == null) break;
+                dir = parent;
+                candidate = Path.Combine(dir, "python", "scripts");
+                if (Directory.Exists(candidate))
+                    return candidate;
+            }
+
+            candidate = Path.Combine(baseDir, "python", "scripts");
+            Directory.CreateDirectory(candidate);
+            return candidate;
+        }
+
         private void InitializeFileSystem()
         {
-            scriptsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "python", "scripts");
+            scriptsDir = FindScriptsDirectory();
             if (!Directory.Exists(scriptsDir))
                 Directory.CreateDirectory(scriptsDir);
 
