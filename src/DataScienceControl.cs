@@ -332,7 +332,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editor.CompletionProvider = completionProvider;
 
             suppressHighlight = true;
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[CreateEditorForTab] tab={tab.FileName}, Content length={tab.Content?.Length ?? -1}, Content preview='{(tab.Content?.Length > 50 ? tab.Content.Substring(0, 50) : tab.Content)}'\n");
             editor.SetText(tab.Content ?? "");
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[CreateEditorForTab] After SetText, editor.Text length={editor.Text?.Length ?? -1}, LineCount={editor.LineCount}\n");
             editor.SetCaretIndex(Math.Min(tab.CursorPosition, (tab.Content ?? "").Length));
             editor.ClearSelection();
             suppressHighlight = false;
@@ -349,6 +351,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             SetupEditorEvents(tab, editor);
 
             content.Show(dockPanel, DockState.Document);
+            System.IO.File.AppendAllText("/tmp/dsw_debug.log", $"[CreateEditorForTab] After Show, editor.Text length={editor.Text?.Length ?? -1}, LineCount={editor.LineCount}\n");
         }
 
         private void SetupEditorEvents(FileTab tab, CodeTextBox editor)
