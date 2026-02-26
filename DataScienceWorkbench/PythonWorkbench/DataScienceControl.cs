@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -809,6 +810,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             });
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string ScriptText
         {
             get { return pythonEditor != null ? pythonEditor.GetText() : activeFile?.Content ?? ""; }
