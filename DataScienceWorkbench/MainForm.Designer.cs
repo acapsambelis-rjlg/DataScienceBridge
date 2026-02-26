@@ -31,7 +31,6 @@ namespace DataScienceWorkbench
             this.dataScienceControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataScienceControl.Location = new System.Drawing.Point(0, 0);
             this.dataScienceControl.Name = "dataScienceControl";
-            this.dataScienceControl.ScriptText = resources.GetString("dataScienceControl.ScriptText");
             this.dataScienceControl.Size = new System.Drawing.Size(1184, 727);
             this.dataScienceControl.TabIndex = 0;
             // 
