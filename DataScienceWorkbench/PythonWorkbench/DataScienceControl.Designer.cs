@@ -24,10 +24,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileListPanel = new Telerik.WinControls.UI.RadPanel();
             this.fileTreeView = new Telerik.WinControls.UI.RadTreeView();
             this.fileListLabel = new Telerik.WinControls.UI.RadLabel();
-            this.fileListButtonPanel = new Telerik.WinControls.UI.RadPanel();
-            this.fileNewBtn = new Telerik.WinControls.UI.RadButton();
-            this.fileOpenBtn = new Telerik.WinControls.UI.RadButton();
-            this.fileCloseBtn = new Telerik.WinControls.UI.RadButton();
             this.editorMenuBar = new Telerik.WinControls.UI.RadMenu();
             this.insertSnippetBtn = new Telerik.WinControls.UI.RadMenuItem();
             this.editorToolBar = new System.Windows.Forms.ToolStrip();
@@ -62,7 +58,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.packageNameBox = new Telerik.WinControls.UI.RadTextBox();
             this.pkgLabel = new Telerik.WinControls.UI.RadLabel();
             this.fileListPanel.SuspendLayout();
-            this.fileListButtonPanel.SuspendLayout();
             this.outputPanel.SuspendLayout();
             this.refPanel.SuspendLayout();
             this.pkgPanel.SuspendLayout();
@@ -82,7 +77,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // fileListPanel
             //
             this.fileListPanel.Controls.Add(this.fileTreeView);
-            this.fileListPanel.Controls.Add(this.fileListButtonPanel);
             this.fileListPanel.Controls.Add(this.fileListLabel);
             this.fileListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fileListPanel.Name = "fileListPanel";
@@ -108,42 +102,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileTreeView.TreeIndent = 16;
             this.fileTreeView.Name = "fileTreeView";
             //
-            // fileListButtonPanel
-            //
-            this.fileListButtonPanel.Controls.Add(this.fileNewBtn);
-            this.fileListButtonPanel.Controls.Add(this.fileOpenBtn);
-            this.fileListButtonPanel.Controls.Add(this.fileCloseBtn);
-            this.fileListButtonPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.fileListButtonPanel.Name = "fileListButtonPanel";
-            this.fileListButtonPanel.Size = new System.Drawing.Size(200, 28);
-            //
-            // fileNewBtn
-            //
-            this.fileNewBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.fileNewBtn.Location = new System.Drawing.Point(4, 2);
-            this.fileNewBtn.Name = "fileNewBtn";
-            this.fileNewBtn.Size = new System.Drawing.Size(44, 24);
-            this.fileNewBtn.Text = "+";
-            //
-            // fileOpenBtn
-            //
-            this.fileOpenBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.fileOpenBtn.Location = new System.Drawing.Point(52, 2);
-            this.fileOpenBtn.Name = "fileOpenBtn";
-            this.fileOpenBtn.Size = new System.Drawing.Size(55, 24);
-            this.fileOpenBtn.Text = "Open";
-            //
-            // fileCloseBtn
-            //
-            this.fileCloseBtn.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.fileCloseBtn.Location = new System.Drawing.Point(111, 2);
-            this.fileCloseBtn.Name = "fileCloseBtn";
-            this.fileCloseBtn.Size = new System.Drawing.Size(44, 24);
-            this.fileCloseBtn.Text = "\u00d7";
-            //
             // editorMenuBar
             //
-            this.editorMenuBar.Items.AddRange(new[] { this.insertSnippetBtn });
+            this.editorMenuBar.Items.AddRange(new Telerik.WinControls.UI.RadMenuItem[] { this.insertSnippetBtn });
             this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
             this.editorMenuBar.Name = "editorMenuBar";
             this.editorMenuBar.Size = new System.Drawing.Size(792, 24);
@@ -440,7 +401,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.Controls.Add(this.editorMenuBar);
             this.Name = "DataScienceControl";
             this.Size = new System.Drawing.Size(800, 600);
-            this.fileListButtonPanel.ResumeLayout(false);
             this.fileListPanel.ResumeLayout(false);
             this.outputPanel.ResumeLayout(false);
             this.refPanel.ResumeLayout(false);
@@ -490,9 +450,5 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadPanel fileListPanel;
         private Telerik.WinControls.UI.RadTreeView fileTreeView;
         private Telerik.WinControls.UI.RadLabel fileListLabel;
-        private Telerik.WinControls.UI.RadPanel fileListButtonPanel;
-        private Telerik.WinControls.UI.RadButton fileNewBtn;
-        private Telerik.WinControls.UI.RadButton fileOpenBtn;
-        private Telerik.WinControls.UI.RadButton fileCloseBtn;
     }
 }

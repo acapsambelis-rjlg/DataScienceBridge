@@ -69,7 +69,9 @@
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonWorkbench\DataSciencePythonCompletionProvider.cs" />
-    <Compile Include="PythonWorkbench\DockPanelContent.cs" />
+    <Compile Include="PythonWorkbench\DockPanelContent.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="PythonWorkbench\PlotViewerForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -93,6 +95,7 @@
     <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Properties\licenses.licx" />
     <EmbeddedResource Include="PythonWorkbench\DataScienceControl.resx">
       <DependentUpon>DataScienceControl.cs</DependentUpon>
     </EmbeddedResource>

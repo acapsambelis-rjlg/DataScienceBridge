@@ -2449,9 +2449,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             fileTreeView.NodeMouseClick += OnFileTreeNodeClick;
             fileTreeView.NodeMouseDoubleClick += OnFileTreeNodeDoubleClick;
             fileTreeView.ValueValidating += OnFileTreeValueValidating;
-            fileNewBtn.Click += OnNewFile;
-            fileOpenBtn.Click += OnOpenFile;
-            fileCloseBtn.Click += OnCloseFile;
 
             fileContextMenu = new RadContextMenu();
             fileTreeView.MouseUp += (s, e) =>
