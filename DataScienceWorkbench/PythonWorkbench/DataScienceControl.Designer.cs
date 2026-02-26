@@ -28,7 +28,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.insertSnippetBtn = new Telerik.WinControls.UI.RadMenuItem();
             this.editorToolBar = new System.Windows.Forms.ToolStrip();
             this.runToolBtn = new System.Windows.Forms.ToolStripButton();
-            this.syntaxCheckToolBtn = new System.Windows.Forms.ToolStripButton();
             this.saveToolBtn = new System.Windows.Forms.ToolStripButton();
             this.undoToolBtn = new System.Windows.Forms.ToolStripButton();
             this.redoToolBtn = new System.Windows.Forms.ToolStripButton();
@@ -119,7 +118,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             //
             this.editorToolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.runToolBtn,
-            this.syntaxCheckToolBtn,
             new System.Windows.Forms.ToolStripSeparator(),
             this.saveToolBtn,
             new System.Windows.Forms.ToolStripSeparator(),
@@ -143,15 +141,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.runToolBtn.Text = "Run";
             this.runToolBtn.ToolTipText = "Execute Script (F5)";
             this.runToolBtn.Click += new System.EventHandler(this.OnRunScript);
-            //
-            // syntaxCheckToolBtn
-            //
-            this.syntaxCheckToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
-            this.syntaxCheckToolBtn.Image = DockIcons.CreateCheckBitmap();
-            this.syntaxCheckToolBtn.Name = "syntaxCheckToolBtn";
-            this.syntaxCheckToolBtn.Text = "Check";
-            this.syntaxCheckToolBtn.ToolTipText = "Check Python syntax for errors";
-            this.syntaxCheckToolBtn.Click += new System.EventHandler(this.OnCheckSyntax);
             //
             // saveToolBtn
             //
@@ -418,7 +407,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadMenuItem insertSnippetBtn;
         private System.Windows.Forms.ToolStrip editorToolBar;
         private System.Windows.Forms.ToolStripButton runToolBtn;
-        private System.Windows.Forms.ToolStripButton syntaxCheckToolBtn;
         private System.Windows.Forms.ToolStripButton saveToolBtn;
         private System.Windows.Forms.ToolStripButton undoToolBtn;
         private System.Windows.Forms.ToolStripButton redoToolBtn;

@@ -46,7 +46,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private const float MaxFontSize = 28f;
         private const float DefaultFontSize = 10f;
         private Font editorFont;
-        private HashSet<int> bookmarks = new HashSet<int>();
         private CodeTextBox pythonEditor => activeFile?.Editor;
 
         private readonly object _pendingUILock = new object();
@@ -59,7 +58,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             public string Content;
             public int CursorPosition;
             public int ScrollPosition;
-            public HashSet<int> Bookmarks = new HashSet<int>();
             public bool IsModified;
             public CodeTextBox Editor;
             public FileDockContent DockContent;
@@ -331,10 +329,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 if (content == null) return;
                 var tab = openFiles.Find(f => f.DockContent == content);
                 if (tab == null || tab == activeFile) return;
-                if (activeFile != null)
-                    activeFile.Bookmarks = new HashSet<int>(bookmarks);
                 activeFile = tab;
-                bookmarks = new HashSet<int>(tab.Bookmarks);
                 if (pythonEditor != null) UpdateCursorPositionStatus();
                 RefreshFileList();
                 RaiseStatus("Editing: " + tab.FileName);
@@ -476,24 +471,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     e.SuppressKeyPress = true;
                     MoveLine(e.KeyCode == Keys.Up);
                 }
-                else if (e.Control && e.KeyCode == Keys.B)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    ToggleBookmarkAtCursor();
-                }
-                else if (e.KeyCode == Keys.F2 && !e.Shift)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    GoToNextBookmark();
-                }
-                else if (e.KeyCode == Keys.F2 && e.Shift)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    GoToPreviousBookmark();
-                }
             };
         }
 
@@ -541,54 +518,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             highlightTimer.Start();
         }
 
-        private void ToggleBookmarkAtCursor()
-        {
-            if (pythonEditor == null) return;
-            int line = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
-            if (bookmarks.Contains(line))
-                bookmarks.Remove(line);
-            else
-                bookmarks.Add(line);
-            RaiseStatus(bookmarks.Contains(line) ? "Bookmark set on line " + (line + 1) : "Bookmark removed from line " + (line + 1));
-        }
-
-        private void GoToNextBookmark()
-        {
-            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
-            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
-            var sorted = bookmarks.OrderBy(b => b).ToList();
-            int next = sorted.FirstOrDefault(b => b > currentLine);
-            if (next == 0 && !bookmarks.Contains(0))
-                next = sorted.FirstOrDefault(b => b != currentLine);
-            if (next == 0 && sorted.Count > 0) next = sorted[0];
-            GoToLine(next);
-        }
-
-        private void GoToPreviousBookmark()
-        {
-            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
-            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
-            var sorted = bookmarks.OrderByDescending(b => b).ToList();
-            int prev = sorted.FirstOrDefault(b => b < currentLine);
-            if (prev == 0 && !bookmarks.Contains(0))
-                prev = sorted.FirstOrDefault(b => b != currentLine);
-            if (prev == 0 && sorted.Count > 0) prev = sorted[0];
-            GoToLine(prev);
-        }
-
-        private void GoToLine(int lineIndex)
-        {
-            if (pythonEditor == null) return;
-            if (lineIndex < 0 || lineIndex >= pythonEditor.GetLineCount()) return;
-            int charIdx = pythonEditor.GetFirstCharIndexFromLine(lineIndex);
-            pythonEditor.SetCaretIndex(charIdx);
-            pythonEditor.ClearSelection();
-            pythonEditor.ScrollToCaretPosition();
-            RaiseStatus("Ln " + (lineIndex + 1));
-        }
-
-        public HashSet<int> GetBookmarks() { return bookmarks; }
-
         private void UpdateCursorPositionStatus()
         {
             if (pythonEditor == null) return;
@@ -601,28 +530,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 RaiseStatus("Ln " + line + ", Col " + col);
             else
                 RaiseStatus("Ln " + line + ", Col " + col + "  |  Zoom: " + zoomPct + "%");
-        }
-
-        private void ZoomEditor(float delta)
-        {
-            float newSize;
-            if (delta == 0f)
-                newSize = DefaultFontSize;
-            else
-                newSize = editorFontSize + delta;
-
-            if (newSize < MinFontSize) newSize = MinFontSize;
-            if (newSize > MaxFontSize) newSize = MaxFontSize;
-            if (Math.Abs(newSize - editorFontSize) < 0.01f) return;
-
-            editorFontSize = newSize;
-            editorFont = ResolveMonoFont(editorFontSize);
-
-            foreach (var tab in openFiles)
-                if (tab.Editor != null)
-                    tab.Editor.EditorFont = editorFont;
-
-            if (pythonEditor != null) UpdateCursorPositionStatus();
         }
 
         private void ApplySyntaxHighlighting()
@@ -733,33 +640,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 pythonEditor.ClearDiagnostics();
         }
 
-        public void LoadData(List<Customer> customers, List<Employee> employees)
-        {
-            this.customers = customers;
-            this.employees = employees;
-
-            RegisterAllDatasetsInMemory();
-            PopulateReferenceTree();
-        }
-
-        public void RegisterInMemoryData(string name, System.Collections.IEnumerable values, string columnName = "value")
-        {
-            inMemoryDataSources[name] = () =>
-            {
-                var sb = new System.Text.StringBuilder();
-                sb.AppendLine(columnName);
-                foreach (var item in values)
-                {
-                    string s = item != null ? item.ToString() : "";
-                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
-                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
-                    sb.AppendLine(s);
-                }
-                return sb.ToString();
-            };
-            PopulateReferenceTree();
-        }
-
         public void RegisterInMemoryData<T>(string name, Func<List<T>> dataProvider) where T : class
         {
             inMemoryDataTypes[name] = typeof(T);
@@ -795,204 +675,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
             UpdateDynamicSymbols();
             PopulateReferenceTree();
-        }
-
-        public void RegisterInMemoryData(string name, Func<System.Data.DataTable> dataProvider)
-        {
-            inMemoryDataSources[name] = () =>
-            {
-                var table = dataProvider();
-                var sb = new System.Text.StringBuilder();
-                var headers = new List<string>();
-                foreach (System.Data.DataColumn col in table.Columns)
-                    headers.Add(col.ColumnName);
-                sb.AppendLine(string.Join(",", headers));
-                foreach (System.Data.DataRow row in table.Rows)
-                {
-                    var vals = new List<string>();
-                    foreach (var item in row.ItemArray)
-                    {
-                        string s = item != null ? item.ToString() : "";
-                        if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
-                            s = "\"" + s.Replace("\"", "\"\"") + "\"";
-                        vals.Add(s);
-                    }
-                    sb.AppendLine(string.Join(",", vals));
-                }
-                return sb.ToString();
-            };
-            PopulateReferenceTree();
-        }
-
-        public void UnregisterInMemoryData(string name)
-        {
-            inMemoryDataSources.Remove(name);
-            PopulateReferenceTree();
-        }
-
-        public void RegisterPythonClass(string className, string pythonCode)
-        {
-            RegisterPythonClass(className, pythonCode, null, null, null);
-        }
-
-        public void RegisterPythonClass(string className, string pythonCode, string description, string example = null, string notes = null)
-        {
-            if (!IsValidPythonIdentifier(className))
-                throw new ArgumentException("Invalid Python class name: " + className);
-            registeredPythonClasses[className] = new PythonClassInfo
-            {
-                PythonCode = pythonCode,
-                Description = description,
-                Example = example,
-                Notes = notes
-            };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void UnregisterPythonClass(string className)
-        {
-            registeredPythonClasses.Remove(className);
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, string value)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = EscapePythonString(value), TypeDescription = "str" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, double value)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value.ToString("G"), TypeDescription = "float" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, int value)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value.ToString(), TypeDescription = "int" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, bool value)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value ? "True" : "False", TypeDescription = "bool" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, string[] values)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            var parts = new List<string>();
-            foreach (var v in values)
-                parts.Add(EscapePythonString(v));
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "[" + string.Join(", ", parts) + "]", TypeDescription = "list" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, double[] values)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            var parts = new List<string>();
-            foreach (var v in values)
-                parts.Add(v.ToString("G"));
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "[" + string.Join(", ", parts) + "]", TypeDescription = "list" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, Dictionary<string, string> values)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            var parts = new List<string>();
-            foreach (var kvp in values)
-                parts.Add(EscapePythonString(kvp.Key) + ": " + EscapePythonString(kvp.Value));
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "{" + string.Join(", ", parts) + "}", TypeDescription = "dict" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void SetContext(string key, Dictionary<string, double> values)
-        {
-            if (!IsValidPythonIdentifier(key))
-                throw new ArgumentException("Invalid Python identifier for context key: " + key);
-            var parts = new List<string>();
-            foreach (var kvp in values)
-                parts.Add(EscapePythonString(kvp.Key) + ": " + kvp.Value.ToString("G"));
-            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "{" + string.Join(", ", parts) + "}", TypeDescription = "dict" };
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void RemoveContext(string key)
-        {
-            contextVariables.Remove(key);
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        public void ClearContext()
-        {
-            contextVariables.Clear();
-            UpdateDynamicSymbols();
-            PopulateReferenceTree();
-        }
-
-        private static string EscapePythonString(string s)
-        {
-            if (s == null) return "None";
-            var sb = new System.Text.StringBuilder(s.Length + 10);
-            sb.Append('"');
-            foreach (char c in s)
-            {
-                switch (c)
-                {
-                    case '\\': sb.Append("\\\\"); break;
-                    case '"': sb.Append("\\\""); break;
-                    case '\n': sb.Append("\\n"); break;
-                    case '\r': sb.Append("\\r"); break;
-                    case '\t': sb.Append("\\t"); break;
-                    case '\b': sb.Append("\\b"); break;
-                    case '\f': sb.Append("\\f"); break;
-                    case '\0': sb.Append("\\0"); break;
-                    default:
-                        if (c < ' ')
-                            sb.Append("\\x" + ((int)c).ToString("x2"));
-                        else
-                            sb.Append(c);
-                        break;
-                }
-            }
-            sb.Append('"');
-            return sb.ToString();
-        }
-
-        private static bool IsValidPythonIdentifier(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return false;
-            if (!char.IsLetter(name[0]) && name[0] != '_') return false;
-            for (int i = 1; i < name.Length; i++)
-            {
-                if (!char.IsLetterOrDigit(name[i]) && name[i] != '_') return false;
-            }
-            return true;
         }
 
         private string BuildPreamble()
@@ -1086,11 +768,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return result;
         }
 
-        public void RunScript()
-        {
-            OnRunScript(this, EventArgs.Empty);
-        }
-
         public void ResetPythonEnvironment()
         {
             AppendOutput("Resetting Python environment...\n", Color.FromArgb(0, 100, 180));
@@ -1136,23 +813,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public void ClearOutput()
         {
             RunOnUIThread(() => outputBox.Clear());
-        }
-
-        private void OnClearOutput(object sender, EventArgs e)
-        {
-            RunOnUIThread(() => outputBox.Clear());
-        }
-
-        public string OutputText
-        {
-            get
-            {
-                if (!IsHandleCreated || !InvokeRequired)
-                    return outputBox.Text;
-                string result = null;
-                Invoke(new Action(() => result = outputBox.Text));
-                return result;
-            }
         }
 
         private void SetupEditorMenuBar()
@@ -1253,22 +913,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             editMenu.Items.Add(new RadMenuSeparatorItem());
 
-            var toggleBookmarkItem = new RadMenuItem("Toggle Bookmark");
-            toggleBookmarkItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) ToggleBookmarkAtCursor(); };
-            toggleBookmarkItem.HintText = "Ctrl+B";
-            editMenu.Items.Add(toggleBookmarkItem);
-
-            var nextBookmarkItem = new RadMenuItem("Next Bookmark");
-            nextBookmarkItem.Click += (s, e) => GoToNextBookmark();
-            nextBookmarkItem.HintText = "F2";
-            editMenu.Items.Add(nextBookmarkItem);
-
-            var prevBookmarkItem = new RadMenuItem("Previous Bookmark");
-            prevBookmarkItem.Click += (s, e) => GoToPreviousBookmark();
-            prevBookmarkItem.HintText = "Shift+F2";
-            editMenu.Items.Add(prevBookmarkItem);
-
-            editMenu.Items.Add(new RadMenuSeparatorItem());
             var clearOutputItem = new RadMenuItem("Clear Output");
             clearOutputItem.Click += (s, e) => ClearOutput();
             editMenu.Items.Add(clearOutputItem);
@@ -1283,25 +927,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 copyItem.Enabled = hasSelection;
                 deleteItem.Enabled = hasSelection;
             };
-
-            var runMenu = new RadMenuItem("Run");
-            var executeItem = new RadMenuItem("Execute Script (F5)");
-            executeItem.Click += OnRunScript;
-            runMenu.Items.Add(executeItem);
-            var checkSyntaxItem = new RadMenuItem("Check Syntax");
-            checkSyntaxItem.Click += OnCheckSyntax;
-            runMenu.Items.Add(checkSyntaxItem);
-            runMenu.Items.Add(new RadMenuSeparatorItem());
-            var resetEnvItem = new RadMenuItem("Reset Python Environment");
-            resetEnvItem.Click += (s, e) =>
-            {
-                var confirm = MessageBox.Show(
-                    "This will delete the virtual environment and recreate it.\nAll installed packages will need to be reinstalled.\n\nContinue?",
-                    "Reset Python Environment", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (confirm == DialogResult.Yes)
-                    ResetPythonEnvironment();
-            };
-            runMenu.Items.Add(resetEnvItem);
 
             var viewMenu = new RadMenuItem("&View");
             var showFilesItem = new RadMenuItem("Files Panel");
@@ -1325,6 +950,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var quickStartItem = new RadMenuItem("Quick Start Guide");
             quickStartItem.Click += OnShowHelp;
             helpMenu.Items.Add(quickStartItem);
+            var resetEnvItem = new RadMenuItem("Reset Python Environment");
+            resetEnvItem.Click += (s, e) =>
+            {
+                var confirm = MessageBox.Show(
+                    "This will delete the virtual environment and recreate it.\nAll installed packages will need to be reinstalled.\n\nContinue?",
+                    "Reset Python Environment", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (confirm == DialogResult.Yes)
+                    ResetPythonEnvironment();
+            };
+            helpMenu.Items.Add(resetEnvItem);
             var shortcutsItem = new RadMenuItem("Keyboard Shortcuts");
             shortcutsItem.Click += OnShowKeyboardShortcuts;
             helpMenu.Items.Add(shortcutsItem);
@@ -1343,8 +978,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             editorMenuBar.Items.Insert(0, fileMenu);
             editorMenuBar.Items.Insert(1, editMenu);
-            editorMenuBar.Items.Insert(2, runMenu);
-            editorMenuBar.Items.Insert(3, viewMenu);
+            editorMenuBar.Items.Insert(2, viewMenu);
             editorMenuBar.Items.Add(helpMenu);
         }
 
@@ -2312,53 +1946,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
         }
 
-        private void OnCheckSyntax(object sender, EventArgs e)
-        {
-            if (pythonEditor == null) return;
-            string script = pythonEditor.GetText();
-            if (string.IsNullOrWhiteSpace(script))
-            {
-                AppendOutput("No script to check.\n", Color.FromArgb(180, 140, 0));
-                return;
-            }
-
-            if (!pythonRunner.PythonAvailable)
-            {
-                AppendOutput("Cannot check syntax: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
-                RaiseStatus("Python not available");
-                return;
-            }
-
-            RaiseStatus("Checking syntax...");
-            var result = pythonRunner.CheckSyntax(script);
-
-            if (result.Success)
-            {
-                syntaxDiagnostics.Clear();
-                MergeDiagnostics();
-                AppendOutput("Syntax OK - no errors found.\n", Color.FromArgb(0, 128, 0));
-                RaiseStatus("Syntax check passed.");
-            }
-            else
-            {
-                AppendOutput("Syntax Error:\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
-
-                int errorLine = ParseErrorLine(result.Error);
-                if (errorLine > 0)
-                {
-                    var errorMsg = result.Error.Trim();
-                    var firstLine = errorMsg.Split('\n')[0];
-                    syntaxDiagnostics.Clear();
-                    syntaxDiagnostics.Add(new Diagnostic(
-                        errorLine - 1, 0, 0,
-                        firstLine,
-                        DiagnosticSeverity.Error));
-                    MergeDiagnostics();
-                }
-                RaiseStatus("Syntax error on line " + errorLine);
-            }
-        }
-
         private void OnToolbarUndo(object sender, EventArgs e)
         {
             if (pythonEditor != null) pythonEditor.PerformUndo();
@@ -2385,8 +1972,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
             return -1;
         }
-
-
 
         private void InitializeFileSystem()
         {
@@ -2869,7 +2454,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (activeFile == null || activeFile.Editor == null) return;
             activeFile.CursorPosition = activeFile.Editor.GetCaretIndex();
-            activeFile.Bookmarks = new HashSet<int>(bookmarks);
         }
 
         private void SwitchToFile(FileTab tab)
@@ -2883,14 +2467,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             SaveCurrentFileState();
 
-            if (activeFile != null)
-                activeFile.Bookmarks = new HashSet<int>(bookmarks);
-
             if (tab.DockContent == null || tab.DockContent.IsDisposed)
                 CreateEditorForTab(tab);
 
             activeFile = tab;
-            bookmarks = new HashSet<int>(tab.Bookmarks);
 
             tab.DockContent.Activate();
 
@@ -3466,11 +3046,6 @@ EDITING
   Shift+Tab             Unindent selected lines
   Delete                Delete selection
 
-BOOKMARKS
-  Ctrl+B                Toggle bookmark on current line
-  F2                    Jump to next bookmark
-  Shift+F2              Jump to previous bookmark
-
 EDITOR
   Ctrl+Mouse Wheel      Zoom in/out
   Escape                Close autocomplete / Find panel";
@@ -3503,7 +3078,6 @@ ERROR DETECTION
 
 LINE NUMBERS
   Displayed in the gutter on the left side.
-  Bookmark indicators appear as blue circles.
 
 BRACKET MATCHING
   Matching parentheses, brackets, and braces
