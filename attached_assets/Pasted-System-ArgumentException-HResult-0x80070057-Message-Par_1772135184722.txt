@@ -1,0 +1,36 @@
+System.ArgumentException
+  HResult=0x80070057
+  Message=Parameter is not valid.
+  Source=System.Drawing
+  StackTrace:
+   at System.Drawing.Graphics.MeasureString(String text, Font font, SizeF layoutArea, StringFormat stringFormat)
+   at System.Drawing.Graphics.MeasureString(String text, Font font, Int32 width, StringFormat format)
+   at CodeEditor.CodeTextBox.MeasureCharSize() in C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\extern\SyntaxEditorControl\SyntaxEditor\CodeTextBox.cs:line 582
+   at CodeEditor.CodeTextBox.set_EditorFont(Font value) in C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\extern\SyntaxEditorControl\SyntaxEditor\CodeTextBox.cs:line 203
+   at RJLG.IntelliSEM.UI.Controls.PythonDataScience.DataScienceControl.CreateEditorForTab(FileTab tab) in C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\DataScienceWorkbench\PythonWorkbench\DataScienceControl.cs:line 401
+   at RJLG.IntelliSEM.UI.Controls.PythonDataScience.DataScienceControl.SwitchToFile(FileTab tab) in C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\DataScienceWorkbench\PythonWorkbench\DataScienceControl.cs:line 2499
+   at RJLG.IntelliSEM.UI.Controls.PythonDataScience.DataScienceControl.OnNewFile(Object sender, EventArgs e) in C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\DataScienceWorkbench\PythonWorkbench\DataScienceControl.cs:line 2538
+   at Telerik.WinControls.RadElement.OnClick(EventArgs e)
+   at Telerik.WinControls.UI.RadButtonItem.OnClick(EventArgs e)
+   at Telerik.WinControls.UI.RadMenuItem.OnClick(EventArgs e)
+   at Telerik.WinControls.RadElement.DoClick(EventArgs e)
+   at Telerik.WinControls.RadElement.RaiseBubbleEvent(RadElement sender, RoutedEventArgs args)
+   at Telerik.WinControls.RadItem.RaiseBubbleEvent(RadElement sender, RoutedEventArgs args)
+   at Telerik.WinControls.RadElement.RaiseRoutedEvent(RadElement sender, RoutedEventArgs args)
+   at Telerik.WinControls.RadElement.DoMouseUp(MouseEventArgs e)
+   at Telerik.WinControls.ComponentInputBehavior.OnMouseUp(MouseEventArgs e)
+   at Telerik.WinControls.RadControl.OnMouseUp(MouseEventArgs e)
+   at System.Windows.Forms.Control.WmMouseUp(Message& m, MouseButtons button, Int32 clicks)
+   at System.Windows.Forms.Control.WndProc(Message& m)
+   at System.Windows.Forms.ScrollableControl.WndProc(Message& m)
+   at Telerik.WinControls.RadControl.WndProc(Message& m)
+   at Telerik.WinControls.UI.RadPopupControlBase.WndProc(Message& m)
+   at System.Windows.Forms.Control.ControlNativeWindow.OnMessage(Message& m)
+   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   at System.Windows.Forms.NativeWindow.DebuggableCallback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+   at System.Windows.Forms.UnsafeNativeMethods.DispatchMessageW(MSG& msg)
+   at System.Windows.Forms.Application.ComponentManager.System.Windows.Forms.UnsafeNativeMethods.IMsoComponentManager.FPushMessageLoop(IntPtr dwComponentID, Int32 reason, Int32 pvLoopData)
+   at System.Windows.Forms.Application.ThreadContext.RunMessageLoopInner(Int32 reason, ApplicationContext context)
+   at System.Windows.Forms.Application.ThreadContext.RunMessageLoop(Int32 reason, ApplicationContext context)
+   at System.Windows.Forms.Application.Run(Form mainForm)
+   at DataScienceWorkbench.Program.Main() in C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\DataScienceWorkbench\Program.cs:line 18
