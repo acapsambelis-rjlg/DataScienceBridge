@@ -224,9 +224,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
                 packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
 
+                var initialActive = activeFile;
                 foreach (var tab in openFiles)
                     CreateEditorForTab(tab);
 
+                activeFile = initialActive;
                 if (activeFile?.DockContent != null)
                     activeFile.DockContent.Activate();
 
@@ -292,7 +294,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     activeFile.Bookmarks = new HashSet<int>(bookmarks);
                 activeFile = tab;
                 bookmarks = new HashSet<int>(tab.Bookmarks);
-                if (pythonEditor != null) UpdateCursorPositionStatus();
+                if (pythonEditor != null)
+                {
+                    UpdateCursorPositionStatus();
+                    BeginInvoke((Action)(() => { if (pythonEditor != null && !IsDisposed) pythonEditor.Refresh(); }));
+                }
                 RefreshFileList();
                 RaiseStatus("Editing: " + tab.FileName);
             };

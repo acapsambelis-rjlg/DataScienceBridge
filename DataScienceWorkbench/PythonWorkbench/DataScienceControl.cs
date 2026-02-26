@@ -280,9 +280,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         BeginInvoke(act);
                 }
 
+                var initialActive = activeFile;
                 foreach (var tab in openFiles)
                     CreateEditorForTab(tab);
 
+                activeFile = initialActive;
                 if (activeFile?.DockContent != null)
                     activeFile.DockContent.Activate();
 
@@ -334,7 +336,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var tab = openFiles.Find(f => f.DockContent == content);
                 if (tab == null || tab == activeFile) return;
                 activeFile = tab;
-                if (pythonEditor != null) UpdateCursorPositionStatus();
+                if (pythonEditor != null)
+                {
+                    UpdateCursorPositionStatus();
+                    BeginInvoke((Action)(() => { if (pythonEditor != null && !IsDisposed) pythonEditor.Refresh(); }));
+                }
                 RefreshFileList();
                 RaiseStatus("Editing: " + tab.FileName);
             };
