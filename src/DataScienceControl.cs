@@ -247,6 +247,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     ApplySyntaxHighlighting();
                     if (activeFile != null) activeFile.IsModified = false;
                     RefreshFileList();
+                    if (activeFile?.Editor != null)
+                    {
+                        activeFile.Editor.Refresh();
+                    }
                 }));
             };
         }
@@ -349,6 +353,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editor.SetCaretIndex(Math.Min(tab.CursorPosition, (tab.Content ?? "").Length));
             editor.ClearSelection();
             suppressHighlight = false;
+            editor.Refresh();
         }
 
         private void SetupEditorEvents(FileTab tab, CodeTextBox editor)
@@ -1097,7 +1102,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             var saveItem = new ToolStripMenuItem("Save");
             saveItem.Click += OnSaveFile;
-            saveItem.ShortcutKeyDisplayString = "Ctrl+S";
+            saveItem.ShortcutKeys = Keys.Control | Keys.S;
             fileMenu.DropDownItems.Add(saveItem);
 
             var saveAsItem = new ToolStripMenuItem("Save As...");
