@@ -68,144 +68,88 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
     internal static class DockIcons
     {
+        private static readonly string SymbolFontFamily = "DejaVu Sans";
+
         public static Icon CreateEditorIcon()
         {
-            return RenderIcon((g, r) =>
-            {
-                var pen = new Pen(Color.FromArgb(60, 120, 216), 1.2f);
-                g.DrawString("</>", new Font("Arial", 6f, FontStyle.Bold), new SolidBrush(Color.FromArgb(60, 120, 216)),
-                    r, new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
-                pen.Dispose();
-            });
+            return RenderSymbolIcon("\u27E8\u27E9", 7f, Color.FromArgb(60, 120, 216), FontStyle.Bold);
         }
 
         public static Icon CreateFilesIcon()
         {
-            return RenderIcon((g, r) =>
-            {
-                var brush = new SolidBrush(Color.FromArgb(220, 180, 60));
-                var pen = new Pen(Color.FromArgb(180, 140, 30), 1f);
-                g.FillRectangle(brush, 2, 5, 11, 8);
-                g.DrawRectangle(pen, 2, 5, 11, 8);
-                var tabBrush = new SolidBrush(Color.FromArgb(240, 200, 80));
-                g.FillRectangle(tabBrush, 2, 3, 5, 3);
-                g.DrawRectangle(pen, 2, 3, 5, 3);
-                brush.Dispose(); pen.Dispose(); tabBrush.Dispose();
-            });
+            return RenderSymbolIcon("\u2636", 11f, Color.FromArgb(200, 160, 40));
         }
 
         public static Icon CreateOutputIcon()
         {
             return RenderIcon((g, r) =>
             {
-                var bgBrush = new SolidBrush(Color.FromArgb(30, 30, 30));
-                g.FillRectangle(bgBrush, 1, 1, 14, 14);
-                var textBrush = new SolidBrush(Color.FromArgb(78, 201, 176));
-                g.DrawString(">_", new Font("Consolas", 7f, FontStyle.Bold), textBrush,
-                    r, new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
-                bgBrush.Dispose(); textBrush.Dispose();
+                g.FillRectangle(new SolidBrush(Color.FromArgb(30, 30, 30)), 1, 1, 14, 14);
+                var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                g.DrawString(">_", new Font("DejaVu Sans Mono", 7f, FontStyle.Bold),
+                    new SolidBrush(Color.FromArgb(78, 201, 176)), r, fmt);
             });
         }
 
         public static Icon CreateReferenceIcon()
         {
-            return RenderIcon((g, r) =>
-            {
-                var pen = new Pen(Color.FromArgb(100, 100, 200), 1.2f);
-                g.DrawEllipse(pen, 3, 2, 5, 5);
-                g.DrawEllipse(pen, 8, 8, 5, 5);
-                g.DrawLine(pen, 7, 6, 9, 9);
-                g.DrawEllipse(pen, 1, 9, 4, 4);
-                g.DrawLine(pen, 4, 6, 3, 9);
-                pen.Dispose();
-            });
+            return RenderSymbolIcon("\u25C8", 11f, Color.FromArgb(100, 100, 200));
         }
 
         public static Icon CreatePackageIcon()
         {
-            return RenderIcon((g, r) =>
-            {
-                var pen = new Pen(Color.FromArgb(0, 122, 204), 1.2f);
-                var brush = new SolidBrush(Color.FromArgb(200, 220, 245));
-                Point[] box = { new Point(8, 1), new Point(14, 4), new Point(14, 11), new Point(8, 14), new Point(2, 11), new Point(2, 4) };
-                g.FillPolygon(brush, box);
-                g.DrawPolygon(pen, box);
-                g.DrawLine(pen, 2, 4, 8, 7);
-                g.DrawLine(pen, 14, 4, 8, 7);
-                g.DrawLine(pen, 8, 7, 8, 14);
-                brush.Dispose(); pen.Dispose();
-            });
+            return RenderSymbolIcon("\u2B21", 11f, Color.FromArgb(0, 122, 204));
         }
 
         public static Bitmap CreatePlayBitmap()
         {
-            return RenderBitmap((g, r) =>
-            {
-                var brush = new SolidBrush(Color.FromArgb(34, 139, 34));
-                Point[] tri = { new Point(4, 2), new Point(13, 8), new Point(4, 14) };
-                g.FillPolygon(brush, tri);
-                brush.Dispose();
-            });
+            return RenderSymbolBitmap("\u25B6", 10f, Color.FromArgb(34, 139, 34));
         }
 
         public static Bitmap CreateCheckBitmap()
         {
-            return RenderBitmap((g, r) =>
-            {
-                var pen = new Pen(Color.FromArgb(0, 122, 204), 2f);
-                g.DrawLine(pen, 3, 8, 6, 12);
-                g.DrawLine(pen, 6, 12, 13, 3);
-                pen.Dispose();
-            });
+            return RenderSymbolBitmap("\u2713", 11f, Color.FromArgb(0, 122, 204), FontStyle.Bold);
         }
 
         public static Bitmap CreateSaveBitmap()
         {
-            return RenderBitmap((g, r) =>
-            {
-                var pen = new Pen(Color.FromArgb(80, 80, 80), 1f);
-                var brush = new SolidBrush(Color.FromArgb(100, 160, 220));
-                g.FillRectangle(brush, 2, 1, 12, 14);
-                g.DrawRectangle(pen, 2, 1, 12, 14);
-                var labelBrush = new SolidBrush(Color.FromArgb(60, 60, 60));
-                g.FillRectangle(labelBrush, 4, 1, 8, 5);
-                var diskBrush = new SolidBrush(Color.FromArgb(240, 240, 240));
-                g.FillRectangle(diskBrush, 5, 9, 6, 6);
-                brush.Dispose(); pen.Dispose(); labelBrush.Dispose(); diskBrush.Dispose();
-            });
+            return RenderSymbolBitmap("\u2B07", 11f, Color.FromArgb(80, 80, 80));
         }
 
         public static Bitmap CreateUndoBitmap()
         {
-            return RenderBitmap((g, r) =>
-            {
-                var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
-                var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("\u21B6", new Font("Segoe UI Symbol", 11f, FontStyle.Bold), brush, r, fmt);
-                brush.Dispose();
-            });
+            return RenderSymbolBitmap("\u21B6", 11f, Color.FromArgb(80, 80, 80), FontStyle.Bold);
         }
 
         public static Bitmap CreateRedoBitmap()
         {
-            return RenderBitmap((g, r) =>
-            {
-                var brush = new SolidBrush(Color.FromArgb(80, 80, 80));
-                var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("\u21B7", new Font("Segoe UI Symbol", 11f, FontStyle.Bold), brush, r, fmt);
-                brush.Dispose();
-            });
+            return RenderSymbolBitmap("\u21B7", 11f, Color.FromArgb(80, 80, 80), FontStyle.Bold);
         }
 
         public static Bitmap CreateFindBitmap()
         {
+            return RenderSymbolBitmap("\u2315", 11f, Color.FromArgb(80, 80, 80));
+        }
+
+        private static Bitmap RenderSymbolBitmap(string symbol, float size, Color color, FontStyle style = FontStyle.Regular)
+        {
             return RenderBitmap((g, r) =>
             {
-                var pen = new Pen(Color.FromArgb(80, 80, 80), 1.5f);
-                g.DrawEllipse(pen, 2, 1, 8, 8);
-                var handlePen = new Pen(Color.FromArgb(80, 80, 80), 2.5f);
-                g.DrawLine(handlePen, 9, 9, 14, 14);
-                pen.Dispose(); handlePen.Dispose();
+                var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                using (var font = new Font(SymbolFontFamily, size, style))
+                using (var brush = new SolidBrush(color))
+                    g.DrawString(symbol, font, brush, r, fmt);
+            });
+        }
+
+        private static Icon RenderSymbolIcon(string symbol, float size, Color color, FontStyle style = FontStyle.Regular)
+        {
+            return RenderIcon((g, r) =>
+            {
+                var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                using (var font = new Font(SymbolFontFamily, size, style))
+                using (var brush = new SolidBrush(color))
+                    g.DrawString(symbol, font, brush, r, fmt);
             });
         }
 
