@@ -631,6 +631,302 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
+        private Process _runningProcess;
+        private readonly object _processLock = new object();
+
+        public bool IsScriptRunning
+        {
+            get { lock (_processLock) return _runningProcess != null; }
+        }
+
+        public void ExecuteAsync(string script, Dictionary<string, string> inMemoryData, string preamble,
+            Action<string> onOutputLine, Action<string> onErrorLine, Action<PythonResult> onComplete)
+        {
+            if (!pythonAvailable)
+            {
+                if (onComplete != null)
+                    onComplete(CreateUnavailableResult("run script"));
+                return;
+            }
+
+            bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
+            bool hasPreamble = !string.IsNullOrEmpty(preamble);
+
+            string fullScript;
+            var sb = new StringBuilder();
+
+            if (hasMemData)
+            {
+                sb.AppendLine("import sys, io, base64, pandas as pd");
+                sb.AppendLine("import numpy as np");
+                sb.AppendLine("from PIL import Image as _PILImage");
+                sb.AppendLine("def _decode_img(s):");
+                sb.AppendLine("    if not isinstance(s, str) or not s.startswith('__IMG__:'): return s");
+                sb.AppendLine("    b = base64.b64decode(s[7:])");
+                sb.AppendLine("    return _PILImage.open(io.BytesIO(b))");
+                sb.AppendLine("def _decode_img_columns(df):");
+                sb.AppendLine("    for col in df.columns:");
+                sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
+                sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
+                sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
+                sb.AppendLine("    return df");
+                sb.AppendLine("class _DatasetRow:");
+                sb.AppendLine("    def __init__(self, series):");
+                sb.AppendLine("        object.__setattr__(self, '_s', series)");
+                sb.AppendLine("    def __getattr__(self, name):");
+                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
+                sb.AppendLine("        if name in _s.index:");
+                sb.AppendLine("            return _s[name]");
+                sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
+                sb.AppendLine("    def __repr__(self):");
+                sb.AppendLine("        return repr(object.__getattribute__(self, '_s'))");
+                sb.AppendLine("    def __dir__(self):");
+                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
+                sb.AppendLine("        return list(_s.index)");
+                sb.AppendLine("class _DotNetDataset:");
+                sb.AppendLine("    def __init__(self, df):");
+                sb.AppendLine("        object.__setattr__(self, '_df', df)");
+                sb.AppendLine("    def __getattr__(self, name):");
+                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+                sb.AppendLine("        if name in _df.columns:");
+                sb.AppendLine("            return _df[name]");
+                sb.AppendLine("        return getattr(_df, name)");
+                sb.AppendLine("    def __repr__(self):");
+                sb.AppendLine("        return repr(object.__getattribute__(self, '_df'))");
+                sb.AppendLine("    def __len__(self):");
+                sb.AppendLine("        return len(object.__getattribute__(self, '_df'))");
+                sb.AppendLine("    def __getitem__(self, key):");
+                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+                sb.AppendLine("        if isinstance(key, (int, slice)):");
+                sb.AppendLine("            result = _df.iloc[key]");
+                sb.AppendLine("            if isinstance(result, pd.Series):");
+                sb.AppendLine("                return _DatasetRow(result)");
+                sb.AppendLine("            return _DotNetDataset(result.reset_index(drop=True))");
+                sb.AppendLine("        return _df[key]");
+                sb.AppendLine("    def __iter__(self):");
+                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+                sb.AppendLine("        for i in range(len(_df)):");
+                sb.AppendLine("            yield _DatasetRow(_df.iloc[i])");
+                sb.AppendLine("    @property");
+                sb.AppendLine("    def df(self):");
+                sb.AppendLine("        return object.__getattribute__(self, '_df')");
+                sb.AppendLine("import types as _types");
+                sb.AppendLine("_dotnet_mod = _types.ModuleType('DotNetData')");
+                sb.AppendLine("_dotnet_mod.__doc__ = 'Datasets piped from the .NET host application.'");
+                sb.AppendLine("_dotnet_mod.__all__ = []");
+                sb.AppendLine("sys.modules['DotNetData'] = _dotnet_mod");
+                sb.AppendLine("while True:");
+                sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
+                sb.AppendLine("    if _hdr == '__DONE__': break");
+                sb.AppendLine("    if _hdr.startswith('__DATASET__||'):");
+                sb.AppendLine("        _parts = _hdr.split('||')");
+                sb.AppendLine("        _name = _parts[1]");
+                sb.AppendLine("        _nlines = int(_parts[2])");
+                sb.AppendLine("        _lines = []");
+                sb.AppendLine("        for _ in range(_nlines):");
+                sb.AppendLine("            _lines.append(sys.stdin.readline())");
+                sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
+                sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
+                sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
+                sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
+                sb.AppendLine("del _decode_img, _decode_img_columns, _tmpdf, _types, _dotnet_mod");
+                sb.AppendLine();
+            }
+
+            if (hasPreamble)
+            {
+                sb.AppendLine(preamble);
+            }
+
+            if (hasMemData || hasPreamble)
+            {
+                sb.AppendLine(script);
+                fullScript = sb.ToString();
+            }
+            else
+            {
+                fullScript = script;
+            }
+
+            string tempScript = GetTempFilePath(".py");
+            File.WriteAllText(tempScript, fullScript);
+
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = pythonPath,
+                    Arguments = "-u \"" + tempScript + "\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                psi.EnvironmentVariables["MPLBACKEND"] = "Agg";
+                psi.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
+
+                string displayVar = Environment.GetEnvironmentVariable("DISPLAY");
+                if (!string.IsNullOrEmpty(displayVar))
+                    psi.EnvironmentVariables["DISPLAY"] = displayVar;
+
+                var proc = Process.Start(psi);
+
+                lock (_processLock)
+                {
+                    _runningProcess = proc;
+                }
+
+                if (hasMemData)
+                {
+                    foreach (var kvp in inMemoryData)
+                    {
+                        string csvData = kvp.Value;
+                        string[] csvLines = csvData.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + csvLines.Length);
+                        foreach (var line in csvLines)
+                            proc.StandardInput.WriteLine(line);
+                    }
+                    proc.StandardInput.WriteLine("__DONE__");
+                    proc.StandardInput.Flush();
+                }
+
+                var plotPaths = new List<string>();
+                var stderrBuilder = new StringBuilder();
+
+                proc.ErrorDataReceived += (s, ev) =>
+                {
+                    if (ev.Data != null)
+                    {
+                        stderrBuilder.AppendLine(ev.Data);
+                        if (onErrorLine != null)
+                            onErrorLine(ev.Data);
+                    }
+                };
+                proc.BeginErrorReadLine();
+
+                var worker = new BackgroundWorker();
+                worker.DoWork += (s, ev) =>
+                {
+                    try
+                    {
+                        char[] buffer = new char[1024];
+                        var lineBuilder = new StringBuilder();
+                        var stdoutBuilder = new StringBuilder();
+
+                        while (true)
+                        {
+                            int count = proc.StandardOutput.Read(buffer, 0, buffer.Length);
+                            if (count <= 0) break;
+
+                            string chunk = new string(buffer, 0, count);
+                            stdoutBuilder.Append(chunk);
+
+                            for (int i = 0; i < count; i++)
+                            {
+                                char c = buffer[i];
+                                if (c == '\n')
+                                {
+                                    string line = lineBuilder.ToString().TrimEnd('\r');
+                                    if (line.StartsWith("__PLOT__:"))
+                                    {
+                                        string path = line.Substring(9).Trim();
+                                        if (File.Exists(path))
+                                            plotPaths.Add(path);
+                                    }
+                                    else if (onOutputLine != null)
+                                    {
+                                        onOutputLine(line + "\n");
+                                    }
+                                    lineBuilder.Clear();
+                                }
+                                else
+                                {
+                                    lineBuilder.Append(c);
+                                }
+                            }
+
+                            if (lineBuilder.Length > 0 && onOutputLine != null)
+                            {
+                                onOutputLine(lineBuilder.ToString());
+                                lineBuilder.Clear();
+                            }
+                        }
+
+                        proc.WaitForExit();
+
+                        ev.Result = new PythonResult
+                        {
+                            ExitCode = proc.ExitCode,
+                            Output = "",
+                            Error = stderrBuilder.ToString(),
+                            Success = proc.ExitCode == 0,
+                            PlotPaths = plotPaths
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        ev.Result = CreateProcessErrorResult("run script", ex);
+                    }
+                };
+                worker.RunWorkerCompleted += (s, ev) =>
+                {
+                    lock (_processLock)
+                    {
+                        _runningProcess = null;
+                    }
+                    try { File.Delete(tempScript); } catch { }
+
+                    if (onComplete != null)
+                    {
+                        var result = ev.Result as PythonResult;
+                        if (result == null)
+                            result = CreateProcessErrorResult("run script", ev.Error ?? new Exception("Unknown error"));
+                        onComplete(result);
+                    }
+                };
+                worker.RunWorkerAsync();
+            }
+            catch (Exception ex)
+            {
+                lock (_processLock)
+                {
+                    _runningProcess = null;
+                }
+                try { File.Delete(tempScript); } catch { }
+                if (onComplete != null)
+                    onComplete(CreateProcessErrorResult("run script", ex));
+            }
+        }
+
+        public void SendInput(string line)
+        {
+            lock (_processLock)
+            {
+                if (_runningProcess != null)
+                {
+                    try
+                    {
+                        _runningProcess.StandardInput.WriteLine(line);
+                        _runningProcess.StandardInput.Flush();
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        public void CancelExecution()
+        {
+            lock (_processLock)
+            {
+                if (_runningProcess != null)
+                {
+                    try { _runningProcess.Kill(); } catch { }
+                }
+            }
+        }
+
         public PythonResult InstallPackage(string packageName)
         {
             if (!pythonAvailable)

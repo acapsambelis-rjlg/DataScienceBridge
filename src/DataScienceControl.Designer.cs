@@ -29,6 +29,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
             this.editorToolBar = new System.Windows.Forms.ToolStrip();
             this.runToolBtn = new System.Windows.Forms.ToolStripButton();
+            this.stopToolBtn = new System.Windows.Forms.ToolStripButton();
             this.syntaxCheckToolBtn = new System.Windows.Forms.ToolStripButton();
             this.saveToolBtn = new System.Windows.Forms.ToolStripButton();
             this.undoToolBtn = new System.Windows.Forms.ToolStripButton();
@@ -170,6 +171,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             //
             this.editorToolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.runToolBtn,
+            this.stopToolBtn,
             this.syntaxCheckToolBtn,
             new System.Windows.Forms.ToolStripSeparator(),
             this.saveToolBtn,
@@ -194,6 +196,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.runToolBtn.Text = "Run";
             this.runToolBtn.ToolTipText = "Execute Script (F5)";
             this.runToolBtn.Click += new System.EventHandler(this.OnRunScript);
+            //
+            // stopToolBtn
+            //
+            this.stopToolBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.ImageAndText;
+            this.stopToolBtn.Image = DockIcons.CreateStopBitmap();
+            this.stopToolBtn.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.stopToolBtn.ForeColor = System.Drawing.Color.FromArgb(180, 30, 30);
+            this.stopToolBtn.Name = "stopToolBtn";
+            this.stopToolBtn.Text = "Stop";
+            this.stopToolBtn.ToolTipText = "Stop running script";
+            this.stopToolBtn.Visible = false;
+            this.stopToolBtn.Click += new System.EventHandler(this.OnStopScript);
             //
             // syntaxCheckToolBtn
             //
@@ -476,6 +490,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
         private System.Windows.Forms.ToolStrip editorToolBar;
         private System.Windows.Forms.ToolStripButton runToolBtn;
+        private System.Windows.Forms.ToolStripButton stopToolBtn;
         private System.Windows.Forms.ToolStripButton syntaxCheckToolBtn;
         private System.Windows.Forms.ToolStripButton saveToolBtn;
         private System.Windows.Forms.ToolStripButton undoToolBtn;

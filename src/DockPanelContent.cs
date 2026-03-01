@@ -126,6 +126,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return RenderSymbolBitmap("\u21B7", 11f, Color.FromArgb(80, 80, 80), FontStyle.Bold);
         }
 
+        public static Bitmap CreateStopBitmap()
+        {
+            return RenderSymbolBitmap("\u25A0", 10f, Color.FromArgb(180, 30, 30));
+        }
+
         public static Bitmap CreateFindBitmap()
         {
             return RenderSymbolBitmap("\u2315", 11f, Color.FromArgb(80, 80, 80));

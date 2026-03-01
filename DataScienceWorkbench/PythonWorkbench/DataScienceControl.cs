@@ -68,6 +68,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private FileTab activeFile;
         private string scriptsDir;
         private int untitledCounter = 0;
+        private int inputStartPosition = -1;
 
         public event EventHandler<string> StatusChanged;
 
@@ -260,6 +261,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             SetupTooltips();
             InitializeFileSystem();
             SetupFileListEvents();
+            outputBox.KeyDown += OnOutputBoxKeyDown;
+            outputBox.KeyPress += OnOutputBoxKeyPress;
             fileTreeView.NodeFormatting += OnTreeNodeFormatting;
             refTreeView.NodeFormatting += OnTreeNodeFormatting;
 
@@ -1961,6 +1964,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void OnRunScript(object sender, EventArgs e)
         {
+            if (pythonRunner.IsScriptRunning)
+            {
+                AppendOutput("A script is already running.\n", Color.FromArgb(180, 140, 0));
+                return;
+            }
+
             if (pythonEditor == null) return;
             string script = pythonEditor.GetText();
             if (string.IsNullOrWhiteSpace(script))
@@ -1990,35 +1999,180 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             RaiseStatus("Running " + runFileName + "...");
             AppendOutput("--- Running [" + runFileName + "] as __main__ at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
 
-            Application.DoEvents();
+            SetScriptRunningUI(true);
 
             Dictionary<string, string> memData = null;
             if (inMemoryDataSources.Count > 0)
                 memData = SerializeInMemoryData();
 
             string preamble = BuildPreamble();
-            var result = pythonRunner.Execute(script, memData, preamble);
 
-            if (!string.IsNullOrEmpty(result.Output))
-                AppendOutput(result.Output, Color.FromArgb(0, 0, 0));
+            pythonRunner.ExecuteAsync(script, memData, preamble,
+                outputChunk => RunOnUIThread(() =>
+                {
+                    string pendingInput = "";
+                    if (inputStartPosition >= 0 && outputBox.TextLength > inputStartPosition)
+                    {
+                        pendingInput = outputBox.Text.Substring(inputStartPosition);
+                        outputBox.SelectionStart = inputStartPosition;
+                        outputBox.SelectionLength = pendingInput.Length;
+                        outputBox.SelectedText = "";
+                    }
+                    AppendOutput(outputChunk, Color.FromArgb(0, 0, 0));
+                    inputStartPosition = outputBox.TextLength;
+                    if (pendingInput.Length > 0)
+                    {
+                        outputBox.SelectionStart = outputBox.TextLength;
+                        outputBox.SelectionLength = 0;
+                        outputBox.SelectionColor = Color.FromArgb(0, 100, 0);
+                        outputBox.AppendText(pendingInput);
+                        outputBox.ScrollToCaret();
+                    }
+                }),
+                errorLine => RunOnUIThread(() =>
+                {
+                    AppendOutput(errorLine + "\n", Color.FromArgb(200, 0, 0));
+                }),
+                result => RunOnUIThread(() =>
+                {
+                    if (!string.IsNullOrEmpty(result.Error))
+                    {
+                        if (result.Success)
+                            AppendOutput(result.Error, Color.FromArgb(140, 120, 0));
+                        else
+                            AppendOutput("ERROR:\n" + result.Error, Color.FromArgb(200, 0, 0));
+                    }
 
-            if (!string.IsNullOrEmpty(result.Error))
+                    if (result.PlotPaths != null && result.PlotPaths.Count > 0)
+                    {
+                        AppendOutput("Generated " + result.PlotPaths.Count + " plot(s).\n", Color.FromArgb(0, 128, 0));
+                        var viewer = new PlotViewerForm(result.PlotPaths);
+                        viewer.Show();
+                    }
+
+                    AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.FromArgb(0, 100, 180));
+                    RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
+                    SetScriptRunningUI(false);
+                })
+            );
+        }
+
+        private void OnStopScript(object sender, EventArgs e)
+        {
+            if (!pythonRunner.IsScriptRunning) return;
+            pythonRunner.CancelExecution();
+            AppendOutput("\n--- Script terminated by user ---\n", Color.FromArgb(180, 30, 30));
+        }
+
+        private void SetScriptRunningUI(bool running)
+        {
+            runToolBtn.Visible = !running;
+            stopToolBtn.Visible = running;
+
+            outputBox.ReadOnly = !running;
+            if (running)
             {
-                if (result.Success)
-                    AppendOutput(result.Error, Color.FromArgb(140, 120, 0));
-                else
-                    AppendOutput("ERROR:\n" + result.Error, Color.FromArgb(200, 0, 0));
+                inputStartPosition = outputBox.TextLength;
+                outputBox.Focus();
+            }
+            else
+            {
+                inputStartPosition = -1;
+                outputBox.ReadOnly = true;
+            }
+        }
+
+        private void OnOutputBoxKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!pythonRunner.IsScriptRunning || inputStartPosition < 0)
+            {
+                if (e.KeyCode == Keys.C && e.Control)
+                    return;
+                e.SuppressKeyPress = true;
+                return;
             }
 
-            if (result.PlotPaths != null && result.PlotPaths.Count > 0)
+            if (e.KeyCode == Keys.C && e.Control && !e.Shift)
             {
-                AppendOutput("Generated " + result.PlotPaths.Count + " plot(s).\n", Color.FromArgb(0, 128, 0));
-                var viewer = new PlotViewerForm(result.PlotPaths);
-                viewer.Show();
+                if (outputBox.SelectionLength == 0)
+                {
+                    e.SuppressKeyPress = true;
+                    pythonRunner.CancelExecution();
+                    AppendOutput("\n--- Script interrupted (Ctrl+C) ---\n", Color.FromArgb(180, 30, 30));
+                }
+                return;
             }
 
-            AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.FromArgb(0, 100, 180));
-            RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                string inputText = "";
+                if (outputBox.TextLength > inputStartPosition)
+                    inputText = outputBox.Text.Substring(inputStartPosition);
+                AppendOutput("\n", Color.FromArgb(0, 0, 0));
+                inputStartPosition = outputBox.TextLength;
+                pythonRunner.SendInput(inputText);
+                return;
+            }
+
+            if (e.KeyCode == Keys.Back || e.KeyCode == Keys.Delete)
+            {
+                if (outputBox.SelectionStart <= inputStartPosition && outputBox.SelectionLength == 0)
+                {
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+                if (outputBox.SelectionStart < inputStartPosition)
+                {
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+            }
+
+            if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Home ||
+                e.KeyCode == Keys.Up || e.KeyCode == Keys.PageUp)
+            {
+                if (outputBox.SelectionStart <= inputStartPosition && !e.Shift)
+                {
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+            }
+
+            if (e.KeyCode == Keys.X && e.Control)
+            {
+                if (outputBox.SelectionStart < inputStartPosition)
+                {
+                    e.SuppressKeyPress = true;
+                    return;
+                }
+            }
+
+            if (e.KeyCode == Keys.A && e.Control)
+            {
+                e.SuppressKeyPress = true;
+                if (outputBox.TextLength > inputStartPosition)
+                {
+                    outputBox.SelectionStart = inputStartPosition;
+                    outputBox.SelectionLength = outputBox.TextLength - inputStartPosition;
+                }
+                return;
+            }
+        }
+
+        private void OnOutputBoxKeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!pythonRunner.IsScriptRunning || inputStartPosition < 0)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (outputBox.SelectionStart < inputStartPosition)
+            {
+                outputBox.SelectionStart = outputBox.TextLength;
+                outputBox.SelectionLength = 0;
+            }
         }
 
         private void OnToolbarUndo(object sender, EventArgs e)
