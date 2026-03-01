@@ -34,7 +34,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private List<Diagnostic> symbolDiagnostics = new List<Diagnostic>();
         private List<Diagnostic> syntaxDiagnostics = new List<Diagnostic>();
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
-        private Dictionary<string, Func<string>> inMemoryDataSources = new Dictionary<string, Func<string>>();
+        private Dictionary<string, Func<IInMemoryDataSource>> inMemoryDataSources = new Dictionary<string, Func<IInMemoryDataSource>>();
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, PythonClassInfo> registeredPythonClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
@@ -701,7 +701,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         s = "\"" + s.Replace("\"", "\"\"") + "\"";
                     sb.AppendLine(s);
                 }
-                return sb.ToString();
+                return new StringDataSource(sb.ToString());
             };
             PopulateReferenceTree();
         }
@@ -737,8 +737,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                     sb.AppendLine(string.Join(",", vals));
                 }
-                return sb.ToString();
+                return new StringDataSource(sb.ToString());
             };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void RegisterInMemoryData<T>(string name, DataQueue<T> queue) where T : class
+        {
+            inMemoryDataTypes[name] = typeof(T);
+            inMemoryDataSources[name] = () => queue;
             UpdateDynamicSymbols();
             PopulateReferenceTree();
         }
@@ -765,7 +773,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                     sb.AppendLine(string.Join(",", vals));
                 }
-                return sb.ToString();
+                return new StringDataSource(sb.ToString());
             };
             PopulateReferenceTree();
         }
@@ -1064,9 +1072,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
-        private Dictionary<string, string> SerializeInMemoryData()
+        private Dictionary<string, IInMemoryDataSource> SerializeInMemoryData()
         {
-            var result = new Dictionary<string, string>();
+            var result = new Dictionary<string, IInMemoryDataSource>();
             foreach (var kvp in inMemoryDataSources)
             {
                 try
@@ -2344,7 +2352,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             SetScriptRunningUI(true);
 
-            Dictionary<string, string> memData = null;
+            Dictionary<string, IInMemoryDataSource> memData = null;
             if (inMemoryDataSources.Count > 0)
                 memData = SerializeInMemoryData();
 

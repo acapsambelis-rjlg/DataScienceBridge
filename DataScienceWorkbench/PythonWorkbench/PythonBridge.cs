@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using RJLG.IntelliSEM.Data.PythonDataScience;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
@@ -430,7 +431,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
         }
 
-        public PythonResult Execute(string script, Dictionary<string, string> inMemoryData, string preamble = null)
+        public PythonResult Execute(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, string preamble = null)
         {
             if (!pythonAvailable)
                 return CreateUnavailableResult("run script");
@@ -562,10 +563,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 {
                     foreach (var kvp in inMemoryData)
                     {
-                        string csvData = kvp.Value;
-                        string[] csvLines = csvData.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + csvLines.Length);
-                        foreach (var line in csvLines)
+                        var source = kvp.Value;
+                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
+                        foreach (var line in source.StreamCsvLines())
                             proc.StandardInput.WriteLine(line);
                     }
                     proc.StandardInput.WriteLine("__DONE__");
@@ -639,7 +639,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             get { lock (_processLock) return _runningProcess != null; }
         }
 
-        public void ExecuteAsync(string script, Dictionary<string, string> inMemoryData, string preamble,
+        public void ExecuteAsync(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, string preamble,
             Action<string> onOutputLine, Action<string> onErrorLine, Action<PythonResult> onComplete,
             string scriptArguments = null, string inputFilePath = null)
         {
@@ -783,10 +783,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 {
                     foreach (var kvp in inMemoryData)
                     {
-                        string csvData = kvp.Value;
-                        string[] csvLines = csvData.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + csvLines.Length);
-                        foreach (var line in csvLines)
+                        var source = kvp.Value;
+                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
+                        foreach (var line in source.StreamCsvLines())
                             proc.StandardInput.WriteLine(line);
                     }
                     proc.StandardInput.WriteLine("__DONE__");

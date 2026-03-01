@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonWorkbenchData\DataModels.cs" />
+    <Compile Include="PythonWorkbench\DataQueue.cs" />
     <Compile Include="PythonWorkbench\DataScienceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
