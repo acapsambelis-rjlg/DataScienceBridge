@@ -27,6 +27,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.editorMenuBar = new Telerik.WinControls.UI.RadMenu();
             this.insertSnippetBtn = new Telerik.WinControls.UI.RadMenuItem();
             this.editorToolBar = new System.Windows.Forms.ToolStrip();
+            this.configDropDown = new System.Windows.Forms.ToolStripDropDownButton();
             this.runToolBtn = new System.Windows.Forms.ToolStripButton();
             this.stopToolBtn = new System.Windows.Forms.ToolStripButton();
             this.saveToolBtn = new System.Windows.Forms.ToolStripButton();
@@ -118,6 +119,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // editorToolBar
             //
             this.editorToolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.configDropDown,
             this.runToolBtn,
             this.stopToolBtn,
             new System.Windows.Forms.ToolStripSeparator(),
@@ -132,6 +134,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.editorToolBar.Name = "editorToolBar";
             this.editorToolBar.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
             this.editorToolBar.BackColor = System.Drawing.SystemColors.Control;
+            //
+            // configDropDown
+            //
+            this.configDropDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.configDropDown.Name = "configDropDown";
+            this.configDropDown.Text = "Current File";
+            this.configDropDown.ToolTipText = "Select run configuration";
+            this.configDropDown.AutoSize = false;
+            this.configDropDown.Width = 140;
+            this.configDropDown.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.configDropDown.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.configDropDown.BackColor = System.Drawing.Color.FromArgb(240, 240, 240);
+            this.configDropDown.Margin = new System.Windows.Forms.Padding(0, 1, 2, 1);
+            this.configDropDown.ShowDropDownArrow = true;
             //
             // runToolBtn
             //
@@ -420,6 +436,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Telerik.WinControls.UI.RadMenu editorMenuBar;
         private Telerik.WinControls.UI.RadMenuItem insertSnippetBtn;
         private System.Windows.Forms.ToolStrip editorToolBar;
+        private System.Windows.Forms.ToolStripDropDownButton configDropDown;
         private System.Windows.Forms.ToolStripButton runToolBtn;
         private System.Windows.Forms.ToolStripButton stopToolBtn;
         private System.Windows.Forms.ToolStripButton saveToolBtn;

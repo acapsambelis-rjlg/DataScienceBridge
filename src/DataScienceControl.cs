@@ -47,6 +47,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private HashSet<int> bookmarks = new HashSet<int>();
         private CodeTextBox pythonEditor => activeFile?.Editor;
 
+        private List<RunConfiguration> runConfigurations = new List<RunConfiguration>();
+        private int selectedConfigIndex = -1;
+        private string configFilePath;
+
         private readonly object _pendingUILock = new object();
         private List<Action> _pendingUIActions = new List<Action>();
 
@@ -2271,14 +2275,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
-            if (pythonEditor == null) return;
-            string script = pythonEditor.GetText();
-            if (string.IsNullOrWhiteSpace(script))
-            {
-                AppendOutput("No script to run.\n", Color.FromArgb(180, 140, 0));
-                return;
-            }
-
             if (venvInitializing)
             {
                 AppendOutput("Python environment is still being set up. Please wait...\n", Color.FromArgb(180, 140, 0));
@@ -2293,12 +2289,56 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
+            var config = GetActiveRunConfiguration();
+            string script = null;
+            string runFileName = "untitled";
+            string scriptArgs = config != null ? config.Arguments : null;
+            string inputFile = ResolveInputFilePath(config);
+
+            if (config != null && !config.UseCurrentFile)
+            {
+                string resolvedPath = ResolveScriptPath(config);
+                if (resolvedPath == null || !File.Exists(resolvedPath))
+                {
+                    AppendOutput("Script not found: " + (config.ScriptPath ?? "(none)") + "\n", Color.FromArgb(200, 0, 0));
+                    return;
+                }
+
+                var matchingTab = openFiles.Find(f =>
+                    f.FilePath != null &&
+                    f.FilePath.Equals(resolvedPath, StringComparison.OrdinalIgnoreCase));
+                if (matchingTab != null && matchingTab.Editor != null)
+                {
+                    script = matchingTab.Editor.GetText();
+                    runFileName = matchingTab.FileName;
+                }
+                else
+                {
+                    script = File.ReadAllText(resolvedPath);
+                    runFileName = Path.GetFileName(resolvedPath);
+                }
+            }
+            else
+            {
+                if (pythonEditor == null) return;
+                script = pythonEditor.GetText();
+                runFileName = activeFile != null ? activeFile.FileName : "untitled";
+            }
+
+            if (string.IsNullOrWhiteSpace(script))
+            {
+                AppendOutput("No script to run.\n", Color.FromArgb(180, 140, 0));
+                return;
+            }
+
             SaveAllFilesToDisk();
             ShowDockPanel(outputDockContent);
 
-            string runFileName = activeFile != null ? activeFile.FileName : "untitled";
-            RaiseStatus("Running " + runFileName + "...");
-            AppendOutput("--- Running [" + runFileName + "] as __main__ at " + DateTime.Now.ToString("HH:mm:ss") + " ---\n", Color.FromArgb(0, 100, 180));
+            string configLabel = config != null ? " [" + config.Name + "]" : "";
+            string argsLabel = !string.IsNullOrEmpty(scriptArgs) ? " args: " + scriptArgs : "";
+            string inputLabel = inputFile != null ? " stdin: " + Path.GetFileName(inputFile) : "";
+            RaiseStatus("Running " + runFileName + configLabel + "...");
+            AppendOutput("--- Running [" + runFileName + "]" + configLabel + " as __main__ at " + DateTime.Now.ToString("HH:mm:ss") + argsLabel + inputLabel + " ---\n", Color.FromArgb(0, 100, 180));
 
             SetScriptRunningUI(true);
 
@@ -2354,7 +2394,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     AppendOutput("--- Finished (exit code: " + result.ExitCode + ") ---\n\n", Color.FromArgb(0, 100, 180));
                     RaiseStatus(result.Success ? "Script completed successfully." : "Script failed with errors.");
                     SetScriptRunningUI(false);
-                })
+                }),
+                scriptArgs,
+                inputFile
             );
         }
 
@@ -2370,6 +2412,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             runToolBtn.Visible = !running;
             stopToolBtn.Visible = running;
             syntaxCheckToolBtn.Enabled = !running;
+            configDropDown.Enabled = !running;
 
             outputBox.ReadOnly = !running;
             if (running)
@@ -2553,11 +2596,125 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
 
 
+        private void LoadRunConfigurations()
+        {
+            int savedIndex;
+            runConfigurations = RunConfigurationStore.Load(configFilePath, out savedIndex);
+            selectedConfigIndex = savedIndex;
+            RefreshConfigDropDown();
+        }
+
+        private void SaveRunConfigurations()
+        {
+            RunConfigurationStore.Save(configFilePath, runConfigurations, selectedConfigIndex);
+        }
+
+        private void RefreshConfigDropDown()
+        {
+            if (configDropDown == null) return;
+            configDropDown.DropDownItems.Clear();
+
+            var currentFileItem = new ToolStripMenuItem("Current File");
+            currentFileItem.Checked = (selectedConfigIndex < 0);
+            currentFileItem.Click += (s, ev) =>
+            {
+                selectedConfigIndex = -1;
+                configDropDown.Text = "Current File";
+                SaveRunConfigurations();
+                RefreshConfigDropDown();
+            };
+            configDropDown.DropDownItems.Add(currentFileItem);
+
+            if (runConfigurations.Count > 0)
+                configDropDown.DropDownItems.Add(new ToolStripSeparator());
+
+            for (int i = 0; i < runConfigurations.Count; i++)
+            {
+                int idx = i;
+                var item = new ToolStripMenuItem(runConfigurations[i].Name);
+                item.Checked = (selectedConfigIndex == idx);
+                item.Click += (s, ev) =>
+                {
+                    selectedConfigIndex = idx;
+                    configDropDown.Text = runConfigurations[idx].Name;
+                    SaveRunConfigurations();
+                    RefreshConfigDropDown();
+                };
+                configDropDown.DropDownItems.Add(item);
+            }
+
+            configDropDown.DropDownItems.Add(new ToolStripSeparator());
+            var editItem = new ToolStripMenuItem("Edit Configurations...");
+            editItem.Click += OnEditConfigurations;
+            configDropDown.DropDownItems.Add(editItem);
+
+            if (selectedConfigIndex >= 0 && selectedConfigIndex < runConfigurations.Count)
+                configDropDown.Text = runConfigurations[selectedConfigIndex].Name;
+            else
+                configDropDown.Text = "Current File";
+        }
+
+        private void OnEditConfigurations(object sender, EventArgs e)
+        {
+            using (var dlg = new RunConfigurationDialog(runConfigurations, Math.Max(0, selectedConfigIndex), scriptsDir))
+            {
+                if (dlg.ShowDialog(this.FindForm()) == DialogResult.OK)
+                {
+                    runConfigurations = dlg.Configurations;
+                    selectedConfigIndex = dlg.SelectedIndex;
+                    if (selectedConfigIndex >= runConfigurations.Count)
+                        selectedConfigIndex = -1;
+                    SaveRunConfigurations();
+                    RefreshConfigDropDown();
+                }
+            }
+        }
+
+        private RunConfiguration GetActiveRunConfiguration()
+        {
+            if (selectedConfigIndex >= 0 && selectedConfigIndex < runConfigurations.Count)
+                return runConfigurations[selectedConfigIndex];
+            return null;
+        }
+
+        private string ResolveScriptPath(RunConfiguration config)
+        {
+            if (config == null || config.UseCurrentFile)
+                return null;
+            if (string.IsNullOrEmpty(config.ScriptPath))
+                return null;
+
+            string scriptPath = config.ScriptPath;
+            if (!Path.IsPathRooted(scriptPath))
+            {
+                string pythonDir = Path.GetDirectoryName(scriptsDir);
+                scriptPath = Path.Combine(pythonDir, scriptPath);
+            }
+            return scriptPath;
+        }
+
+        private string ResolveInputFilePath(RunConfiguration config)
+        {
+            if (config == null || string.IsNullOrEmpty(config.InputFilePath))
+                return null;
+
+            string inputPath = config.InputFilePath;
+            if (!Path.IsPathRooted(inputPath))
+            {
+                string pythonDir = Path.GetDirectoryName(scriptsDir);
+                inputPath = Path.Combine(pythonDir, inputPath);
+            }
+            return inputPath;
+        }
+
         private void InitializeFileSystem()
         {
             scriptsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "python", "scripts");
             if (!Directory.Exists(scriptsDir))
                 Directory.CreateDirectory(scriptsDir);
+
+            configFilePath = Path.Combine(Path.GetDirectoryName(scriptsDir), "run_configurations.ini");
+            LoadRunConfigurations();
 
             symbolAnalyzer.ScriptsDirectory = scriptsDir;
             symbolAnalyzer.SetFileContentResolver(moduleName =>

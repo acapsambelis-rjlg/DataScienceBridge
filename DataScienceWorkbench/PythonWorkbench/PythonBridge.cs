@@ -640,7 +640,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         }
 
         public void ExecuteAsync(string script, Dictionary<string, string> inMemoryData, string preamble,
-            Action<string> onOutputLine, Action<string> onErrorLine, Action<PythonResult> onComplete)
+            Action<string> onOutputLine, Action<string> onErrorLine, Action<PythonResult> onComplete,
+            string scriptArguments = null, string inputFilePath = null)
         {
             if (!pythonAvailable)
             {
@@ -756,7 +757,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var psi = new ProcessStartInfo
                 {
                     FileName = pythonPath,
-                    Arguments = "-u \"" + tempScript + "\"",
+                    Arguments = "-u \"" + tempScript + "\"" + (string.IsNullOrEmpty(scriptArguments) ? "" : " " + scriptArguments),
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     RedirectStandardInput = true,
@@ -790,6 +791,37 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                     proc.StandardInput.WriteLine("__DONE__");
                     proc.StandardInput.Flush();
+                }
+
+                string[] _inputFileLines = null;
+                if (!string.IsNullOrEmpty(inputFilePath) && File.Exists(inputFilePath))
+                {
+                    try { _inputFileLines = File.ReadAllLines(inputFilePath); }
+                    catch { _inputFileLines = null; }
+                }
+
+                if (_inputFileLines != null && _inputFileLines.Length > 0)
+                {
+                    var capturedLines = _inputFileLines;
+                    var inputThread = new Thread(() =>
+                    {
+                        try
+                        {
+                            Thread.Sleep(100);
+                            foreach (var line in capturedLines)
+                            {
+                                try
+                                {
+                                    proc.StandardInput.WriteLine(line);
+                                    proc.StandardInput.Flush();
+                                }
+                                catch { break; }
+                            }
+                        }
+                        catch { }
+                    });
+                    inputThread.IsBackground = true;
+                    inputThread.Start();
                 }
 
                 var plotPaths = new List<string>();
