@@ -7,8 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using CodeEditor;
-using Telerik.WinControls;
-using Telerik.WinControls.UI;
 using WeifenLuo.WinFormsUI.Docking;
 using RJLG.IntelliSEM.Data.PythonDataScience;
 
@@ -40,13 +38,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, PythonClassInfo> registeredPythonClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
-        private RadContextMenu fileContextMenu;
-        private Dictionary<RadTreeNode, Tuple<Font, Color>> nodeStyles = new Dictionary<RadTreeNode, Tuple<Font, Color>>();
+        private ContextMenuStrip fileContextMenu;
         private float editorFontSize = 10f;
         private const float MinFontSize = 6f;
         private const float MaxFontSize = 28f;
         private const float DefaultFontSize = 10f;
         private Font editorFont;
+        private HashSet<int> bookmarks = new HashSet<int>();
         private CodeTextBox pythonEditor => activeFile?.Editor;
 
         private List<RunConfiguration> runConfigurations = new List<RunConfiguration>();
@@ -63,6 +61,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             public string Content;
             public int CursorPosition;
             public int ScrollPosition;
+            public HashSet<int> Bookmarks = new HashSet<int>();
             public bool IsModified;
             public CodeTextBox Editor;
             public FileDockContent DockContent;
@@ -123,51 +122,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return new Font(System.Drawing.FontFamily.GenericSansSerif, size, style);
         }
 
-        private void SetNodeStyle(RadTreeNode node, Font font, Color foreColor)
-        {
-            nodeStyles[node] = Tuple.Create(font, foreColor);
-        }
-
-        private void SetNodeForeColor(RadTreeNode node, Color foreColor)
-        {
-            Font existingFont = null;
-            Tuple<Font, Color> existing;
-            if (nodeStyles.TryGetValue(node, out existing))
-                existingFont = existing.Item1;
-            nodeStyles[node] = Tuple.Create(existingFont, foreColor);
-        }
-
-        private void SetNodeFont(RadTreeNode node, Font font)
-        {
-            Color existingColor = Color.Empty;
-            Tuple<Font, Color> existing;
-            if (nodeStyles.TryGetValue(node, out existing))
-                existingColor = existing.Item2;
-            nodeStyles[node] = Tuple.Create(font, existingColor);
-        }
-
-        private void OnTreeNodeFormatting(object sender, TreeNodeFormattingEventArgs e)
-        {
-            Tuple<Font, Color> style;
-            if (nodeStyles.TryGetValue(e.Node, out style))
-            {
-                if (style.Item1 != null)
-                    e.NodeElement.ContentElement.Font = style.Item1;
-                else
-                    e.NodeElement.ContentElement.ResetValue(LightVisualElement.FontProperty, ValueResetFlags.Local);
-
-                if (style.Item2 != Color.Empty)
-                    e.NodeElement.ContentElement.ForeColor = style.Item2;
-                else
-                    e.NodeElement.ContentElement.ResetValue(LightVisualElement.ForeColorProperty, ValueResetFlags.Local);
-            }
-            else
-            {
-                e.NodeElement.ContentElement.ResetValue(LightVisualElement.FontProperty, ValueResetFlags.Local);
-                e.NodeElement.ContentElement.ResetValue(LightVisualElement.ForeColorProperty, ValueResetFlags.Local);
-            }
-        }
-
         private void ResolveRuntimeFonts()
         {
             editorFont = ResolveMonoFont(10f);
@@ -183,15 +137,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             fileListLabel.Font = uiFontBold;
         }
 
-        private Image folderIcon;
-        private Image folderOpenIcon;
-        private Image pythonFileIcon;
+        private ImageList fileTreeImageList;
 
         private void CreateFileTreeIcons()
         {
-            folderIcon = DrawFolderIcon(false);
-            folderOpenIcon = DrawFolderIcon(true);
-            pythonFileIcon = DrawPythonFileIcon();
+            fileTreeImageList = new ImageList();
+            fileTreeImageList.ImageSize = new Size(16, 16);
+            fileTreeImageList.ColorDepth = ColorDepth.Depth32Bit;
+
+            fileTreeImageList.Images.Add("folder", DrawFolderIcon(false));
+            fileTreeImageList.Images.Add("folder_open", DrawFolderIcon(true));
+            fileTreeImageList.Images.Add("python", DrawPythonFileIcon());
+
+            fileTreeView.ImageList = fileTreeImageList;
         }
 
         private static Bitmap DrawFolderIcon(bool open)
@@ -267,14 +225,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             SetupFileListEvents();
             outputBox.KeyDown += OnOutputBoxKeyDown;
             outputBox.KeyPress += OnOutputBoxKeyPress;
-            fileTreeView.NodeFormatting += OnTreeNodeFormatting;
-            refTreeView.NodeFormatting += OnTreeNodeFormatting;
 
             this.HandleCreated += (s, e) =>
             {
                 filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
                 outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
                 packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
+
+                var initialActive = activeFile;
+                foreach (var tab in openFiles)
+                    CreateEditorForTab(tab);
+
+                activeFile = initialActive;
+                if (activeFile?.DockContent != null)
+                    activeFile.DockContent.Activate();
 
                 List<Action> pending;
                 lock (_pendingUILock)
@@ -288,29 +252,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         BeginInvoke(act);
                 }
 
-                var initialActive = activeFile;
-                foreach (var tab in openFiles)
-                    CreateEditorForTab(tab);
-
-                activeFile = initialActive;
-                if (activeFile?.DockContent != null)
-                    activeFile.DockContent.Activate();
-
                 BeginInvoke((Action)(() =>
                 {
                     ApplySyntaxHighlighting();
                     if (activeFile != null) activeFile.IsModified = false;
                     RefreshFileList();
                     if (activeFile?.Editor != null)
-                    {
                         activeFile.Editor.Refresh();
-                    }
                 }));
             };
         }
 
         private void InitializeDocking()
         {
+            dockPanel.Theme = new WeifenLuo.WinFormsUI.Docking.VS2015LightTheme();
             dockPanel.ShowDocumentIcon = true;
             dockPanel.DockLeftPortion = 0.18;
             dockPanel.DockBottomPortion = 0.25;
@@ -343,7 +298,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 if (content == null) return;
                 var tab = openFiles.Find(f => f.DockContent == content);
                 if (tab == null || tab == activeFile) return;
+                if (activeFile != null)
+                    activeFile.Bookmarks = new HashSet<int>(bookmarks);
                 activeFile = tab;
+                bookmarks = new HashSet<int>(tab.Bookmarks);
                 if (pythonEditor != null)
                 {
                     UpdateCursorPositionStatus();
@@ -361,42 +319,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     LoadPackagesAsync();
                 }
             };
-        }
-
-        private void ShowDockPanel(ToolDockContent panel)
-        {
-            if (panel.DockState == DockState.Hidden)
-                panel.Show(dockPanel);
-            else if (panel.DockState == DockState.DockBottomAutoHide)
-                panel.DockState = DockState.DockBottom;
-            else if (panel.DockState == DockState.DockLeftAutoHide)
-                panel.DockState = DockState.DockLeft;
-            else if (panel.DockState == DockState.DockRightAutoHide)
-                panel.DockState = DockState.DockRight;
-            else if (panel.DockState == DockState.DockTopAutoHide)
-                panel.DockState = DockState.DockTop;
-            panel.Activate();
-        }
-
-        private void FloatPanel(ToolDockContent panel)
-        {
-            panel.Show(dockPanel, DockState.Float);
-            panel.Activate();
-        }
-
-        private void ResetDockLayout()
-        {
-            filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
-            outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
-            referenceDockContent.DockPanel = null;
-            packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
-
-            foreach (var tab in openFiles)
-                if (tab.DockContent != null && !tab.DockContent.IsDisposed)
-                    tab.DockContent.Show(dockPanel, DockState.Document);
-
-            if (activeFile?.DockContent != null)
-                activeFile.DockContent.Activate();
         }
 
         private void SetupSyntaxHighlighting()
@@ -432,11 +354,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             content.Icon = DockIcons.CreateEditorIcon();
             content.Controls.Add(editor);
             content.CloseRequested += (s, e) => OnCloseFileTab(tab);
+            content.TabPageContextMenuStrip = CreateTabContextMenu(tab);
             tab.DockContent = content;
 
             SetupEditorEvents(tab, editor);
 
             content.Show(dockPanel, DockState.Document);
+            SetupTabMiddleClick(content);
 
             suppressHighlight = true;
             editor.SetText(tab.Content ?? "");
@@ -498,6 +422,24 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     e.SuppressKeyPress = true;
                     MoveLine(e.KeyCode == Keys.Up);
                 }
+                else if (e.Control && e.KeyCode == Keys.B)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    ToggleBookmarkAtCursor();
+                }
+                else if (e.KeyCode == Keys.F2 && !e.Shift)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    GoToNextBookmark();
+                }
+                else if (e.KeyCode == Keys.F2 && e.Shift)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    GoToPreviousBookmark();
+                }
             };
         }
 
@@ -545,6 +487,54 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             highlightTimer.Start();
         }
 
+        private void ToggleBookmarkAtCursor()
+        {
+            if (pythonEditor == null) return;
+            int line = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
+            if (bookmarks.Contains(line))
+                bookmarks.Remove(line);
+            else
+                bookmarks.Add(line);
+            RaiseStatus(bookmarks.Contains(line) ? "Bookmark set on line " + (line + 1) : "Bookmark removed from line " + (line + 1));
+        }
+
+        private void GoToNextBookmark()
+        {
+            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
+            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
+            var sorted = bookmarks.OrderBy(b => b).ToList();
+            int next = sorted.FirstOrDefault(b => b > currentLine);
+            if (next == 0 && !bookmarks.Contains(0))
+                next = sorted.FirstOrDefault(b => b != currentLine);
+            if (next == 0 && sorted.Count > 0) next = sorted[0];
+            GoToLine(next);
+        }
+
+        private void GoToPreviousBookmark()
+        {
+            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
+            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
+            var sorted = bookmarks.OrderByDescending(b => b).ToList();
+            int prev = sorted.FirstOrDefault(b => b < currentLine);
+            if (prev == 0 && !bookmarks.Contains(0))
+                prev = sorted.FirstOrDefault(b => b != currentLine);
+            if (prev == 0 && sorted.Count > 0) prev = sorted[0];
+            GoToLine(prev);
+        }
+
+        private void GoToLine(int lineIndex)
+        {
+            if (pythonEditor == null) return;
+            if (lineIndex < 0 || lineIndex >= pythonEditor.GetLineCount()) return;
+            int charIdx = pythonEditor.GetFirstCharIndexFromLine(lineIndex);
+            pythonEditor.SetCaretIndex(charIdx);
+            pythonEditor.ClearSelection();
+            pythonEditor.ScrollToCaretPosition();
+            RaiseStatus("Ln " + (lineIndex + 1));
+        }
+
+        public HashSet<int> GetBookmarks() { return bookmarks; }
+
         private void UpdateCursorPositionStatus()
         {
             if (pythonEditor == null) return;
@@ -557,6 +547,28 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 RaiseStatus("Ln " + line + ", Col " + col);
             else
                 RaiseStatus("Ln " + line + ", Col " + col + "  |  Zoom: " + zoomPct + "%");
+        }
+
+        private void ZoomEditor(float delta)
+        {
+            float newSize;
+            if (delta == 0f)
+                newSize = DefaultFontSize;
+            else
+                newSize = editorFontSize + delta;
+
+            if (newSize < MinFontSize) newSize = MinFontSize;
+            if (newSize > MaxFontSize) newSize = MaxFontSize;
+            if (Math.Abs(newSize - editorFontSize) < 0.01f) return;
+
+            editorFontSize = newSize;
+            editorFont = ResolveMonoFont(editorFontSize);
+
+            foreach (var tab in openFiles)
+                if (tab.Editor != null)
+                    tab.Editor.EditorFont = editorFont;
+
+            if (pythonEditor != null) UpdateCursorPositionStatus();
         }
 
         private void ApplySyntaxHighlighting()
@@ -667,6 +679,33 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 pythonEditor.ClearDiagnostics();
         }
 
+        public void LoadData(List<Customer> customers, List<Employee> employees)
+        {
+            this.customers = customers;
+            this.employees = employees;
+
+            RegisterAllDatasetsInMemory();
+            PopulateReferenceTree();
+        }
+
+        public void RegisterInMemoryData(string name, System.Collections.IEnumerable values, string columnName = "value")
+        {
+            inMemoryDataSources[name] = () =>
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine(columnName);
+                foreach (var item in values)
+                {
+                    string s = item != null ? item.ToString() : "";
+                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                    sb.AppendLine(s);
+                }
+                return sb.ToString();
+            };
+            PopulateReferenceTree();
+        }
+
         public void RegisterInMemoryData<T>(string name, Func<List<T>> dataProvider) where T : class
         {
             inMemoryDataTypes[name] = typeof(T);
@@ -702,6 +741,204 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
             UpdateDynamicSymbols();
             PopulateReferenceTree();
+        }
+
+        public void RegisterInMemoryData(string name, Func<System.Data.DataTable> dataProvider)
+        {
+            inMemoryDataSources[name] = () =>
+            {
+                var table = dataProvider();
+                var sb = new System.Text.StringBuilder();
+                var headers = new List<string>();
+                foreach (System.Data.DataColumn col in table.Columns)
+                    headers.Add(col.ColumnName);
+                sb.AppendLine(string.Join(",", headers));
+                foreach (System.Data.DataRow row in table.Rows)
+                {
+                    var vals = new List<string>();
+                    foreach (var item in row.ItemArray)
+                    {
+                        string s = item != null ? item.ToString() : "";
+                        if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                            s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                        vals.Add(s);
+                    }
+                    sb.AppendLine(string.Join(",", vals));
+                }
+                return sb.ToString();
+            };
+            PopulateReferenceTree();
+        }
+
+        public void UnregisterInMemoryData(string name)
+        {
+            inMemoryDataSources.Remove(name);
+            PopulateReferenceTree();
+        }
+
+        public void RegisterPythonClass(string className, string pythonCode)
+        {
+            RegisterPythonClass(className, pythonCode, null, null, null);
+        }
+
+        public void RegisterPythonClass(string className, string pythonCode, string description, string example = null, string notes = null)
+        {
+            if (!IsValidPythonIdentifier(className))
+                throw new ArgumentException("Invalid Python class name: " + className);
+            registeredPythonClasses[className] = new PythonClassInfo
+            {
+                PythonCode = pythonCode,
+                Description = description,
+                Example = example,
+                Notes = notes
+            };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void UnregisterPythonClass(string className)
+        {
+            registeredPythonClasses.Remove(className);
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, string value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = EscapePythonString(value), TypeDescription = "str" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, double value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value.ToString("G"), TypeDescription = "float" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, int value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value.ToString(), TypeDescription = "int" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, bool value)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = value ? "True" : "False", TypeDescription = "bool" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, string[] values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var v in values)
+                parts.Add(EscapePythonString(v));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "[" + string.Join(", ", parts) + "]", TypeDescription = "list" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, double[] values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var v in values)
+                parts.Add(v.ToString("G"));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "[" + string.Join(", ", parts) + "]", TypeDescription = "list" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, Dictionary<string, string> values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var kvp in values)
+                parts.Add(EscapePythonString(kvp.Key) + ": " + EscapePythonString(kvp.Value));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "{" + string.Join(", ", parts) + "}", TypeDescription = "dict" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void SetContext(string key, Dictionary<string, double> values)
+        {
+            if (!IsValidPythonIdentifier(key))
+                throw new ArgumentException("Invalid Python identifier for context key: " + key);
+            var parts = new List<string>();
+            foreach (var kvp in values)
+                parts.Add(EscapePythonString(kvp.Key) + ": " + kvp.Value.ToString("G"));
+            contextVariables[key] = new ContextVariable { Name = key, PythonLiteral = "{" + string.Join(", ", parts) + "}", TypeDescription = "dict" };
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void RemoveContext(string key)
+        {
+            contextVariables.Remove(key);
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        public void ClearContext()
+        {
+            contextVariables.Clear();
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
+        private static string EscapePythonString(string s)
+        {
+            if (s == null) return "None";
+            var sb = new System.Text.StringBuilder(s.Length + 10);
+            sb.Append('"');
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '"': sb.Append("\\\""); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    case '\0': sb.Append("\\0"); break;
+                    default:
+                        if (c < ' ')
+                            sb.Append("\\x" + ((int)c).ToString("x2"));
+                        else
+                            sb.Append(c);
+                        break;
+                }
+            }
+            sb.Append('"');
+            return sb.ToString();
+        }
+
+        private static bool IsValidPythonIdentifier(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return false;
+            if (!char.IsLetter(name[0]) && name[0] != '_') return false;
+            for (int i = 1; i < name.Length; i++)
+            {
+                if (!char.IsLetterOrDigit(name[i]) && name[i] != '_') return false;
+            }
+            return true;
         }
 
         private string BuildPreamble()
@@ -844,6 +1081,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return result;
         }
 
+        public void RunScript()
+        {
+            OnRunScript(this, EventArgs.Empty);
+        }
+
         public void ResetPythonEnvironment()
         {
             AppendOutput("Resetting Python environment...\n", Color.FromArgb(0, 100, 180));
@@ -893,107 +1135,139 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             RunOnUIThread(() => outputBox.Clear());
         }
 
+        private void OnClearOutput(object sender, EventArgs e)
+        {
+            RunOnUIThread(() => outputBox.Clear());
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public string OutputText
+        {
+            get
+            {
+                if (!IsHandleCreated || !InvokeRequired)
+                    return outputBox.Text;
+                string result = null;
+                Invoke(new Action(() => result = outputBox.Text));
+                return result;
+            }
+        }
+
         private void SetupEditorMenuBar()
         {
-            var fileMenu = new RadMenuItem("File");
+            var fileMenu = new ToolStripMenuItem("File");
 
-            var newFileItem = new RadMenuItem("New File");
+            var newFileItem = new ToolStripMenuItem("New File");
             newFileItem.Click += OnNewFile;
-            newFileItem.HintText = "Ctrl+N";
-            newFileItem.Shortcuts.Add(new RadShortcut(Keys.Control, Keys.N));
-            fileMenu.Items.Add(newFileItem);
+            newFileItem.ShortcutKeyDisplayString = "Ctrl+N";
+            fileMenu.DropDownItems.Add(newFileItem);
 
-            var openFileItem = new RadMenuItem("Open File...");
+            var openFileItem = new ToolStripMenuItem("Open File...");
             openFileItem.Click += OnOpenFile;
-            fileMenu.Items.Add(openFileItem);
+            fileMenu.DropDownItems.Add(openFileItem);
 
-            var saveItem = new RadMenuItem("Save");
+            var saveItem = new ToolStripMenuItem("Save");
             saveItem.Click += OnSaveFile;
-            saveItem.HintText = "Ctrl+S";
-            saveItem.Shortcuts.Add(new RadShortcut(Keys.Control, Keys.S));
-            fileMenu.Items.Add(saveItem);
+            saveItem.ShortcutKeys = Keys.Control | Keys.S;
+            fileMenu.DropDownItems.Add(saveItem);
 
-            var saveAsItem = new RadMenuItem("Save As...");
+            var saveAsItem = new ToolStripMenuItem("Save As...");
             saveAsItem.Click += OnSaveFileAs;
-            fileMenu.Items.Add(saveAsItem);
-            fileMenu.Items.Add(new RadMenuSeparatorItem());
+            fileMenu.DropDownItems.Add(saveAsItem);
+            fileMenu.DropDownItems.Add(new ToolStripSeparator());
 
-            var closeItem = new RadMenuItem("Close File");
+            var closeItem = new ToolStripMenuItem("Close File");
             closeItem.Click += OnCloseFile;
-            closeItem.HintText = "Ctrl+W";
-            closeItem.Shortcuts.Add(new RadShortcut(Keys.Control, Keys.W));
-            fileMenu.Items.Add(closeItem);
+            closeItem.ShortcutKeyDisplayString = "Ctrl+W";
+            fileMenu.DropDownItems.Add(closeItem);
 
-            var editMenu = new RadMenuItem("&Edit");
+            var editMenu = new ToolStripMenuItem("&Edit");
 
-            var undoItem = new RadMenuItem("Undo");
+            var undoItem = new ToolStripMenuItem("Undo");
             undoItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformUndo(); };
-            undoItem.HintText = "Ctrl+Z";
-            editMenu.Items.Add(undoItem);
+            undoItem.ShortcutKeyDisplayString = "Ctrl+Z";
+            editMenu.DropDownItems.Add(undoItem);
 
-            var redoItem = new RadMenuItem("Redo");
+            var redoItem = new ToolStripMenuItem("Redo");
             redoItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformRedo(); };
-            redoItem.HintText = "Ctrl+Y";
-            editMenu.Items.Add(redoItem);
+            redoItem.ShortcutKeyDisplayString = "Ctrl+Y";
+            editMenu.DropDownItems.Add(redoItem);
 
-            editMenu.Items.Add(new RadMenuSeparatorItem());
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
 
-            var cutItem = new RadMenuItem("Cut");
+            var cutItem = new ToolStripMenuItem("Cut");
             cutItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformCut(); };
-            cutItem.HintText = "Ctrl+X";
-            editMenu.Items.Add(cutItem);
+            cutItem.ShortcutKeyDisplayString = "Ctrl+X";
+            editMenu.DropDownItems.Add(cutItem);
 
-            var copyItem = new RadMenuItem("Copy");
+            var copyItem = new ToolStripMenuItem("Copy");
             copyItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformCopy(); };
-            copyItem.HintText = "Ctrl+C";
-            editMenu.Items.Add(copyItem);
+            copyItem.ShortcutKeyDisplayString = "Ctrl+C";
+            editMenu.DropDownItems.Add(copyItem);
 
-            var pasteItem = new RadMenuItem("Paste");
+            var pasteItem = new ToolStripMenuItem("Paste");
             pasteItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformPaste(); };
-            pasteItem.HintText = "Ctrl+V";
-            editMenu.Items.Add(pasteItem);
+            pasteItem.ShortcutKeyDisplayString = "Ctrl+V";
+            editMenu.DropDownItems.Add(pasteItem);
 
-            var deleteItem = new RadMenuItem("Delete");
+            var deleteItem = new ToolStripMenuItem("Delete");
             deleteItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus && pythonEditor.SelectionLength > 0) pythonEditor.DeleteSelectionText(); };
-            deleteItem.HintText = "Del";
-            editMenu.Items.Add(deleteItem);
+            deleteItem.ShortcutKeyDisplayString = "Del";
+            editMenu.DropDownItems.Add(deleteItem);
 
-            editMenu.Items.Add(new RadMenuSeparatorItem());
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
 
-            var selectAllItem = new RadMenuItem("Select All");
+            var selectAllItem = new ToolStripMenuItem("Select All");
             selectAllItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformSelectAll(); };
-            selectAllItem.HintText = "Ctrl+A";
-            editMenu.Items.Add(selectAllItem);
+            selectAllItem.ShortcutKeyDisplayString = "Ctrl+A";
+            editMenu.DropDownItems.Add(selectAllItem);
 
-            editMenu.Items.Add(new RadMenuSeparatorItem());
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
 
-            var findItem = new RadMenuItem("Find && Replace...");
+            var findItem = new ToolStripMenuItem("Find && Replace...");
             findItem.Click += (s, e) => pythonEditor?.ShowReplace();
-            findItem.HintText = "Ctrl+H";
-            editMenu.Items.Add(findItem);
+            findItem.ShortcutKeyDisplayString = "Ctrl+H";
+            editMenu.DropDownItems.Add(findItem);
 
-            editMenu.Items.Add(new RadMenuSeparatorItem());
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
 
-            var dupLineItem = new RadMenuItem("Duplicate Line");
+            var dupLineItem = new ToolStripMenuItem("Duplicate Line");
             dupLineItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) DuplicateLine(); };
-            dupLineItem.HintText = "Ctrl+D";
-            editMenu.Items.Add(dupLineItem);
+            dupLineItem.ShortcutKeyDisplayString = "Ctrl+D";
+            editMenu.DropDownItems.Add(dupLineItem);
 
-            var moveUpItem = new RadMenuItem("Move Line Up");
+            var moveUpItem = new ToolStripMenuItem("Move Line Up");
             moveUpItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) MoveLine(true); };
-            moveUpItem.HintText = "Alt+Up";
-            editMenu.Items.Add(moveUpItem);
+            moveUpItem.ShortcutKeyDisplayString = "Alt+Up";
+            editMenu.DropDownItems.Add(moveUpItem);
 
-            var moveDownItem = new RadMenuItem("Move Line Down");
+            var moveDownItem = new ToolStripMenuItem("Move Line Down");
             moveDownItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) MoveLine(false); };
-            moveDownItem.HintText = "Alt+Down";
-            editMenu.Items.Add(moveDownItem);
+            moveDownItem.ShortcutKeyDisplayString = "Alt+Down";
+            editMenu.DropDownItems.Add(moveDownItem);
 
-            editMenu.Items.Add(new RadMenuSeparatorItem());
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
 
-            var clearOutputItem = new RadMenuItem("Clear Output");
-            clearOutputItem.Click += (s, e) => ClearOutput();
-            editMenu.Items.Add(clearOutputItem);
+            var toggleBookmarkItem = new ToolStripMenuItem("Toggle Bookmark");
+            toggleBookmarkItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) ToggleBookmarkAtCursor(); };
+            toggleBookmarkItem.ShortcutKeyDisplayString = "Ctrl+B";
+            editMenu.DropDownItems.Add(toggleBookmarkItem);
+
+            var nextBookmarkItem = new ToolStripMenuItem("Next Bookmark");
+            nextBookmarkItem.Click += (s, e) => GoToNextBookmark();
+            nextBookmarkItem.ShortcutKeyDisplayString = "F2";
+            editMenu.DropDownItems.Add(nextBookmarkItem);
+
+            var prevBookmarkItem = new ToolStripMenuItem("Previous Bookmark");
+            prevBookmarkItem.Click += (s, e) => GoToPreviousBookmark();
+            prevBookmarkItem.ShortcutKeyDisplayString = "Shift+F2";
+            editMenu.DropDownItems.Add(prevBookmarkItem);
+
+            editMenu.DropDownItems.Add(new ToolStripSeparator());
+            var clearOutputItem = new ToolStripMenuItem("Clear Output");
+            clearOutputItem.Click += (s, e) => outputBox.Clear();
+            editMenu.DropDownItems.Add(clearOutputItem);
 
             editMenu.DropDownOpening += (s, e) =>
             {
@@ -1006,29 +1280,15 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 deleteItem.Enabled = hasSelection;
             };
 
-            var viewMenu = new RadMenuItem("&View");
-            var showFilesItem = new RadMenuItem("Files Panel");
-            showFilesItem.Click += (s, e) => ShowDockPanel(filesDockContent);
-            viewMenu.Items.Add(showFilesItem);
-            var showOutputItem = new RadMenuItem("Output Panel");
-            showOutputItem.Click += (s, e) => ShowDockPanel(outputDockContent);
-            viewMenu.Items.Add(showOutputItem);
-            var showRefItem = new RadMenuItem("Data Reference");
-            showRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
-            viewMenu.Items.Add(showRefItem);
-            var showPkgItem = new RadMenuItem("Package Manager");
-            showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
-            viewMenu.Items.Add(showPkgItem);
-            viewMenu.Items.Add(new RadMenuSeparatorItem());
-            var resetLayoutItem = new RadMenuItem("Reset Layout");
-            resetLayoutItem.Click += (s, e) => ResetDockLayout();
-            viewMenu.Items.Add(resetLayoutItem);
-
-            var helpMenu = new RadMenuItem("Help");
-            var quickStartItem = new RadMenuItem("Quick Start Guide");
-            quickStartItem.Click += OnShowHelp;
-            helpMenu.Items.Add(quickStartItem);
-            var resetEnvItem = new RadMenuItem("Reset Python Environment");
+            var runMenu = new ToolStripMenuItem("Run");
+            var executeItem = new ToolStripMenuItem("Execute Script (F5)");
+            executeItem.Click += OnRunScript;
+            runMenu.DropDownItems.Add(executeItem);
+            var checkSyntaxItem = new ToolStripMenuItem("Check Syntax");
+            checkSyntaxItem.Click += OnCheckSyntax;
+            runMenu.DropDownItems.Add(checkSyntaxItem);
+            runMenu.DropDownItems.Add(new ToolStripSeparator());
+            var resetEnvItem = new ToolStripMenuItem("Reset Python Environment");
             resetEnvItem.Click += (s, e) =>
             {
                 var confirm = MessageBox.Show(
@@ -1037,30 +1297,54 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 if (confirm == DialogResult.Yes)
                     ResetPythonEnvironment();
             };
-            helpMenu.Items.Add(resetEnvItem);
-            var shortcutsItem = new RadMenuItem("Keyboard Shortcuts");
+            runMenu.DropDownItems.Add(resetEnvItem);
+
+            var viewMenu = new ToolStripMenuItem("&View");
+            var showFilesItem = new ToolStripMenuItem("Files Panel");
+            showFilesItem.Click += (s, e) => ShowDockPanel(filesDockContent);
+            viewMenu.DropDownItems.Add(showFilesItem);
+            var showOutputItem = new ToolStripMenuItem("Output Panel");
+            showOutputItem.Click += (s, e) => ShowDockPanel(outputDockContent);
+            viewMenu.DropDownItems.Add(showOutputItem);
+            var showRefItem = new ToolStripMenuItem("Data Reference");
+            showRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
+            viewMenu.DropDownItems.Add(showRefItem);
+            var showPkgItem = new ToolStripMenuItem("Package Manager");
+            showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
+            viewMenu.DropDownItems.Add(showPkgItem);
+            viewMenu.DropDownItems.Add(new ToolStripSeparator());
+            var resetLayoutItem = new ToolStripMenuItem("Reset Layout");
+            resetLayoutItem.Click += (s, e) => ResetDockLayout();
+            viewMenu.DropDownItems.Add(resetLayoutItem);
+
+            var helpMenu = new ToolStripMenuItem("Help");
+            var quickStartItem = new ToolStripMenuItem("Quick Start Guide");
+            quickStartItem.Click += OnShowHelp;
+            helpMenu.DropDownItems.Add(quickStartItem);
+            var shortcutsItem = new ToolStripMenuItem("Keyboard Shortcuts");
             shortcutsItem.Click += OnShowKeyboardShortcuts;
-            helpMenu.Items.Add(shortcutsItem);
-            var editorFeaturesItem = new RadMenuItem("Editor Features");
+            helpMenu.DropDownItems.Add(shortcutsItem);
+            var editorFeaturesItem = new ToolStripMenuItem("Editor Features");
             editorFeaturesItem.Click += OnShowEditorFeatures;
-            helpMenu.Items.Add(editorFeaturesItem);
-            helpMenu.Items.Add(new RadMenuSeparatorItem());
-            var aboutItem = new RadMenuItem("About");
+            helpMenu.DropDownItems.Add(editorFeaturesItem);
+            helpMenu.DropDownItems.Add(new ToolStripSeparator());
+            var aboutItem = new ToolStripMenuItem("About");
             aboutItem.Click += (s, e) => MessageBox.Show(
                 "Data Science Workbench v1.0\n\n" +
                 "A .NET Windows Forms control with\n" +
                 "integrated Python scripting for data analysis.\n\n" +
                 "Built with Mono + Python 3",
                 "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            helpMenu.Items.Add(aboutItem);
+            helpMenu.DropDownItems.Add(aboutItem);
 
             editorMenuBar.Items.Insert(0, fileMenu);
             editorMenuBar.Items.Insert(1, editMenu);
-            editorMenuBar.Items.Insert(2, viewMenu);
+            editorMenuBar.Items.Insert(2, runMenu);
+            editorMenuBar.Items.Insert(3, viewMenu);
             editorMenuBar.Items.Add(helpMenu);
         }
 
-        public RadMenu CreateMenuStrip()
+        public MenuStrip CreateMenuStrip()
         {
             return editorMenuBar;
         }
@@ -1132,56 +1416,56 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SetupSnippetMenu()
         {
-            var item = new RadMenuItem("List Datasets");
+            var item = new ToolStripMenuItem("List Datasets");
             item.Click += (s, e) => InsertSnippet(GetLoadDataSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("Basic Statistics");
+            item = new ToolStripMenuItem("Basic Statistics");
             item.Click += (s, e) => InsertSnippet(GetStatsSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("Plot Histogram");
+            item = new ToolStripMenuItem("Plot Histogram");
             item.Click += (s, e) => InsertSnippet(GetHistogramSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("Scatter Plot");
+            item = new ToolStripMenuItem("Scatter Plot");
             item.Click += (s, e) => InsertSnippet(GetScatterSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("Group By Analysis");
+            item = new ToolStripMenuItem("Group By Analysis");
             item.Click += (s, e) => InsertSnippet(GetGroupBySnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("Correlation Matrix");
+            item = new ToolStripMenuItem("Correlation Matrix");
             item.Click += (s, e) => InsertSnippet(GetCorrelationSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("Time Series Plot");
+            item = new ToolStripMenuItem("Time Series Plot");
             item.Click += (s, e) => InsertSnippet(GetTimeSeriesSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("Display Images");
+            item = new ToolStripMenuItem("Display Images");
             item.Click += (s, e) => InsertSnippet(GetImageDisplaySnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            var mlSeparator = new RadMenuSeparatorItem();
-            insertSnippetBtn.Items.Add(mlSeparator);
+            var mlSeparator = new ToolStripSeparator();
+            insertSnippetBtn.DropDownItems.Add(mlSeparator);
 
-            item = new RadMenuItem("ML: Salary Prediction (Linear Regression)");
+            item = new ToolStripMenuItem("ML: Salary Prediction (Linear Regression)");
             item.Click += (s, e) => InsertSnippet(GetLinearRegressionSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("ML: Department Classifier (Random Forest)");
+            item = new ToolStripMenuItem("ML: Department Classifier (Random Forest)");
             item.Click += (s, e) => InsertSnippet(GetClassificationSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("ML: Employee Clustering (K-Means)");
+            item = new ToolStripMenuItem("ML: Employee Clustering (K-Means)");
             item.Click += (s, e) => InsertSnippet(GetClusteringSnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
 
-            item = new RadMenuItem("ML: Customer Segmentation (PCA)");
+            item = new ToolStripMenuItem("ML: Customer Segmentation (PCA)");
             item.Click += (s, e) => InsertSnippet(GetPCASnippet());
-            insertSnippetBtn.Items.Add(item);
+            insertSnippetBtn.DropDownItems.Add(item);
         }
 
         private void RegisterAllDatasetsInMemory()
@@ -1226,7 +1510,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             refTreeView.BeginUpdate();
             refTreeView.Nodes.Clear();
-            nodeStyles.Clear();
 
             foreach (var kvp in inMemoryDataTypes)
             {
@@ -1267,10 +1550,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 if (datasetMatches || matchedColNames.Count > 0)
                 {
-                    var node = new RadTreeNode(name + "  (" + count + ")");
+                    var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
                     node.Tag = name;
-                    refTreeView.Nodes.Add(node);
-                    SetNodeFont(node, new Font(refTreeView.Font, FontStyle.Bold));
+                    node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
 
                     AddHierarchicalColumns(node, name, type, datasetMatches ? null : matchedColNames);
                     node.ExpandAll();
@@ -1292,16 +1574,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 if (matchingClasses.Count > 0)
                 {
-                    var classNode = new RadTreeNode("Registered Classes  (" + matchingClasses.Count + ")");
+                    var classNode = refTreeView.Nodes.Add("Registered Classes  (" + matchingClasses.Count + ")");
+                    classNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
                     classNode.Tag = "regclasses";
-                    refTreeView.Nodes.Add(classNode);
-                    SetNodeFont(classNode, new Font(refTreeView.Font, FontStyle.Bold));
                     foreach (var name in matchingClasses)
                     {
-                        var child = new RadTreeNode(name);
+                        var child = classNode.Nodes.Add(name);
                         child.Tag = "regclass_" + name;
-                        classNode.Nodes.Add(child);
-                        SetNodeForeColor(child, Color.FromArgb(0, 100, 160));
+                        child.ForeColor = Color.FromArgb(0, 100, 160);
                     }
                     classNode.Expand();
                 }
@@ -1319,16 +1599,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 if (matchingCtx.Count > 0)
                 {
-                    var ctxNode = new RadTreeNode("Context Hub  (" + matchingCtx.Count + ")");
+                    var ctxNode = refTreeView.Nodes.Add("Context Hub  (" + matchingCtx.Count + ")");
+                    ctxNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
                     ctxNode.Tag = "contexthub";
-                    refTreeView.Nodes.Add(ctxNode);
-                    SetNodeFont(ctxNode, new Font(refTreeView.Font, FontStyle.Bold));
                     foreach (var kvp in matchingCtx)
                     {
-                        var child = new RadTreeNode(kvp.Key + "  :  " + kvp.Value.TypeDescription);
+                        var child = ctxNode.Nodes.Add(kvp.Key + "  :  " + kvp.Value.TypeDescription);
                         child.Tag = "ctx_" + kvp.Key;
-                        ctxNode.Nodes.Add(child);
-                        SetNodeForeColor(child, Color.FromArgb(128, 0, 128));
+                        child.ForeColor = Color.FromArgb(128, 0, 128);
                     }
                     ctxNode.Expand();
                 }
@@ -1337,7 +1615,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             refTreeView.EndUpdate();
         }
 
-        private void AddHierarchicalColumns(RadTreeNode parentNode, string datasetName, Type type, HashSet<string> filterColumns)
+        private void AddHierarchicalColumns(TreeNode parentNode, string datasetName, Type type, HashSet<string> filterColumns)
         {
             var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
             var groupChildren = new Dictionary<string, List<FlattenedProperty>>(StringComparer.Ordinal);
@@ -1364,10 +1642,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
                 if (fp.IsComputed) typeName += " (computed)";
-                var child = new RadTreeNode(fp.ColumnName + "  :  " + typeName);
+                var child = parentNode.Nodes.Add(fp.ColumnName + "  :  " + typeName);
                 child.Tag = new string[] { "field", datasetName, fp.ColumnName };
-                parentNode.Nodes.Add(child);
-                SetNodeForeColor(child, Color.FromArgb(80, 80, 80));
+                child.ForeColor = Color.FromArgb(80, 80, 80);
             }
 
             foreach (var kvp in groupChildren)
@@ -1376,16 +1653,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var groupProps = kvp.Value;
                 string groupTypeName = groupProps[0].PropertyPath[0].PropertyType.Name;
                 string groupPrefix = groupName + "_";
-                var groupNode = new RadTreeNode(groupName + "  (" + groupTypeName + ")");
+                var groupNode = parentNode.Nodes.Add(groupName + "  (" + groupTypeName + ")");
                 groupNode.Tag = new string[] { "subclass", datasetName, groupPrefix };
-                parentNode.Nodes.Add(groupNode);
-                SetNodeStyle(groupNode, new Font(refTreeView.Font, FontStyle.Italic), Color.FromArgb(0, 100, 130));
+                groupNode.ForeColor = Color.FromArgb(0, 100, 130);
+                groupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
 
                 AddSubclassChildren(groupNode, datasetName, groupProps, 1, filterColumns, groupPrefix);
             }
         }
 
-        private void AddSubclassChildren(RadTreeNode parentNode, string datasetName, List<FlattenedProperty> groupProps, int depth, HashSet<string> filterColumns, string pathPrefix)
+        private void AddSubclassChildren(TreeNode parentNode, string datasetName, List<FlattenedProperty> groupProps, int depth, HashSet<string> filterColumns, string pathPrefix)
         {
             var subGroups = new Dictionary<string, List<FlattenedProperty>>(StringComparer.Ordinal);
             var leafProps = new List<FlattenedProperty>();
@@ -1410,10 +1687,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 string leafName = fp.PropertyPath[fp.PropertyPath.Length - 1].Name;
                 string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
                 if (fp.IsComputed) typeName += " (computed)";
-                var child = new RadTreeNode(leafName + "  \u2192  " + fp.ColumnName + "  :  " + typeName);
+                var child = parentNode.Nodes.Add(leafName + "  \u2192  " + fp.ColumnName + "  :  " + typeName);
                 child.Tag = new string[] { "field", datasetName, fp.ColumnName };
-                parentNode.Nodes.Add(child);
-                SetNodeForeColor(child, Color.FromArgb(80, 80, 80));
+                child.ForeColor = Color.FromArgb(80, 80, 80);
             }
 
             foreach (var kvp in subGroups)
@@ -1422,10 +1698,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var subGroupProps = kvp.Value;
                 string subGroupTypeName = subGroupProps[0].PropertyPath[depth].PropertyType.Name;
                 string subPrefix = pathPrefix + subGroupName + "_";
-                var subGroupNode = new RadTreeNode(subGroupName + "  (" + subGroupTypeName + ")");
+                var subGroupNode = parentNode.Nodes.Add(subGroupName + "  (" + subGroupTypeName + ")");
                 subGroupNode.Tag = new string[] { "subclass", datasetName, subPrefix };
-                parentNode.Nodes.Add(subGroupNode);
-                SetNodeStyle(subGroupNode, new Font(refTreeView.Font, FontStyle.Italic), Color.FromArgb(0, 100, 130));
+                subGroupNode.ForeColor = Color.FromArgb(0, 100, 130);
+                subGroupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
 
                 AddSubclassChildren(subGroupNode, datasetName, subGroupProps, depth + 1, filterColumns, subPrefix);
             }
@@ -1433,7 +1709,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void PopulateReferenceTree()
         {
-            nodeStyles.Clear();
             refTreeView.Nodes.Clear();
 
             foreach (var kvp in inMemoryDataTypes)
@@ -1441,10 +1716,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 string name = kvp.Key;
                 Type type = kvp.Value;
                 int count = GetRecordCountForTag(name);
-                var node = new RadTreeNode(name + "  (" + count + ")");
+                var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
                 node.Tag = name;
-                refTreeView.Nodes.Add(node);
-                SetNodeFont(node, new Font(refTreeView.Font, FontStyle.Bold));
+                node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
 
                 AddHierarchicalColumns(node, name, type, null);
                 node.Expand();
@@ -1452,32 +1726,28 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             if (registeredPythonClasses.Count > 0)
             {
-                var classNode = new RadTreeNode("Registered Classes  (" + registeredPythonClasses.Count + ")");
+                var classNode = refTreeView.Nodes.Add("Registered Classes  (" + registeredPythonClasses.Count + ")");
+                classNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
                 classNode.Tag = "regclasses";
-                refTreeView.Nodes.Add(classNode);
-                SetNodeFont(classNode, new Font(refTreeView.Font, FontStyle.Bold));
                 foreach (var name in registeredPythonClasses.Keys)
                 {
-                    var child = new RadTreeNode(name);
+                    var child = classNode.Nodes.Add(name);
                     child.Tag = "regclass_" + name;
-                    classNode.Nodes.Add(child);
-                    SetNodeForeColor(child, Color.FromArgb(0, 100, 160));
+                    child.ForeColor = Color.FromArgb(0, 100, 160);
                 }
                 classNode.Expand();
             }
 
             if (contextVariables.Count > 0)
             {
-                var ctxNode = new RadTreeNode("Context Hub  (" + contextVariables.Count + ")");
+                var ctxNode = refTreeView.Nodes.Add("Context Hub  (" + contextVariables.Count + ")");
+                ctxNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
                 ctxNode.Tag = "contexthub";
-                refTreeView.Nodes.Add(ctxNode);
-                SetNodeFont(ctxNode, new Font(refTreeView.Font, FontStyle.Bold));
                 foreach (var kvp in contextVariables)
                 {
-                    var child = new RadTreeNode(kvp.Key + "  :  " + kvp.Value.TypeDescription);
+                    var child = ctxNode.Nodes.Add(kvp.Key + "  :  " + kvp.Value.TypeDescription);
                     child.Tag = "ctx_" + kvp.Key;
-                    ctxNode.Nodes.Add(child);
-                    SetNodeForeColor(child, Color.FromArgb(128, 0, 128));
+                    child.ForeColor = Color.FromArgb(128, 0, 128);
                 }
                 ctxNode.Expand();
             }
@@ -1504,12 +1774,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return cols;
         }
 
-        private void OnRefTreeSelect(object sender, EventArgs e)
+        private void OnRefTreeSelect(object sender, TreeViewEventArgs e)
         {
-            var selectedNode = refTreeView.SelectedNode;
-            if (selectedNode == null || selectedNode.Tag == null) return;
+            if (e.Node == null || e.Node.Tag == null) return;
 
-            var tagArr = selectedNode.Tag as string[];
+            var tagArr = e.Node.Tag as string[];
             if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "field")
             {
                 ShowFieldDetail(tagArr[1], tagArr[2]);
@@ -1517,11 +1786,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
             if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "subclass")
             {
-                ShowSubclassDetail(tagArr[1], tagArr[2], selectedNode);
+                ShowSubclassDetail(tagArr[1], tagArr[2], e.Node);
                 return;
             }
 
-            string tag = selectedNode.Tag.ToString();
+            string tag = e.Node.Tag.ToString();
 
             if (tag == "regclasses" || tag.StartsWith("regclass_"))
             {
@@ -1663,7 +1932,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             refDetailBox.ScrollToCaret();
         }
 
-        private void ShowSubclassDetail(string datasetName, string prefix, RadTreeNode node)
+        private void ShowSubclassDetail(string datasetName, string prefix, TreeNode node)
         {
             Type type;
             if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
@@ -1964,7 +2233,41 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
-        
+        private void ShowDockPanel(ToolDockContent panel)
+        {
+            if (panel.DockState == DockState.Hidden)
+                panel.Show(dockPanel);
+            else if (panel.DockState == DockState.DockBottomAutoHide)
+                panel.DockState = DockState.DockBottom;
+            else if (panel.DockState == DockState.DockLeftAutoHide)
+                panel.DockState = DockState.DockLeft;
+            else if (panel.DockState == DockState.DockRightAutoHide)
+                panel.DockState = DockState.DockRight;
+            else if (panel.DockState == DockState.DockTopAutoHide)
+                panel.DockState = DockState.DockTop;
+            panel.Activate();
+        }
+
+        private void FloatPanel(ToolDockContent panel)
+        {
+            panel.Show(dockPanel, DockState.Float);
+            panel.Activate();
+        }
+
+        private void ResetDockLayout()
+        {
+            filesDockContent.Show(dockPanel, DockState.DockLeftAutoHide);
+            outputDockContent.Show(dockPanel, DockState.DockBottomAutoHide);
+            referenceDockContent.DockPanel = null;
+            packagesDockContent.Show(dockPanel, DockState.DockRightAutoHide);
+
+            foreach (var tab in openFiles)
+                if (tab.DockContent != null && !tab.DockContent.IsDisposed)
+                    tab.DockContent.Show(dockPanel, DockState.Document);
+
+            if (activeFile?.DockContent != null)
+                activeFile.DockContent.Activate();
+        }
 
         private void OnRunScript(object sender, EventArgs e)
         {
@@ -2110,6 +2413,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             runToolBtn.Visible = !running;
             stopToolBtn.Visible = running;
+            syntaxCheckToolBtn.Enabled = !running;
             configDropDown.Enabled = !running;
 
             outputBox.ReadOnly = !running;
@@ -2218,6 +2522,53 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
+        private void OnCheckSyntax(object sender, EventArgs e)
+        {
+            if (pythonEditor == null) return;
+            string script = pythonEditor.GetText();
+            if (string.IsNullOrWhiteSpace(script))
+            {
+                AppendOutput("No script to check.\n", Color.FromArgb(180, 140, 0));
+                return;
+            }
+
+            if (!pythonRunner.PythonAvailable)
+            {
+                AppendOutput("Cannot check syntax: " + pythonRunner.PythonError + "\n", Color.FromArgb(200, 0, 0));
+                RaiseStatus("Python not available");
+                return;
+            }
+
+            RaiseStatus("Checking syntax...");
+            var result = pythonRunner.CheckSyntax(script);
+
+            if (result.Success)
+            {
+                syntaxDiagnostics.Clear();
+                MergeDiagnostics();
+                AppendOutput("Syntax OK - no errors found.\n", Color.FromArgb(0, 128, 0));
+                RaiseStatus("Syntax check passed.");
+            }
+            else
+            {
+                AppendOutput("Syntax Error:\n" + result.Error + "\n", Color.FromArgb(200, 0, 0));
+
+                int errorLine = ParseErrorLine(result.Error);
+                if (errorLine > 0)
+                {
+                    var errorMsg = result.Error.Trim();
+                    var firstLine = errorMsg.Split('\n')[0];
+                    syntaxDiagnostics.Clear();
+                    syntaxDiagnostics.Add(new Diagnostic(
+                        errorLine - 1, 0, 0,
+                        firstLine,
+                        DiagnosticSeverity.Error));
+                    MergeDiagnostics();
+                }
+                RaiseStatus("Syntax error on line " + errorLine);
+            }
+        }
+
         private void OnToolbarUndo(object sender, EventArgs e)
         {
             if (pythonEditor != null) pythonEditor.PerformUndo();
@@ -2245,28 +2596,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return -1;
         }
 
-        private static string FindScriptsDirectory()
-        {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string candidate = Path.Combine(baseDir, "python", "scripts");
-            if (Directory.Exists(candidate))
-                return candidate;
 
-            string dir = baseDir;
-            for (int i = 0; i < 5; i++)
-            {
-                string parent = Directory.GetParent(dir)?.FullName;
-                if (parent == null) break;
-                dir = parent;
-                candidate = Path.Combine(dir, "python", "scripts");
-                if (Directory.Exists(candidate))
-                    return candidate;
-            }
-
-            candidate = Path.Combine(baseDir, "python", "scripts");
-            Directory.CreateDirectory(candidate);
-            return candidate;
-        }
 
         private void LoadRunConfigurations()
         {
@@ -2381,7 +2711,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void InitializeFileSystem()
         {
-            scriptsDir = FindScriptsDirectory();
+            scriptsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "python", "scripts");
             if (!Directory.Exists(scriptsDir))
                 Directory.CreateDirectory(scriptsDir);
 
@@ -2457,38 +2787,39 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             fileTreeView.NodeMouseClick += OnFileTreeNodeClick;
             fileTreeView.NodeMouseDoubleClick += OnFileTreeNodeDoubleClick;
-            fileTreeView.ValueValidating += OnFileTreeValueValidating;
+            fileTreeView.AfterLabelEdit += OnFileTreeAfterLabelEdit;
+            fileNewBtn.Click += OnNewFile;
+            fileOpenBtn.Click += OnOpenFile;
+            fileCloseBtn.Click += OnCloseFile;
 
-            fileContextMenu = new RadContextMenu();
+            fileContextMenu = new ContextMenuStrip();
             fileTreeView.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtons.Right)
                 {
-                    var node = fileTreeView.GetNodeAt(e.Location);
-                    if (node != null)
-                        fileTreeView.SelectedNode = node;
+                    var node = fileTreeView.GetNodeAt(e.X, e.Y);
+                    fileTreeView.SelectedNode = node;
                     BuildFileContextMenu(node);
                     fileContextMenu.Show(fileTreeView.PointToScreen(e.Location));
                 }
             };
         }
 
-        private void BeginNodeRename(RadTreeNode node)
+        private void BeginNodeRename(TreeNode node)
         {
             if (node == null) return;
-            fileTreeView.AllowEdit = true;
-            fileTreeView.SelectedNode = node;
-            fileTreeView.BeginEdit();
+            fileTreeView.LabelEdit = true;
+            node.BeginEdit();
         }
 
-        private void BuildFileContextMenu(RadTreeNode node)
+        private void BuildFileContextMenu(TreeNode node)
         {
             fileContextMenu.Items.Clear();
 
-            var newFileCtx = new RadMenuItem("New File");
+            var newFileCtx = new ToolStripMenuItem("New File");
             newFileCtx.Click += OnNewFile;
             fileContextMenu.Items.Add(newFileCtx);
-            var newFolderCtx = new RadMenuItem("New Folder");
+            var newFolderCtx = new ToolStripMenuItem("New Folder");
             newFolderCtx.Click += OnNewFolder;
             fileContextMenu.Items.Add(newFolderCtx);
 
@@ -2497,36 +2828,36 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 string path = (string)node.Tag;
                 bool isFolder = Directory.Exists(path);
 
-                fileContextMenu.Items.Add(new RadMenuSeparatorItem());
+                fileContextMenu.Items.Add(new ToolStripSeparator());
 
                 if (!isFolder)
                 {
-                    var openItem = new RadMenuItem("Open");
+                    var openItem = new ToolStripMenuItem("Open");
                     openItem.Click += (s, e) => OpenFileFromTree(node);
                     fileContextMenu.Items.Add(openItem);
                 }
 
-                var renameItem = new RadMenuItem("Rename");
+                var renameItem = new ToolStripMenuItem("Rename");
                 renameItem.Click += (s, e) => { BeginNodeRename(node); };
                 fileContextMenu.Items.Add(renameItem);
 
-                var deleteItem = new RadMenuItem("Delete");
+                var deleteItem = new ToolStripMenuItem("Delete");
                 deleteItem.Click += (s, e) => OnDeleteFileOrFolder(node);
                 fileContextMenu.Items.Add(deleteItem);
             }
         }
 
-        private void OnFileTreeNodeClick(object sender, RadTreeViewEventArgs e)
+        private void OnFileTreeNodeClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             OpenFileFromTree(e.Node);
         }
 
-        private void OnFileTreeNodeDoubleClick(object sender, RadTreeViewEventArgs e)
+        private void OnFileTreeNodeDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             OpenFileFromTree(e.Node);
         }
 
-        private void OpenFileFromTree(RadTreeNode node)
+        private void OpenFileFromTree(TreeNode node)
         {
             if (node == null) return;
             string tag = node.Tag as string;
@@ -2593,12 +2924,15 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             var node = FindNodeByPath(fileTreeView.Nodes, folderPath);
             if (node != null)
+            {
+                fileTreeView.SelectedNode = node;
                 BeginNodeRename(node);
+            }
 
             RaiseStatus("Created folder: " + Path.GetFileName(folderPath));
         }
 
-        private void OnDeleteFileOrFolder(RadTreeNode node)
+        private void OnDeleteFileOrFolder(TreeNode node)
         {
             if (node == null) return;
             string path = node.Tag as string;
@@ -2664,25 +2998,29 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             RaiseStatus("Deleted: " + itemName);
         }
 
-        private void OnFileTreeValueValidating(object sender, TreeNodeValidatingEventArgs e)
+        private void OnFileTreeAfterLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
-            fileTreeView.AllowEdit = false;
+            fileTreeView.LabelEdit = false;
 
-            string newLabel = e.NewValue as string;
-            if (string.IsNullOrEmpty(newLabel) || string.IsNullOrEmpty(newLabel.Trim()))
+            if (e.Label == null)
             {
-                e.Cancel = true;
+                e.CancelEdit = true;
                 return;
             }
 
-            string newName = newLabel.Trim();
+            string newName = e.Label.Trim();
+            if (string.IsNullOrEmpty(newName))
+            {
+                e.CancelEdit = true;
+                return;
+            }
 
             char[] invalidChars = Path.GetInvalidFileNameChars();
             foreach (char c in newName)
             {
                 if (Array.IndexOf(invalidChars, c) >= 0)
                 {
-                    e.Cancel = true;
+                    e.CancelEdit = true;
                     MessageBox.Show("The name contains invalid characters.", "Invalid Name",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -2692,7 +3030,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             string oldPath = e.Node.Tag as string;
             if (oldPath == null || oldPath.StartsWith("UNSAVED:"))
             {
-                e.Cancel = true;
+                e.CancelEdit = true;
                 return;
             }
 
@@ -2706,13 +3044,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             if (newPath.Equals(oldPath, StringComparison.OrdinalIgnoreCase))
             {
-                e.Cancel = true;
+                e.CancelEdit = true;
                 return;
             }
 
             if ((isFolder && Directory.Exists(newPath)) || (!isFolder && File.Exists(newPath)))
             {
-                e.Cancel = true;
+                e.CancelEdit = true;
                 MessageBox.Show("An item with this name already exists.", "Name Conflict",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -2750,13 +3088,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                 }
 
-                e.Cancel = true;
+                e.CancelEdit = true;
                 RefreshFileList();
                 RaiseStatus("Renamed to: " + newName);
             }
             catch (Exception ex)
             {
-                e.Cancel = true;
+                e.CancelEdit = true;
                 MessageBox.Show("Failed to rename: " + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -2766,7 +3104,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             fileTreeView.BeginUpdate();
             fileTreeView.Nodes.Clear();
-            nodeStyles.Clear();
             PopulateTreeNode(fileTreeView.Nodes, scriptsDir);
             fileTreeView.ExpandAll();
 
@@ -2786,16 +3123,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             fileTreeView.EndUpdate();
         }
 
-        private void PopulateTreeNode(RadTreeNodeCollection parentNodes, string dirPath)
+        private void PopulateTreeNode(TreeNodeCollection parentNodes, string dirPath)
         {
             foreach (var subDir in Directory.GetDirectories(dirPath).OrderBy(d => d))
             {
                 string dirName = Path.GetFileName(subDir);
-                var dirNode = new RadTreeNode(dirName);
+                var dirNode = new TreeNode(dirName);
                 dirNode.Tag = subDir;
-                dirNode.Image = folderIcon;
+                dirNode.ForeColor = Color.FromArgb(80, 80, 80);
+                dirNode.ImageKey = "folder";
+                dirNode.SelectedImageKey = "folder_open";
                 parentNodes.Add(dirNode);
-                SetNodeForeColor(dirNode, Color.FromArgb(80, 80, 80));
                 PopulateTreeNode(dirNode.Nodes, subDir);
             }
 
@@ -2813,20 +3151,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 else if (fileTab != null && fileTab.IsModified)
                     displayName = "\u2022 " + fileName;
 
-                var fileNode = new RadTreeNode(displayName);
+                var fileNode = new TreeNode(displayName);
                 fileNode.Tag = filePath;
-                fileNode.Image = pythonFileIcon;
+                fileNode.ImageKey = "python";
+                fileNode.SelectedImageKey = "python";
 
-                Color nodeColor;
                 if (isActive)
-                    nodeColor = Color.FromArgb(0, 90, 180);
+                    fileNode.ForeColor = Color.FromArgb(0, 90, 180);
                 else if (fileTab != null)
-                    nodeColor = Color.FromArgb(30, 30, 30);
+                    fileNode.ForeColor = Color.FromArgb(30, 30, 30);
                 else
-                    nodeColor = Color.FromArgb(100, 100, 100);
+                    fileNode.ForeColor = Color.FromArgb(100, 100, 100);
 
                 parentNodes.Add(fileNode);
-                SetNodeForeColor(fileNode, nodeColor);
             }
 
             foreach (var ft in openFiles)
@@ -2837,18 +3174,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     string displayName = isActive ? "\u25b8 " + ft.FileName
                         : ft.IsModified ? "\u2022 " + ft.FileName
                         : ft.FileName;
-                    var node = new RadTreeNode(displayName);
+                    var node = new TreeNode(displayName);
                     node.Tag = "UNSAVED:" + ft.FileName;
-                    node.Image = pythonFileIcon;
+                    node.ImageKey = "python";
+                    node.SelectedImageKey = "python";
+                    node.ForeColor = isActive ? Color.FromArgb(0, 90, 180) : Color.FromArgb(128, 128, 128);
                     fileTreeView.Nodes.Add(node);
-                    SetNodeForeColor(node, isActive ? Color.FromArgb(0, 90, 180) : Color.FromArgb(128, 128, 128));
                 }
             }
         }
 
-        private RadTreeNode FindNodeByPath(RadTreeNodeCollection nodes, string path)
+        private TreeNode FindNodeByPath(TreeNodeCollection nodes, string path)
         {
-            foreach (RadTreeNode node in nodes)
+            foreach (TreeNode node in nodes)
             {
                 string tag = node.Tag as string;
                 if (tag != null && tag.Equals(path, StringComparison.OrdinalIgnoreCase))
@@ -2863,6 +3201,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (activeFile == null || activeFile.Editor == null) return;
             activeFile.CursorPosition = activeFile.Editor.GetCaretIndex();
+            activeFile.Bookmarks = new HashSet<int>(bookmarks);
         }
 
         private void SwitchToFile(FileTab tab)
@@ -2876,10 +3215,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             SaveCurrentFileState();
 
+            if (activeFile != null)
+                activeFile.Bookmarks = new HashSet<int>(bookmarks);
+
             if (tab.DockContent == null || tab.DockContent.IsDisposed)
                 CreateEditorForTab(tab);
 
             activeFile = tab;
+            bookmarks = new HashSet<int>(tab.Bookmarks);
 
             tab.DockContent.Activate();
 
@@ -2921,7 +3264,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             var node = FindNodeByPath(fileTreeView.Nodes, filePath);
             if (node != null)
+            {
+                fileTreeView.SelectedNode = node;
                 BeginNodeRename(node);
+            }
 
             RaiseStatus("New file: " + name);
         }
@@ -3081,6 +3427,136 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 activeFile = null;
                 SwitchToFile(next);
+            }
+            RefreshFileList();
+        }
+
+        private ContextMenuStrip CreateTabContextMenu(FileTab tab)
+        {
+            var menu = new ContextMenuStrip();
+            menu.Items.Add("Close", null, (s, e) => OnCloseFileTab(tab));
+            menu.Items.Add("Close Others", null, (s, e) => OnCloseOtherTabs(tab));
+            menu.Items.Add("Close All", null, (s, e) => OnCloseAllTabs());
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add("Save", null, (s, e) =>
+            {
+                if (tab.Editor != null) tab.Content = tab.Editor.GetText();
+                if (tab.FilePath != null)
+                {
+                    File.WriteAllText(tab.FilePath, tab.Content ?? "");
+                    tab.IsModified = false;
+                    if (tab.DockContent != null)
+                        tab.DockContent.Text = tab.FileName;
+                    RefreshFileList();
+                    RaiseStatus("Saved " + tab.FileName);
+                }
+            });
+            menu.Opening += (s, e) =>
+            {
+                menu.Items[1].Enabled = openFiles.Count > 1;
+                menu.Items[2].Enabled = openFiles.Count > 1;
+            };
+            return menu;
+        }
+
+        private void SetupTabMiddleClick(FileDockContent content)
+        {
+            if (content.Pane == null) return;
+            var strip = content.Pane.TabStripControl;
+            if (strip == null) return;
+            if (strip.Tag != null) return;
+            strip.Tag = "hooked";
+            strip.MouseClick += (s, e) =>
+            {
+                if (e.Button != MouseButtons.Middle) return;
+                var pane = content.Pane;
+                if (pane == null) return;
+                var hoverContent = pane.MouseOverTab as FileDockContent;
+                if (hoverContent == null) return;
+                var tab = openFiles.Find(f => f.DockContent == hoverContent);
+                if (tab != null)
+                    OnCloseFileTab(tab);
+            };
+        }
+
+        private void OnCloseOtherTabs(FileTab keepTab)
+        {
+            var toClose = new List<FileTab>();
+            foreach (var f in openFiles)
+            {
+                if (f != keepTab)
+                    toClose.Add(f);
+            }
+            foreach (var f in toClose)
+            {
+                if (f.IsModified)
+                {
+                    var result = MessageBox.Show(
+                        "Save changes to " + f.FileName + "?",
+                        "Unsaved Changes",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
+                    if (result == DialogResult.Cancel) return;
+                    if (result == DialogResult.Yes)
+                    {
+                        string content = f.Editor != null ? f.Editor.GetText() : f.Content ?? "";
+                        if (f.FilePath != null)
+                            File.WriteAllText(f.FilePath, content);
+                    }
+                }
+                openFiles.Remove(f);
+                if (f.DockContent != null)
+                {
+                    f.DockContent.AllowClose = true;
+                    f.DockContent.Close();
+                    f.DockContent = null;
+                }
+                f.Editor = null;
+            }
+            if (activeFile == null || !openFiles.Contains(activeFile))
+            {
+                activeFile = null;
+                SwitchToFile(keepTab);
+            }
+            RefreshFileList();
+        }
+
+        private void OnCloseAllTabs()
+        {
+            if (openFiles.Count <= 1) return;
+            var toClose = new List<FileTab>(openFiles);
+            var keepTab = toClose[0];
+            toClose.RemoveAt(0);
+            foreach (var f in toClose)
+            {
+                if (f.IsModified)
+                {
+                    var result = MessageBox.Show(
+                        "Save changes to " + f.FileName + "?",
+                        "Unsaved Changes",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
+                    if (result == DialogResult.Cancel) return;
+                    if (result == DialogResult.Yes)
+                    {
+                        string content = f.Editor != null ? f.Editor.GetText() : f.Content ?? "";
+                        if (f.FilePath != null)
+                            File.WriteAllText(f.FilePath, content);
+                    }
+                }
+                openFiles.Remove(f);
+                if (f.DockContent != null)
+                {
+                    f.DockContent.AllowClose = true;
+                    f.DockContent.Close();
+                    f.DockContent = null;
+                }
+                f.Editor = null;
+            }
+            if (activeFile == null || !openFiles.Contains(activeFile))
+            {
+                activeFile = null;
+                SwitchToFile(keepTab);
             }
             RefreshFileList();
         }
@@ -3247,7 +3723,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (quickCombo.SelectedItem != null)
             {
-                packageNameBox.Text = quickCombo.SelectedItem.Text;
+                packageNameBox.Text = quickCombo.SelectedItem.ToString();
                 OnInstallPackage(sender, e);
             }
         }
@@ -3468,6 +3944,11 @@ EDITING
   Shift+Tab             Unindent selected lines
   Delete                Delete selection
 
+BOOKMARKS
+  Ctrl+B                Toggle bookmark on current line
+  F2                    Jump to next bookmark
+  Shift+F2              Jump to previous bookmark
+
 EDITOR
   Ctrl+Mouse Wheel      Zoom in/out
   Escape                Close autocomplete / Find panel";
@@ -3500,6 +3981,7 @@ ERROR DETECTION
 
 LINE NUMBERS
   Displayed in the gutter on the left side.
+  Bookmark indicators appear as blue circles.
 
 BRACKET MATCHING
   Matching parentheses, brackets, and braces

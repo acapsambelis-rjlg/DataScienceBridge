@@ -354,11 +354,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             content.Icon = DockIcons.CreateEditorIcon();
             content.Controls.Add(editor);
             content.CloseRequested += (s, e) => OnCloseFileTab(tab);
+            content.TabPageContextMenuStrip = CreateTabContextMenu(tab);
             tab.DockContent = content;
 
             SetupEditorEvents(tab, editor);
 
             content.Show(dockPanel, DockState.Document);
+            SetupTabMiddleClick(content);
 
             suppressHighlight = true;
             editor.SetText(tab.Content ?? "");
@@ -3425,6 +3427,136 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 activeFile = null;
                 SwitchToFile(next);
+            }
+            RefreshFileList();
+        }
+
+        private ContextMenuStrip CreateTabContextMenu(FileTab tab)
+        {
+            var menu = new ContextMenuStrip();
+            menu.Items.Add("Close", null, (s, e) => OnCloseFileTab(tab));
+            menu.Items.Add("Close Others", null, (s, e) => OnCloseOtherTabs(tab));
+            menu.Items.Add("Close All", null, (s, e) => OnCloseAllTabs());
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add("Save", null, (s, e) =>
+            {
+                if (tab.Editor != null) tab.Content = tab.Editor.GetText();
+                if (tab.FilePath != null)
+                {
+                    File.WriteAllText(tab.FilePath, tab.Content ?? "");
+                    tab.IsModified = false;
+                    if (tab.DockContent != null)
+                        tab.DockContent.Text = tab.FileName;
+                    RefreshFileList();
+                    RaiseStatus("Saved " + tab.FileName);
+                }
+            });
+            menu.Opening += (s, e) =>
+            {
+                menu.Items[1].Enabled = openFiles.Count > 1;
+                menu.Items[2].Enabled = openFiles.Count > 1;
+            };
+            return menu;
+        }
+
+        private void SetupTabMiddleClick(FileDockContent content)
+        {
+            if (content.Pane == null) return;
+            var strip = content.Pane.TabStripControl;
+            if (strip == null) return;
+            if (strip.Tag != null) return;
+            strip.Tag = "hooked";
+            strip.MouseClick += (s, e) =>
+            {
+                if (e.Button != MouseButtons.Middle) return;
+                var pane = content.Pane;
+                if (pane == null) return;
+                var hoverContent = pane.MouseOverTab as FileDockContent;
+                if (hoverContent == null) return;
+                var tab = openFiles.Find(f => f.DockContent == hoverContent);
+                if (tab != null)
+                    OnCloseFileTab(tab);
+            };
+        }
+
+        private void OnCloseOtherTabs(FileTab keepTab)
+        {
+            var toClose = new List<FileTab>();
+            foreach (var f in openFiles)
+            {
+                if (f != keepTab)
+                    toClose.Add(f);
+            }
+            foreach (var f in toClose)
+            {
+                if (f.IsModified)
+                {
+                    var result = MessageBox.Show(
+                        "Save changes to " + f.FileName + "?",
+                        "Unsaved Changes",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
+                    if (result == DialogResult.Cancel) return;
+                    if (result == DialogResult.Yes)
+                    {
+                        string content = f.Editor != null ? f.Editor.GetText() : f.Content ?? "";
+                        if (f.FilePath != null)
+                            File.WriteAllText(f.FilePath, content);
+                    }
+                }
+                openFiles.Remove(f);
+                if (f.DockContent != null)
+                {
+                    f.DockContent.AllowClose = true;
+                    f.DockContent.Close();
+                    f.DockContent = null;
+                }
+                f.Editor = null;
+            }
+            if (activeFile == null || !openFiles.Contains(activeFile))
+            {
+                activeFile = null;
+                SwitchToFile(keepTab);
+            }
+            RefreshFileList();
+        }
+
+        private void OnCloseAllTabs()
+        {
+            if (openFiles.Count <= 1) return;
+            var toClose = new List<FileTab>(openFiles);
+            var keepTab = toClose[0];
+            toClose.RemoveAt(0);
+            foreach (var f in toClose)
+            {
+                if (f.IsModified)
+                {
+                    var result = MessageBox.Show(
+                        "Save changes to " + f.FileName + "?",
+                        "Unsaved Changes",
+                        MessageBoxButtons.YesNoCancel,
+                        MessageBoxIcon.Question);
+                    if (result == DialogResult.Cancel) return;
+                    if (result == DialogResult.Yes)
+                    {
+                        string content = f.Editor != null ? f.Editor.GetText() : f.Content ?? "";
+                        if (f.FilePath != null)
+                            File.WriteAllText(f.FilePath, content);
+                    }
+                }
+                openFiles.Remove(f);
+                if (f.DockContent != null)
+                {
+                    f.DockContent.AllowClose = true;
+                    f.DockContent.Close();
+                    f.DockContent = null;
+                }
+                f.Editor = null;
+            }
+            if (activeFile == null || !openFiles.Contains(activeFile))
+            {
+                activeFile = null;
+                SwitchToFile(keepTab);
             }
             RefreshFileList();
         }
