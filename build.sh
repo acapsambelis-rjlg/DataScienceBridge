@@ -20,6 +20,7 @@ mcs $REFS \
     -out:DataScienceWorkbench.exe \
     -langversion:7 \
     src/DataModels.cs \
+    src/RunConfiguration.cs \
     src/JsonHelper.cs \
     src/PythonBridge.cs \
     src/PythonSymbolAnalyzer.cs \

@@ -91,6 +91,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
             listPanel.Controls.Add(listLabel);
 
+            var listBtnPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 32,
+                Padding = new Padding(2)
+            };
+            listPanel.Controls.Add(listBtnPanel);
+
             configListBox = new ListBox
             {
                 Dock = DockStyle.Fill,
@@ -100,14 +108,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             configListBox.SelectedIndexChanged += OnConfigSelected;
             listPanel.Controls.Add(configListBox);
             listPanel.Controls.SetChildIndex(listLabel, 1);
-
-            var listBtnPanel = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 32,
-                Padding = new Padding(2)
-            };
-            listPanel.Controls.Add(listBtnPanel);
 
             addBtn = new Button { Text = "+", Width = 32, Height = 26, Location = new Point(2, 3), FlatStyle = FlatStyle.Flat };
             addBtn.Click += OnAddConfig;
