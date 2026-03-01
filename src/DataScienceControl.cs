@@ -35,6 +35,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private List<Diagnostic> syntaxDiagnostics = new List<Diagnostic>();
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
         private Dictionary<string, Func<IInMemoryDataSource>> inMemoryDataSources = new Dictionary<string, Func<IInMemoryDataSource>>();
+        private Dictionary<string, IStreamingDataSource> streamingDataSources = new Dictionary<string, IStreamingDataSource>();
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, PythonClassInfo> registeredPythonClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
@@ -751,6 +752,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             PopulateReferenceTree();
         }
 
+        public void RegisterStreamingData<T>(string name, DataQueue<T> queue) where T : class
+        {
+            inMemoryDataTypes[name] = typeof(T);
+            streamingDataSources[name] = queue;
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
         public void RegisterInMemoryData(string name, Func<System.Data.DataTable> dataProvider)
         {
             inMemoryDataSources[name] = () =>
@@ -781,6 +790,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public void UnregisterInMemoryData(string name)
         {
             inMemoryDataSources.Remove(name);
+            streamingDataSources.Remove(name);
             PopulateReferenceTree();
         }
 
@@ -2356,9 +2366,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (inMemoryDataSources.Count > 0)
                 memData = SerializeInMemoryData();
 
+            Dictionary<string, IStreamingDataSource> streamData = null;
+            if (streamingDataSources.Count > 0)
+                streamData = new Dictionary<string, IStreamingDataSource>(streamingDataSources);
+
             string preamble = BuildPreamble();
 
-            pythonRunner.ExecuteAsync(script, memData, preamble,
+            pythonRunner.ExecuteAsync(script, memData, streamData, preamble,
                 outputChunk => RunOnUIThread(() =>
                 {
                     string pendingInput = "";

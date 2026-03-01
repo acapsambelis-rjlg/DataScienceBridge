@@ -11,6 +11,12 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         IEnumerable<string> StreamCsvLines();
     }
 
+    public interface IStreamingDataSource
+    {
+        string GetCsvHeader();
+        IEnumerable<string> StreamCsvRows();
+    }
+
     internal class StringDataSource : IInMemoryDataSource
     {
         private readonly string _csv;
@@ -36,9 +42,10 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         }
     }
 
-    public class DataQueue<T> : IInMemoryDataSource where T : class
+    public class DataQueue<T> : IInMemoryDataSource, IStreamingDataSource where T : class
     {
         private readonly Queue<T> _items = new Queue<T>();
+        private IEnumerable<T> _lazySource;
         private FlattenedProperty[] _flatProps;
         private bool _locked;
         private int _snapshotCount;
@@ -64,17 +71,25 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                 _items.Enqueue(item);
         }
 
+        public void SetSource(IEnumerable<T> source)
+        {
+            if (_locked)
+                throw new InvalidOperationException("Cannot set source while the DataQueue is being streamed.");
+            _lazySource = source;
+        }
+
         public int Count { get { return _items.Count; } }
 
         public Type ItemType { get { return typeof(T); } }
 
-        public bool IsConsumed { get { return _snapshotCount > 0 && _items.Count == 0; } }
+        public bool IsConsumed { get { return _snapshotCount > 0 && _items.Count == 0 && _lazySource == null; } }
 
         public void Clear()
         {
             if (_locked)
                 throw new InvalidOperationException("Cannot clear while the DataQueue is being streamed.");
             _items.Clear();
+            _lazySource = null;
             _snapshotCount = 0;
         }
 
@@ -96,10 +111,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                 _locked = true;
             }
 
-            var headerParts = new List<string>();
-            foreach (var fp in _flatProps)
-                headerParts.Add(fp.ColumnName);
-            yield return string.Join(",", headerParts);
+            yield return GetCsvHeader();
 
             int remaining = _snapshotCount;
             while (remaining > 0 && _items.Count > 0)
@@ -107,6 +119,35 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                 var item = _items.Dequeue();
                 remaining--;
                 yield return SerializeRow(item);
+            }
+
+            _locked = false;
+        }
+
+        public string GetCsvHeader()
+        {
+            var headerParts = new List<string>();
+            foreach (var fp in _flatProps)
+                headerParts.Add(fp.ColumnName);
+            return string.Join(",", headerParts);
+        }
+
+        public IEnumerable<string> StreamCsvRows()
+        {
+            _locked = true;
+
+            if (_lazySource != null)
+            {
+                foreach (var item in _lazySource)
+                    yield return SerializeRow(item);
+            }
+            else
+            {
+                while (_items.Count > 0)
+                {
+                    var item = _items.Dequeue();
+                    yield return SerializeRow(item);
+                }
             }
 
             _locked = false;
