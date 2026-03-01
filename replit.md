@@ -33,7 +33,7 @@ Both projects now use `CodeEditor.CodeTextBox` as the Python editor, replacing t
 
 **Telerik Migration Status (VS project only):**
 - **Phase 1 COMPLETE:** Basic layout/container controls swapped — TabControl→RadPageView, SplitContainer→RadSplitContainer+SplitPanel, Panel→RadPanel, Button→RadButton, Label→RadLabel, MenuStrip→RadMenu, ToolStripMenuItem→RadMenuItem, ContextMenuStrip→RadContextMenu, GroupBox→RadGroupBox, TextBox→RadTextBox, ComboBox→RadDropDownList
-- **Phase 2 PARTIAL:** TreeView→RadTreeView COMPLETE (both fileTreeView and refTreeView migrated with NodeFormatting-based styling, ValueValidating for inline rename, RadTreeViewEventArgs for click/double-click events, SelectedNodeChanged for selection). ListBox→RadListControl PENDING.
+- **Phase 2 COMPLETE:** TreeView→RadTreeView COMPLETE (both fileTreeView and refTreeView migrated with NodeFormatting-based styling, ValueValidating for inline rename, RadTreeViewEventArgs for click/double-click events, SelectedNodeChanged for selection). ListBox→RadListControl COMPLETE (RunConfigurationDialog uses RadListControl with RadListDataItem). RadioButton→RadRadioButton (ToggleState/ToggleStateChanged API).
 - **Phase 3 COMPLETE — CodeTextBox Migration:** Replaced RadSyntaxEditor with CodeTextBox from `extern/SyntaxEditorControl`. Eliminated PythonTagger.cs, DiagnosticTagger.cs, AutoCompletePopup.cs, PythonSyntaxHighlighter.cs, ErrorSquiggleOverlay.cs, LineNumberPanel.cs. Custom undo/redo stack removed. SyntaxEditorHelper.cs rewritten as CodeTextBox extension methods. DataSciencePythonCompletionProvider.cs created implementing `ICompletionProvider`.
 
 **Namespace Structure (decoupled from file paths — do not change):**
@@ -42,6 +42,8 @@ Both projects now use `CodeEditor.CodeTextBox` as the Python editor, replacing t
 - `DataScienceWorkbench` — MainForm, Program (demo app only, not part of reusable control)
 
 Files can be copied directly between `src/` and `DataScienceWorkbench/PythonWorkbench/` for non-Telerik files without namespace adjustments. The VS Designer.cs uses fully-qualified Telerik types for non-editor controls. The `CreateMenuStrip()` public API returns `RadMenu` in the VS project and `MenuStrip` in the Mono project.
+
+**VS Project Form Convention:** All forms and controls in the VS project use the standard Visual Studio three-file pattern: `.cs` (partial class code-behind), `.Designer.cs` (partial class with `InitializeComponent()`), `.resx` (resources). The `.csproj` uses `DependentUpon` to nest Designer.cs and .resx under the main .cs file. Telerik controls are used where possible (RadButton, RadLabel, RadTextBox, RadPanel, RadRadioButton, RadListControl, RadSplitContainer, etc.). The Mono `src/` project keeps single-file forms with standard WinForms controls.
 
 **Path Resolution (VS project):**
 - The VS project uses `FindScriptsDirectory()` (in DataScienceControl.cs) and `FindPythonBaseDirectory()` (in PythonBridge.cs) to locate the `python/` directory by walking up from `AppDomain.CurrentDomain.BaseDirectory` (which is `bin/Debug/` or `bin/Release/` in VS). This ensures scripts and venv are found relative to the project root, not the build output folder. The Mono project uses `BaseDirectory` directly since the exe runs from the workspace root.

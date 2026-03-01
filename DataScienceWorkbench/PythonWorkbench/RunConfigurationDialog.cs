@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using Telerik.WinControls.Enumerations;
+using Telerik.WinControls.UI;
+using Telerik.WinControls.UI.Data;
 using RJLG.IntelliSEM.Data.PythonDataScience;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
@@ -72,7 +75,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             suppressSelectionChange = true;
             configListBox.Items.Clear();
             foreach (var c in configs)
-                configListBox.Items.Add(c.Name);
+                configListBox.Items.Add(new RadListDataItem(c.Name));
             suppressSelectionChange = false;
         }
 
@@ -86,7 +89,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 scriptBox.Text = "";
                 argsBox.Text = "";
                 inputFileBox.Text = "";
-                useCurrentRadio.Checked = true;
+                useCurrentRadio.ToggleState = ToggleState.On;
                 return;
             }
 
@@ -96,8 +99,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             scriptBox.Text = c.ScriptPath ?? "";
             argsBox.Text = c.Arguments ?? "";
             inputFileBox.Text = c.InputFilePath ?? "";
-            useCurrentRadio.Checked = c.UseCurrentFile;
-            useSpecificRadio.Checked = !c.UseCurrentFile;
+            useCurrentRadio.ToggleState = c.UseCurrentFile ? ToggleState.On : ToggleState.Off;
+            useSpecificRadio.ToggleState = c.UseCurrentFile ? ToggleState.Off : ToggleState.On;
             scriptBox.Enabled = !c.UseCurrentFile;
             browseScriptBtn.Enabled = !c.UseCurrentFile;
             suppressSelectionChange = false;
@@ -108,7 +111,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (configListBox.SelectedIndex < 0) return;
             var c = configs[configListBox.SelectedIndex];
             c.Name = nameBox.Text.Trim();
-            c.UseCurrentFile = useCurrentRadio.Checked;
+            c.UseCurrentFile = useCurrentRadio.ToggleState == ToggleState.On;
             c.ScriptPath = scriptBox.Text.Trim();
             c.Arguments = argsBox.Text.Trim();
             c.InputFilePath = inputFileBox.Text.Trim();
@@ -119,23 +122,23 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             for (int i = 0; i < configs.Count; i++)
             {
-                if (i < configListBox.Items.Count && configListBox.Items[i].ToString() != configs[i].Name)
+                if (i < configListBox.Items.Count && configListBox.Items[i].Text != configs[i].Name)
                 {
-                    configs[i].Name = configListBox.Items[i].ToString();
+                    configs[i].Name = configListBox.Items[i].Text;
                 }
             }
             if (configListBox.SelectedIndex >= 0)
             {
                 var c = configs[configListBox.SelectedIndex];
                 c.Name = nameBox.Text.Trim();
-                c.UseCurrentFile = useCurrentRadio.Checked;
+                c.UseCurrentFile = useCurrentRadio.ToggleState == ToggleState.On;
                 c.ScriptPath = scriptBox.Text.Trim();
                 c.Arguments = argsBox.Text.Trim();
                 c.InputFilePath = inputFileBox.Text.Trim();
             }
         }
 
-        private void OnConfigSelected(object sender, EventArgs e)
+        private void OnConfigSelected(object sender, PositionChangedEventArgs e)
         {
             if (suppressSelectionChange) return;
             SaveCurrentFromFields();
@@ -149,7 +152,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             configs[configListBox.SelectedIndex].Name = nameBox.Text.Trim();
             int idx = configListBox.SelectedIndex;
             suppressSelectionChange = true;
-            configListBox.Items[idx] = nameBox.Text.Trim();
+            configListBox.Items[idx].Text = nameBox.Text.Trim();
             configListBox.SelectedIndex = idx;
             suppressSelectionChange = false;
         }
@@ -164,13 +167,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             c.InputFilePath = inputFileBox.Text.Trim();
         }
 
-        private void OnRadioChanged(object sender, EventArgs e)
+        private void OnRadioChanged(object sender, StateChangedEventArgs e)
         {
             if (suppressSelectionChange) return;
-            scriptBox.Enabled = useSpecificRadio.Checked;
-            browseScriptBtn.Enabled = useSpecificRadio.Checked;
+            bool useSpecific = useSpecificRadio.ToggleState == ToggleState.On;
+            scriptBox.Enabled = useSpecific;
+            browseScriptBtn.Enabled = useSpecific;
             if (configListBox.SelectedIndex >= 0)
-                configs[configListBox.SelectedIndex].UseCurrentFile = useCurrentRadio.Checked;
+                configs[configListBox.SelectedIndex].UseCurrentFile = useCurrentRadio.ToggleState == ToggleState.On;
         }
 
         private void OnAddConfig(object sender, EventArgs e)
