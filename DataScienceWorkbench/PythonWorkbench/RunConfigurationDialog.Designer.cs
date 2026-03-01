@@ -51,14 +51,47 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.bottomPanel.SuspendLayout();
             this.SuspendLayout();
             //
+            // bottomPanel
+            //
+            this.bottomPanel.Controls.Add(this.okBtn);
+            this.bottomPanel.Controls.Add(this.cancelBtn);
+            this.bottomPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.bottomPanel.Location = new System.Drawing.Point(0, 361);
+            this.bottomPanel.Name = "bottomPanel";
+            this.bottomPanel.Size = new System.Drawing.Size(604, 40);
+            this.bottomPanel.TabIndex = 0;
+            //
+            // okBtn
+            //
+            this.okBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.okBtn.Location = new System.Drawing.Point(434, 6);
+            this.okBtn.Name = "okBtn";
+            this.okBtn.Size = new System.Drawing.Size(80, 28);
+            this.okBtn.TabIndex = 0;
+            this.okBtn.Text = "OK";
+            this.okBtn.Click += new System.EventHandler(this.OnOkClick);
+            //
+            // cancelBtn
+            //
+            this.cancelBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.cancelBtn.Location = new System.Drawing.Point(519, 6);
+            this.cancelBtn.Name = "cancelBtn";
+            this.cancelBtn.Size = new System.Drawing.Size(80, 28);
+            this.cancelBtn.TabIndex = 1;
+            this.cancelBtn.Text = "Cancel";
+            //
             // splitContainer
             //
+            this.splitContainer.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.splitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.splitContainer.Location = new System.Drawing.Point(0, 0);
             this.splitContainer.Name = "splitContainer";
+            this.splitContainer.Size = new System.Drawing.Size(604, 361);
             this.splitContainer.SplitterDistance = 180;
-            this.splitContainer.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.splitContainer.TabIndex = 1;
             //
             // splitContainer.Panel1
             //
@@ -71,26 +104,23 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             // listPanel
             //
             this.listPanel.Controls.Add(this.configListBox);
-            this.listPanel.Controls.Add(this.listLabel);
             this.listPanel.Controls.Add(this.listBtnPanel);
+            this.listPanel.Controls.Add(this.listLabel);
             this.listPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listPanel.Location = new System.Drawing.Point(0, 0);
             this.listPanel.Name = "listPanel";
-            //
-            // configListBox
-            //
-            this.configListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.configListBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.configListBox.IntegralHeight = false;
-            this.configListBox.Name = "configListBox";
-            this.configListBox.SelectedIndexChanged += new System.EventHandler(this.OnConfigSelected);
+            this.listPanel.Size = new System.Drawing.Size(178, 359);
+            this.listPanel.TabIndex = 0;
             //
             // listLabel
             //
             this.listLabel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.listLabel.Font = new System.Drawing.Font(this.Font.FontFamily, 9F, System.Drawing.FontStyle.Bold);
-            this.listLabel.Height = 22;
+            this.listLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold);
+            this.listLabel.Location = new System.Drawing.Point(0, 0);
             this.listLabel.Name = "listLabel";
             this.listLabel.Padding = new System.Windows.Forms.Padding(4, 4, 0, 0);
+            this.listLabel.Size = new System.Drawing.Size(178, 22);
+            this.listLabel.TabIndex = 2;
             this.listLabel.Text = "Configurations:";
             //
             // listBtnPanel
@@ -99,9 +129,22 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.listBtnPanel.Controls.Add(this.removeBtn);
             this.listBtnPanel.Controls.Add(this.duplicateBtn);
             this.listBtnPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.listBtnPanel.Height = 32;
+            this.listBtnPanel.Location = new System.Drawing.Point(0, 327);
             this.listBtnPanel.Name = "listBtnPanel";
             this.listBtnPanel.Padding = new System.Windows.Forms.Padding(2);
+            this.listBtnPanel.Size = new System.Drawing.Size(178, 32);
+            this.listBtnPanel.TabIndex = 1;
+            //
+            // configListBox
+            //
+            this.configListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.configListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.configListBox.IntegralHeight = false;
+            this.configListBox.Location = new System.Drawing.Point(0, 22);
+            this.configListBox.Name = "configListBox";
+            this.configListBox.Size = new System.Drawing.Size(178, 305);
+            this.configListBox.TabIndex = 0;
+            this.configListBox.SelectedIndexChanged += new System.EventHandler(this.OnConfigSelected);
             //
             // addBtn
             //
@@ -109,6 +152,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.addBtn.Location = new System.Drawing.Point(2, 3);
             this.addBtn.Name = "addBtn";
             this.addBtn.Size = new System.Drawing.Size(32, 26);
+            this.addBtn.TabIndex = 0;
             this.addBtn.Text = "+";
             this.addBtn.Click += new System.EventHandler(this.OnAddConfig);
             //
@@ -118,6 +162,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.removeBtn.Location = new System.Drawing.Point(36, 3);
             this.removeBtn.Name = "removeBtn";
             this.removeBtn.Size = new System.Drawing.Size(32, 26);
+            this.removeBtn.TabIndex = 1;
             this.removeBtn.Text = "\u2212";
             this.removeBtn.Click += new System.EventHandler(this.OnRemoveConfig);
             //
@@ -127,6 +172,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.duplicateBtn.Location = new System.Drawing.Point(70, 3);
             this.duplicateBtn.Name = "duplicateBtn";
             this.duplicateBtn.Size = new System.Drawing.Size(46, 26);
+            this.duplicateBtn.TabIndex = 2;
             this.duplicateBtn.Text = "Copy";
             this.duplicateBtn.Click += new System.EventHandler(this.OnDuplicateConfig);
             //
@@ -147,14 +193,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.detailPanel.Controls.Add(this.nameBox);
             this.detailPanel.Controls.Add(this.nameLabel);
             this.detailPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.detailPanel.Location = new System.Drawing.Point(0, 0);
             this.detailPanel.Name = "detailPanel";
             this.detailPanel.Padding = new System.Windows.Forms.Padding(8);
+            this.detailPanel.Size = new System.Drawing.Size(418, 359);
+            this.detailPanel.TabIndex = 0;
             //
             // nameLabel
             //
             this.nameLabel.AutoSize = true;
             this.nameLabel.Location = new System.Drawing.Point(8, 8);
             this.nameLabel.Name = "nameLabel";
+            this.nameLabel.Size = new System.Drawing.Size(38, 13);
+            this.nameLabel.TabIndex = 0;
             this.nameLabel.Text = "Name:";
             //
             // nameBox
@@ -162,6 +213,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.nameBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.nameBox.Location = new System.Drawing.Point(8, 28);
             this.nameBox.Name = "nameBox";
+            this.nameBox.Size = new System.Drawing.Size(402, 20);
+            this.nameBox.TabIndex = 1;
             this.nameBox.TextChanged += new System.EventHandler(this.OnNameChanged);
             //
             // useCurrentRadio
@@ -170,6 +223,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.useCurrentRadio.Checked = true;
             this.useCurrentRadio.Location = new System.Drawing.Point(8, 58);
             this.useCurrentRadio.Name = "useCurrentRadio";
+            this.useCurrentRadio.Size = new System.Drawing.Size(100, 17);
+            this.useCurrentRadio.TabIndex = 2;
             this.useCurrentRadio.TabStop = true;
             this.useCurrentRadio.Text = "Run current file";
             this.useCurrentRadio.CheckedChanged += new System.EventHandler(this.OnRadioChanged);
@@ -179,6 +234,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.useSpecificRadio.AutoSize = true;
             this.useSpecificRadio.Location = new System.Drawing.Point(8, 82);
             this.useSpecificRadio.Name = "useSpecificRadio";
+            this.useSpecificRadio.Size = new System.Drawing.Size(120, 17);
+            this.useSpecificRadio.TabIndex = 3;
             this.useSpecificRadio.Text = "Run specific script:";
             this.useSpecificRadio.CheckedChanged += new System.EventHandler(this.OnRadioChanged);
             //
@@ -187,6 +244,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.scriptLabel.AutoSize = true;
             this.scriptLabel.Location = new System.Drawing.Point(8, 106);
             this.scriptLabel.Name = "scriptLabel";
+            this.scriptLabel.Size = new System.Drawing.Size(37, 13);
+            this.scriptLabel.TabIndex = 4;
             this.scriptLabel.Text = "Script:";
             //
             // scriptBox
@@ -194,15 +253,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.scriptBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.scriptBox.Location = new System.Drawing.Point(8, 124);
             this.scriptBox.Name = "scriptBox";
+            this.scriptBox.Size = new System.Drawing.Size(370, 20);
+            this.scriptBox.TabIndex = 5;
             this.scriptBox.TextChanged += new System.EventHandler(this.OnFieldChanged);
             //
             // browseScriptBtn
             //
             this.browseScriptBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.browseScriptBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.browseScriptBtn.Location = new System.Drawing.Point(0, 124);
+            this.browseScriptBtn.Location = new System.Drawing.Point(380, 124);
             this.browseScriptBtn.Name = "browseScriptBtn";
             this.browseScriptBtn.Size = new System.Drawing.Size(30, 22);
+            this.browseScriptBtn.TabIndex = 6;
             this.browseScriptBtn.Text = "...";
             this.browseScriptBtn.Click += new System.EventHandler(this.OnBrowseScript);
             //
@@ -211,6 +273,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.argsLabel.AutoSize = true;
             this.argsLabel.Location = new System.Drawing.Point(8, 154);
             this.argsLabel.Name = "argsLabel";
+            this.argsLabel.Size = new System.Drawing.Size(60, 13);
+            this.argsLabel.TabIndex = 7;
             this.argsLabel.Text = "Arguments:";
             //
             // argsBox
@@ -218,6 +282,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.argsBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.argsBox.Location = new System.Drawing.Point(8, 172);
             this.argsBox.Name = "argsBox";
+            this.argsBox.Size = new System.Drawing.Size(402, 20);
+            this.argsBox.TabIndex = 8;
             this.argsBox.TextChanged += new System.EventHandler(this.OnFieldChanged);
             //
             // inputLabel
@@ -225,6 +291,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.inputLabel.AutoSize = true;
             this.inputLabel.Location = new System.Drawing.Point(8, 202);
             this.inputLabel.Name = "inputLabel";
+            this.inputLabel.Size = new System.Drawing.Size(85, 13);
+            this.inputLabel.TabIndex = 9;
             this.inputLabel.Text = "Input file (stdin):";
             //
             // inputFileBox
@@ -234,14 +302,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.inputFileBox.Location = new System.Drawing.Point(8, 220);
             this.inputFileBox.Name = "inputFileBox";
             this.inputFileBox.ReadOnly = true;
+            this.inputFileBox.Size = new System.Drawing.Size(346, 20);
+            this.inputFileBox.TabIndex = 10;
             //
             // browseInputBtn
             //
             this.browseInputBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.browseInputBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.browseInputBtn.Location = new System.Drawing.Point(0, 220);
+            this.browseInputBtn.Location = new System.Drawing.Point(356, 220);
             this.browseInputBtn.Name = "browseInputBtn";
             this.browseInputBtn.Size = new System.Drawing.Size(30, 22);
+            this.browseInputBtn.TabIndex = 11;
             this.browseInputBtn.Text = "...";
             this.browseInputBtn.Click += new System.EventHandler(this.OnBrowseInput);
             //
@@ -249,49 +320,29 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             //
             this.clearInputBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.clearInputBtn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.clearInputBtn.Location = new System.Drawing.Point(0, 220);
+            this.clearInputBtn.Location = new System.Drawing.Point(388, 220);
             this.clearInputBtn.Name = "clearInputBtn";
             this.clearInputBtn.Size = new System.Drawing.Size(24, 22);
+            this.clearInputBtn.TabIndex = 12;
             this.clearInputBtn.Text = "\u00d7";
             this.clearInputBtn.Click += new System.EventHandler(this.OnClearInput);
             //
             // inputHintLabel
             //
             this.inputHintLabel.AutoSize = true;
-            this.inputHintLabel.Font = new System.Drawing.Font(this.Font.FontFamily, 7.5F);
+            this.inputHintLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F);
             this.inputHintLabel.ForeColor = System.Drawing.SystemColors.GrayText;
             this.inputHintLabel.Location = new System.Drawing.Point(8, 244);
             this.inputHintLabel.Name = "inputHintLabel";
+            this.inputHintLabel.Size = new System.Drawing.Size(296, 13);
+            this.inputHintLabel.TabIndex = 13;
             this.inputHintLabel.Text = "Lines from this file are fed to input() calls sequentially.";
-            //
-            // bottomPanel
-            //
-            this.bottomPanel.Controls.Add(this.okBtn);
-            this.bottomPanel.Controls.Add(this.cancelBtn);
-            this.bottomPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.bottomPanel.Height = 40;
-            this.bottomPanel.Name = "bottomPanel";
-            //
-            // okBtn
-            //
-            this.okBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.okBtn.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.okBtn.Name = "okBtn";
-            this.okBtn.Size = new System.Drawing.Size(80, 28);
-            this.okBtn.Text = "OK";
-            this.okBtn.Click += new System.EventHandler(this.OnOkClick);
-            //
-            // cancelBtn
-            //
-            this.cancelBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancelBtn.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancelBtn.Name = "cancelBtn";
-            this.cancelBtn.Size = new System.Drawing.Size(80, 28);
-            this.cancelBtn.Text = "Cancel";
             //
             // RunConfigurationDialog
             //
             this.AcceptButton = this.okBtn;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelBtn;
             this.ClientSize = new System.Drawing.Size(604, 401);
             this.Controls.Add(this.splitContainer);
