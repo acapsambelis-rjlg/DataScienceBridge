@@ -7,30 +7,8 @@ using RJLG.IntelliSEM.Data.PythonDataScience;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
-    public class RunConfigurationDialog : Form
+    public partial class RunConfigurationDialog : Form
     {
-        private ListBox configListBox;
-        private TextBox nameBox;
-        private RadioButton useCurrentRadio;
-        private RadioButton useSpecificRadio;
-        private TextBox scriptBox;
-        private Button browseScriptBtn;
-        private TextBox argsBox;
-        private TextBox inputFileBox;
-        private Button browseInputBtn;
-        private Button clearInputBtn;
-        private Button addBtn;
-        private Button removeBtn;
-        private Button duplicateBtn;
-        private Button okBtn;
-        private Button cancelBtn;
-        private Panel detailPanel;
-        private Label nameLabel;
-        private Label scriptLabel;
-        private Label argsLabel;
-        private Label inputLabel;
-        private Label inputHintLabel;
-
         private List<RunConfiguration> configs;
         private string scriptsDir;
         private bool suppressSelectionChange;
@@ -50,7 +28,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 configs.Add(c.Clone());
 
             SelectedIndex = selectedIndex;
-            InitializeDialogComponents();
+            InitializeComponent();
             PopulateList();
             if (configs.Count > 0)
             {
@@ -60,150 +38,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             UpdateDetailPanel();
         }
 
-        private void InitializeDialogComponents()
+        private void RunConfigurationDialog_Load(object sender, EventArgs e)
         {
-            Text = "Run Configurations";
-            Size = new Size(620, 440);
-            MinimumSize = new Size(560, 380);
-            StartPosition = FormStartPosition.CenterParent;
-            FormBorderStyle = FormBorderStyle.Sizable;
-            MaximizeBox = false;
+            LayoutDetailControls();
+        }
 
-            var splitContainer = new SplitContainer
-            {
-                Dock = DockStyle.Fill,
-                SplitterDistance = 180,
-                FixedPanel = FixedPanel.Panel1,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            Controls.Add(splitContainer);
-
-            var listPanel = new Panel { Dock = DockStyle.Fill };
-            splitContainer.Panel1.Controls.Add(listPanel);
-
-            var listLabel = new Label
-            {
-                Text = "Configurations:",
-                Dock = DockStyle.Top,
-                Height = 22,
-                Padding = new Padding(4, 4, 0, 0),
-                Font = new Font(Font.FontFamily, 9f, FontStyle.Bold)
-            };
-            listPanel.Controls.Add(listLabel);
-
-            var listBtnPanel = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 32,
-                Padding = new Padding(2)
-            };
-            listPanel.Controls.Add(listBtnPanel);
-
-            configListBox = new ListBox
-            {
-                Dock = DockStyle.Fill,
-                IntegralHeight = false,
-                BorderStyle = BorderStyle.None
-            };
-            configListBox.SelectedIndexChanged += OnConfigSelected;
-            listPanel.Controls.Add(configListBox);
-            listPanel.Controls.SetChildIndex(listLabel, 1);
-
-            addBtn = new Button { Text = "+", Width = 32, Height = 26, Location = new Point(2, 3), FlatStyle = FlatStyle.Flat };
-            addBtn.Click += OnAddConfig;
-            listBtnPanel.Controls.Add(addBtn);
-
-            removeBtn = new Button { Text = "\u2212", Width = 32, Height = 26, Location = new Point(36, 3), FlatStyle = FlatStyle.Flat };
-            removeBtn.Click += OnRemoveConfig;
-            listBtnPanel.Controls.Add(removeBtn);
-
-            duplicateBtn = new Button { Text = "Copy", Width = 46, Height = 26, Location = new Point(70, 3), FlatStyle = FlatStyle.Flat };
-            duplicateBtn.Click += OnDuplicateConfig;
-            listBtnPanel.Controls.Add(duplicateBtn);
-
-            detailPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(8) };
-            splitContainer.Panel2.Controls.Add(detailPanel);
-
-            int y = 8;
-            nameLabel = new Label { Text = "Name:", Location = new Point(8, y), AutoSize = true };
-            detailPanel.Controls.Add(nameLabel);
-            y += 20;
-            nameBox = new TextBox { Location = new Point(8, y), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            nameBox.TextChanged += OnNameChanged;
-            detailPanel.Controls.Add(nameBox);
-            y += 30;
-
-            useCurrentRadio = new RadioButton { Text = "Run current file", Location = new Point(8, y), AutoSize = true, Checked = true };
-            useCurrentRadio.CheckedChanged += OnRadioChanged;
-            detailPanel.Controls.Add(useCurrentRadio);
-            y += 24;
-
-            useSpecificRadio = new RadioButton { Text = "Run specific script:", Location = new Point(8, y), AutoSize = true };
-            useSpecificRadio.CheckedChanged += OnRadioChanged;
-            detailPanel.Controls.Add(useSpecificRadio);
-            y += 24;
-
-            scriptLabel = new Label { Text = "Script:", Location = new Point(8, y), AutoSize = true };
-            detailPanel.Controls.Add(scriptLabel);
-            y += 18;
-            scriptBox = new TextBox { Location = new Point(8, y), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            scriptBox.TextChanged += OnFieldChanged;
-            detailPanel.Controls.Add(scriptBox);
-            browseScriptBtn = new Button { Text = "...", Width = 30, Height = 22, Location = new Point(0, y), Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat };
-            browseScriptBtn.Click += OnBrowseScript;
-            detailPanel.Controls.Add(browseScriptBtn);
-            y += 30;
-
-            argsLabel = new Label { Text = "Arguments:", Location = new Point(8, y), AutoSize = true };
-            detailPanel.Controls.Add(argsLabel);
-            y += 18;
-            argsBox = new TextBox { Location = new Point(8, y), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
-            argsBox.TextChanged += OnFieldChanged;
-            detailPanel.Controls.Add(argsBox);
-            y += 30;
-
-            inputLabel = new Label { Text = "Input file (stdin):", Location = new Point(8, y), AutoSize = true };
-            detailPanel.Controls.Add(inputLabel);
-            y += 18;
-            inputFileBox = new TextBox { Location = new Point(8, y), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, ReadOnly = true, BackColor = SystemColors.Window };
-            detailPanel.Controls.Add(inputFileBox);
-            browseInputBtn = new Button { Text = "...", Width = 30, Height = 22, Location = new Point(0, y), Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat };
-            browseInputBtn.Click += OnBrowseInput;
-            detailPanel.Controls.Add(browseInputBtn);
-            clearInputBtn = new Button { Text = "\u00d7", Width = 24, Height = 22, Location = new Point(0, y), Anchor = AnchorStyles.Top | AnchorStyles.Right, FlatStyle = FlatStyle.Flat };
-            clearInputBtn.Click += (s, e) => { inputFileBox.Text = ""; OnFieldChanged(s, e); };
-            detailPanel.Controls.Add(clearInputBtn);
-            y += 24;
-            inputHintLabel = new Label
-            {
-                Text = "Lines from this file are fed to input() calls sequentially.",
-                Location = new Point(8, y),
-                AutoSize = true,
-                ForeColor = SystemColors.GrayText,
-                Font = new Font(Font.FontFamily, 7.5f)
-            };
-            detailPanel.Controls.Add(inputHintLabel);
-
-            var bottomPanel = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 40
-            };
-            Controls.Add(bottomPanel);
-            Controls.SetChildIndex(bottomPanel, 0);
-
-            okBtn = new Button { Text = "OK", Width = 80, Height = 28, Anchor = AnchorStyles.Bottom | AnchorStyles.Right, DialogResult = DialogResult.OK };
-            okBtn.Click += (s, e) => { SaveCurrent(); };
-            bottomPanel.Controls.Add(okBtn);
-
-            cancelBtn = new Button { Text = "Cancel", Width = 80, Height = 28, Anchor = AnchorStyles.Bottom | AnchorStyles.Right, DialogResult = DialogResult.Cancel };
-            bottomPanel.Controls.Add(cancelBtn);
-
-            AcceptButton = okBtn;
-            CancelButton = cancelBtn;
-
-            Resize += (s, e) => LayoutDetailControls();
-            Load += (s, e) => LayoutDetailControls();
+        private void RunConfigurationDialog_Resize(object sender, EventArgs e)
+        {
+            LayoutDetailControls();
         }
 
         private void LayoutDetailControls()
@@ -273,13 +115,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             SelectedIndex = configListBox.SelectedIndex;
         }
 
-        private void OnConfigSelected(object sender, EventArgs e)
-        {
-            if (suppressSelectionChange) return;
-            SaveCurrentFromFields();
-            UpdateDetailPanel();
-        }
-
         private void SaveCurrentFromFields()
         {
             for (int i = 0; i < configs.Count; i++)
@@ -298,6 +133,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 c.Arguments = argsBox.Text.Trim();
                 c.InputFilePath = inputFileBox.Text.Trim();
             }
+        }
+
+        private void OnConfigSelected(object sender, EventArgs e)
+        {
+            if (suppressSelectionChange) return;
+            SaveCurrentFromFields();
+            UpdateDetailPanel();
         }
 
         private void OnNameChanged(object sender, EventArgs e)
@@ -369,6 +211,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             PopulateList();
             configListBox.SelectedIndex = configs.Count - 1;
             UpdateDetailPanel();
+        }
+
+        private void OnOkClick(object sender, EventArgs e)
+        {
+            SaveCurrent();
+        }
+
+        private void OnClearInput(object sender, EventArgs e)
+        {
+            inputFileBox.Text = "";
+            OnFieldChanged(sender, e);
         }
 
         private void OnBrowseScript(object sender, EventArgs e)
