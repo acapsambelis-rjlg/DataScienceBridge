@@ -12,10 +12,12 @@ The Data Science Workbench is a Windows Forms application (compatible with Mono 
 The application uses Mono (C# / .NET Framework 4.7.2 compatible) with Python integration achieved via subprocess-based execution, streaming data in-memory directly to Python variables. The UI is built using Windows Forms, with `DataScienceControl` serving as a self-contained, reusable component.
 
 **Dual-Project Structure:**
-- `src/`: Mono project using standard WinForms controls for Linux/Replit execution.
-- `DataScienceWorkbench/PythonWorkbench/`: Visual Studio project — UI controls and editor integration (DataScienceControl, PlotViewerForm, RunConfigurationDialog, PythonBridge, SyntaxEditorHelper, CompletionProvider, etc.). Uses Telerik UI for WinForms for non-editor UI (RadMenu, RadTreeView, RadPanel, etc.) and `CodeTextBox` for the editor.
+- `src/`: Mono project using standard WinForms controls (TreeView, TreeNode, etc.) for Linux/Replit execution.
+- `DataScienceWorkbench/PythonWorkbench/`: Visual Studio project — UI controls and editor integration (DataScienceControl, PlotViewerForm, RunConfigurationDialog, PythonBridge, SyntaxEditorHelper, CompletionProvider, etc.). Uses Telerik UI for WinForms for non-editor UI (RadMenu, RadTreeView/RadTreeNode, RadPanel, etc.) and `CodeTextBox` for the editor.
 - `DataScienceWorkbench/PythonWorkbenchData/`: Data layer — models, streaming queue, attribute definitions, run configurations (DataModels, DataQueue, PythonVisibleAttribute, RunConfiguration).
 - `extern/SyntaxEditorControl/`: Git submodule providing the `CodeTextBox` editor control, shared by both projects.
+
+**IMPORTANT: DataScienceControl.cs differs between projects.** The `src/` version uses standard WinForms TreeView/TreeNode types, while `DataScienceWorkbench/PythonWorkbench/` uses Telerik RadTreeView/RadTreeNode. Do NOT blindly copy DataScienceControl.cs between projects.
 
 **Editor Control — CodeTextBox (migration COMPLETE):**
 `CodeTextBox` provides syntax highlighting, code folding, completion/autocomplete via `ICompletionProvider`, diagnostics (error squiggles) via `IDiagnosticProvider`/`SetDiagnostics()`, find/replace, bracket matching, auto-indent, tab indent/dedent, undo/redo, line numbers, zoom, and multi-cursor editing. Domain-specific completions are provided by `DataSciencePythonCompletionProvider` (implements `ICompletionProvider`). Extension methods in `SyntaxEditorHelper.cs` bridge CodeTextBox's API with legacy call patterns.

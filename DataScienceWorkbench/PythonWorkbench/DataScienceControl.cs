@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using CodeEditor;
+using Telerik.WinControls.UI;
 using WeifenLuo.WinFormsUI.Docking;
 using RJLG.IntelliSEM.Data.PythonDataScience;
 
@@ -138,19 +139,15 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             fileListLabel.Font = uiFontBold;
         }
 
-        private ImageList fileTreeImageList;
+        private Image fileTreeFolderImage;
+        private Image fileTreeFolderOpenImage;
+        private Image fileTreePythonImage;
 
         private void CreateFileTreeIcons()
         {
-            fileTreeImageList = new ImageList();
-            fileTreeImageList.ImageSize = new Size(16, 16);
-            fileTreeImageList.ColorDepth = ColorDepth.Depth32Bit;
-
-            fileTreeImageList.Images.Add("folder", DrawFolderIcon(false));
-            fileTreeImageList.Images.Add("folder_open", DrawFolderIcon(true));
-            fileTreeImageList.Images.Add("python", DrawPythonFileIcon());
-
-            fileTreeView.ImageList = fileTreeImageList;
+            fileTreeFolderImage = DrawFolderIcon(false);
+            fileTreeFolderOpenImage = DrawFolderIcon(true);
+            fileTreePythonImage = DrawPythonFileIcon();
         }
 
         private static Bitmap DrawFolderIcon(bool open)
@@ -1595,9 +1592,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 if (datasetMatches || matchedColNames.Count > 0)
                 {
-                    var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
+                    var node = new RadTreeNode(name + "  (" + count + ")");
                     node.Tag = name;
-                    node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                    node.Font = new Font(refTreeView.Font, FontStyle.Bold);
+                    refTreeView.Nodes.Add(node);
 
                     AddHierarchicalColumns(node, name, type, datasetMatches ? null : matchedColNames);
                     node.ExpandAll();
@@ -1619,14 +1617,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 if (matchingClasses.Count > 0)
                 {
-                    var classNode = refTreeView.Nodes.Add("Registered Classes  (" + matchingClasses.Count + ")");
-                    classNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                    var classNode = new RadTreeNode("Registered Classes  (" + matchingClasses.Count + ")");
+                    classNode.Font = new Font(refTreeView.Font, FontStyle.Bold);
                     classNode.Tag = "regclasses";
+                    refTreeView.Nodes.Add(classNode);
                     foreach (var name in matchingClasses)
                     {
-                        var child = classNode.Nodes.Add(name);
+                        var child = new RadTreeNode(name);
                         child.Tag = "regclass_" + name;
                         child.ForeColor = Color.FromArgb(0, 100, 160);
+                        classNode.Nodes.Add(child);
                     }
                     classNode.Expand();
                 }
@@ -1644,14 +1644,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 if (matchingCtx.Count > 0)
                 {
-                    var ctxNode = refTreeView.Nodes.Add("Context Hub  (" + matchingCtx.Count + ")");
-                    ctxNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                    var ctxNode = new RadTreeNode("Context Hub  (" + matchingCtx.Count + ")");
+                    ctxNode.Font = new Font(refTreeView.Font, FontStyle.Bold);
                     ctxNode.Tag = "contexthub";
+                    refTreeView.Nodes.Add(ctxNode);
                     foreach (var kvp in matchingCtx)
                     {
-                        var child = ctxNode.Nodes.Add(kvp.Key + "  :  " + kvp.Value.TypeDescription);
+                        var child = new RadTreeNode(kvp.Key + "  :  " + kvp.Value.TypeDescription);
                         child.Tag = "ctx_" + kvp.Key;
                         child.ForeColor = Color.FromArgb(128, 0, 128);
+                        ctxNode.Nodes.Add(child);
                     }
                     ctxNode.Expand();
                 }
@@ -1660,7 +1662,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             refTreeView.EndUpdate();
         }
 
-        private void AddHierarchicalColumns(TreeNode parentNode, string datasetName, Type type, HashSet<string> filterColumns)
+        private void AddHierarchicalColumns(RadTreeNode parentNode, string datasetName, Type type, HashSet<string> filterColumns)
         {
             var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
             var groupChildren = new Dictionary<string, List<FlattenedProperty>>(StringComparer.Ordinal);
@@ -1687,9 +1689,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
                 if (fp.IsComputed) typeName += " (computed)";
-                var child = parentNode.Nodes.Add(fp.ColumnName + "  :  " + typeName);
+                var child = new RadTreeNode(fp.ColumnName + "  :  " + typeName);
                 child.Tag = new string[] { "field", datasetName, fp.ColumnName };
                 child.ForeColor = Color.FromArgb(80, 80, 80);
+                parentNode.Nodes.Add(child);
             }
 
             foreach (var kvp in groupChildren)
@@ -1698,16 +1701,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var groupProps = kvp.Value;
                 string groupTypeName = groupProps[0].PropertyPath[0].PropertyType.Name;
                 string groupPrefix = groupName + "_";
-                var groupNode = parentNode.Nodes.Add(groupName + "  (" + groupTypeName + ")");
+                var groupNode = new RadTreeNode(groupName + "  (" + groupTypeName + ")");
                 groupNode.Tag = new string[] { "subclass", datasetName, groupPrefix };
                 groupNode.ForeColor = Color.FromArgb(0, 100, 130);
-                groupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
+                groupNode.Font = new Font(refTreeView.Font, FontStyle.Italic);
+                parentNode.Nodes.Add(groupNode);
 
                 AddSubclassChildren(groupNode, datasetName, groupProps, 1, filterColumns, groupPrefix);
             }
         }
 
-        private void AddSubclassChildren(TreeNode parentNode, string datasetName, List<FlattenedProperty> groupProps, int depth, HashSet<string> filterColumns, string pathPrefix)
+        private void AddSubclassChildren(RadTreeNode parentNode, string datasetName, List<FlattenedProperty> groupProps, int depth, HashSet<string> filterColumns, string pathPrefix)
         {
             var subGroups = new Dictionary<string, List<FlattenedProperty>>(StringComparer.Ordinal);
             var leafProps = new List<FlattenedProperty>();
@@ -1732,9 +1736,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 string leafName = fp.PropertyPath[fp.PropertyPath.Length - 1].Name;
                 string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
                 if (fp.IsComputed) typeName += " (computed)";
-                var child = parentNode.Nodes.Add(leafName + "  \u2192  " + fp.ColumnName + "  :  " + typeName);
+                var child = new RadTreeNode(leafName + "  \u2192  " + fp.ColumnName + "  :  " + typeName);
                 child.Tag = new string[] { "field", datasetName, fp.ColumnName };
                 child.ForeColor = Color.FromArgb(80, 80, 80);
+                parentNode.Nodes.Add(child);
             }
 
             foreach (var kvp in subGroups)
@@ -1743,10 +1748,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var subGroupProps = kvp.Value;
                 string subGroupTypeName = subGroupProps[0].PropertyPath[depth].PropertyType.Name;
                 string subPrefix = pathPrefix + subGroupName + "_";
-                var subGroupNode = parentNode.Nodes.Add(subGroupName + "  (" + subGroupTypeName + ")");
+                var subGroupNode = new RadTreeNode(subGroupName + "  (" + subGroupTypeName + ")");
                 subGroupNode.Tag = new string[] { "subclass", datasetName, subPrefix };
                 subGroupNode.ForeColor = Color.FromArgb(0, 100, 130);
-                subGroupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
+                subGroupNode.Font = new Font(refTreeView.Font, FontStyle.Italic);
+                parentNode.Nodes.Add(subGroupNode);
 
                 AddSubclassChildren(subGroupNode, datasetName, subGroupProps, depth + 1, filterColumns, subPrefix);
             }
@@ -1761,9 +1767,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 string name = kvp.Key;
                 Type type = kvp.Value;
                 int count = GetRecordCountForTag(name);
-                var node = refTreeView.Nodes.Add(name + "  (" + count + ")");
+                var node = new RadTreeNode(name + "  (" + count + ")");
                 node.Tag = name;
-                node.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                node.Font = new Font(refTreeView.Font, FontStyle.Bold);
+                refTreeView.Nodes.Add(node);
 
                 AddHierarchicalColumns(node, name, type, null);
                 node.Expand();
@@ -1771,28 +1778,32 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             if (registeredPythonClasses.Count > 0)
             {
-                var classNode = refTreeView.Nodes.Add("Registered Classes  (" + registeredPythonClasses.Count + ")");
-                classNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                var classNode = new RadTreeNode("Registered Classes  (" + registeredPythonClasses.Count + ")");
+                classNode.Font = new Font(refTreeView.Font, FontStyle.Bold);
                 classNode.Tag = "regclasses";
+                refTreeView.Nodes.Add(classNode);
                 foreach (var name in registeredPythonClasses.Keys)
                 {
-                    var child = classNode.Nodes.Add(name);
+                    var child = new RadTreeNode(name);
                     child.Tag = "regclass_" + name;
                     child.ForeColor = Color.FromArgb(0, 100, 160);
+                    classNode.Nodes.Add(child);
                 }
                 classNode.Expand();
             }
 
             if (contextVariables.Count > 0)
             {
-                var ctxNode = refTreeView.Nodes.Add("Context Hub  (" + contextVariables.Count + ")");
-                ctxNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                var ctxNode = new RadTreeNode("Context Hub  (" + contextVariables.Count + ")");
+                ctxNode.Font = new Font(refTreeView.Font, FontStyle.Bold);
                 ctxNode.Tag = "contexthub";
+                refTreeView.Nodes.Add(ctxNode);
                 foreach (var kvp in contextVariables)
                 {
-                    var child = ctxNode.Nodes.Add(kvp.Key + "  :  " + kvp.Value.TypeDescription);
+                    var child = new RadTreeNode(kvp.Key + "  :  " + kvp.Value.TypeDescription);
                     child.Tag = "ctx_" + kvp.Key;
                     child.ForeColor = Color.FromArgb(128, 0, 128);
+                    ctxNode.Nodes.Add(child);
                 }
                 ctxNode.Expand();
             }
@@ -1819,7 +1830,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return cols;
         }
 
-        private void OnRefTreeSelect(object sender, TreeViewEventArgs e)
+        private void OnRefTreeSelect(object sender, RadTreeViewEventArgs e)
         {
             if (e.Node == null || e.Node.Tag == null) return;
 
@@ -1977,7 +1988,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             refDetailBox.ScrollToCaret();
         }
 
-        private void ShowSubclassDetail(string datasetName, string prefix, TreeNode node)
+        private void ShowSubclassDetail(string datasetName, string prefix, RadTreeNode node)
         {
             Type type;
             if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
@@ -2836,7 +2847,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             fileTreeView.NodeMouseClick += OnFileTreeNodeClick;
             fileTreeView.NodeMouseDoubleClick += OnFileTreeNodeDoubleClick;
-            fileTreeView.AfterLabelEdit += OnFileTreeAfterLabelEdit;
+            fileTreeView.Edited += OnFileTreeAfterLabelEdit;
             fileNewBtn.Click += OnNewFile;
             fileOpenBtn.Click += OnOpenFile;
             fileCloseBtn.Click += OnCloseFile;
@@ -2846,7 +2857,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 if (e.Button == MouseButtons.Right)
                 {
-                    var node = fileTreeView.GetNodeAt(e.X, e.Y);
+                    var node = fileTreeView.GetNodeAt(e.Location);
                     fileTreeView.SelectedNode = node;
                     BuildFileContextMenu(node);
                     fileContextMenu.Show(fileTreeView.PointToScreen(e.Location));
@@ -2854,14 +2865,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
         }
 
-        private void BeginNodeRename(TreeNode node)
+        private void BeginNodeRename(RadTreeNode node)
         {
             if (node == null) return;
-            fileTreeView.LabelEdit = true;
+            fileTreeView.AllowEdit = true;
             node.BeginEdit();
         }
 
-        private void BuildFileContextMenu(TreeNode node)
+        private void BuildFileContextMenu(RadTreeNode node)
         {
             fileContextMenu.Items.Clear();
 
@@ -2896,17 +2907,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
-        private void OnFileTreeNodeClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void OnFileTreeNodeClick(object sender, RadTreeViewEventArgs e)
         {
             OpenFileFromTree(e.Node);
         }
 
-        private void OnFileTreeNodeDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        private void OnFileTreeNodeDoubleClick(object sender, RadTreeViewEventArgs e)
         {
             OpenFileFromTree(e.Node);
         }
 
-        private void OpenFileFromTree(TreeNode node)
+        private void OpenFileFromTree(RadTreeNode node)
         {
             if (node == null) return;
             string tag = node.Tag as string;
@@ -2981,7 +2992,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             RaiseStatus("Created folder: " + Path.GetFileName(folderPath));
         }
 
-        private void OnDeleteFileOrFolder(TreeNode node)
+        private void OnDeleteFileOrFolder(RadTreeNode node)
         {
             if (node == null) return;
             string path = node.Tag as string;
@@ -3047,20 +3058,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             RaiseStatus("Deleted: " + itemName);
         }
 
-        private void OnFileTreeAfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        private void OnFileTreeAfterLabelEdit(object sender, TreeNodeEditedEventArgs e)
         {
-            fileTreeView.LabelEdit = false;
+            fileTreeView.AllowEdit = false;
 
-            if (e.Label == null)
-            {
-                e.CancelEdit = true;
-                return;
-            }
+            string oldValue = e.OldValue as string;
+            string newName = e.Node.Text?.Trim();
 
-            string newName = e.Label.Trim();
-            if (string.IsNullOrEmpty(newName))
+            if (string.IsNullOrEmpty(newName) || newName == oldValue)
             {
-                e.CancelEdit = true;
+                if (oldValue != null) e.Node.Text = oldValue;
                 return;
             }
 
@@ -3069,7 +3076,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 if (Array.IndexOf(invalidChars, c) >= 0)
                 {
-                    e.CancelEdit = true;
+                    e.Node.Text = oldValue;
                     MessageBox.Show("The name contains invalid characters.", "Invalid Name",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -3079,7 +3086,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             string oldPath = e.Node.Tag as string;
             if (oldPath == null || oldPath.StartsWith("UNSAVED:"))
             {
-                e.CancelEdit = true;
+                if (oldValue != null) e.Node.Text = oldValue;
                 return;
             }
 
@@ -3093,13 +3100,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             if (newPath.Equals(oldPath, StringComparison.OrdinalIgnoreCase))
             {
-                e.CancelEdit = true;
+                if (oldValue != null) e.Node.Text = oldValue;
                 return;
             }
 
             if ((isFolder && Directory.Exists(newPath)) || (!isFolder && File.Exists(newPath)))
             {
-                e.CancelEdit = true;
+                if (oldValue != null) e.Node.Text = oldValue;
                 MessageBox.Show("An item with this name already exists.", "Name Conflict",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -3137,13 +3144,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                 }
 
-                e.CancelEdit = true;
                 RefreshFileList();
                 RaiseStatus("Renamed to: " + newName);
             }
             catch (Exception ex)
             {
-                e.CancelEdit = true;
+                if (oldValue != null) e.Node.Text = oldValue;
                 MessageBox.Show("Failed to rename: " + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -3172,16 +3178,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             fileTreeView.EndUpdate();
         }
 
-        private void PopulateTreeNode(TreeNodeCollection parentNodes, string dirPath)
+        private void PopulateTreeNode(RadTreeNodeCollection parentNodes, string dirPath)
         {
             foreach (var subDir in Directory.GetDirectories(dirPath).OrderBy(d => d))
             {
                 string dirName = Path.GetFileName(subDir);
-                var dirNode = new TreeNode(dirName);
+                var dirNode = new RadTreeNode(dirName);
                 dirNode.Tag = subDir;
                 dirNode.ForeColor = Color.FromArgb(80, 80, 80);
-                dirNode.ImageKey = "folder";
-                dirNode.SelectedImageKey = "folder_open";
+                dirNode.Image = fileTreeFolderImage;
+                dirNode.ExpandedImage = fileTreeFolderOpenImage;
                 parentNodes.Add(dirNode);
                 PopulateTreeNode(dirNode.Nodes, subDir);
             }
@@ -3200,10 +3206,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 else if (fileTab != null && fileTab.IsModified)
                     displayName = "\u2022 " + fileName;
 
-                var fileNode = new TreeNode(displayName);
+                var fileNode = new RadTreeNode(displayName);
                 fileNode.Tag = filePath;
-                fileNode.ImageKey = "python";
-                fileNode.SelectedImageKey = "python";
+                fileNode.Image = fileTreePythonImage;
 
                 if (isActive)
                     fileNode.ForeColor = Color.FromArgb(0, 90, 180);
@@ -3223,19 +3228,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     string displayName = isActive ? "\u25b8 " + ft.FileName
                         : ft.IsModified ? "\u2022 " + ft.FileName
                         : ft.FileName;
-                    var node = new TreeNode(displayName);
+                    var node = new RadTreeNode(displayName);
                     node.Tag = "UNSAVED:" + ft.FileName;
-                    node.ImageKey = "python";
-                    node.SelectedImageKey = "python";
+                    node.Image = fileTreePythonImage;
                     node.ForeColor = isActive ? Color.FromArgb(0, 90, 180) : Color.FromArgb(128, 128, 128);
                     fileTreeView.Nodes.Add(node);
                 }
             }
         }
 
-        private TreeNode FindNodeByPath(TreeNodeCollection nodes, string path)
+        private RadTreeNode FindNodeByPath(RadTreeNodeCollection nodes, string path)
         {
-            foreach (TreeNode node in nodes)
+            foreach (RadTreeNode node in nodes)
             {
                 string tag = node.Tag as string;
                 if (tag != null && tag.Equals(path, StringComparison.OrdinalIgnoreCase))
