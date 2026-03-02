@@ -13,7 +13,8 @@ The application uses Mono (C# / .NET Framework 4.7.2 compatible) with Python int
 
 **Dual-Project Structure:**
 - `src/`: Mono project using standard WinForms controls for Linux/Replit execution.
-- `DataScienceWorkbench/PythonWorkbench/`: Visual Studio project using Telerik UI for WinForms for non-editor UI (RadMenu, RadTreeView, RadPanel, etc.) and `CodeTextBox` for the editor.
+- `DataScienceWorkbench/PythonWorkbench/`: Visual Studio project — UI controls and editor integration (DataScienceControl, PlotViewerForm, RunConfigurationDialog, PythonBridge, SyntaxEditorHelper, CompletionProvider, etc.). Uses Telerik UI for WinForms for non-editor UI (RadMenu, RadTreeView, RadPanel, etc.) and `CodeTextBox` for the editor.
+- `DataScienceWorkbench/PythonWorkbenchData/`: Data layer — models, streaming queue, attribute definitions, run configurations (DataModels, DataQueue, PythonVisibleAttribute, RunConfiguration).
 - `extern/SyntaxEditorControl/`: Git submodule providing the `CodeTextBox` editor control, shared by both projects.
 
 **Editor Control — CodeTextBox (migration COMPLETE):**

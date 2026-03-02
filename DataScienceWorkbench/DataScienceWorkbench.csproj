@@ -62,7 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonWorkbenchData\DataModels.cs" />
-    <Compile Include="PythonWorkbench\DataQueue.cs" />
+    <Compile Include="PythonWorkbenchData\DataQueue.cs" />
+    <Compile Include="PythonWorkbenchData\PythonVisibleAttribute.cs" />
+    <Compile Include="PythonWorkbenchData\RunConfiguration.cs" />
     <Compile Include="PythonWorkbench\DataScienceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -79,6 +81,15 @@
     <Compile Include="PythonWorkbench\PlotViewerForm.Designer.cs">
       <DependentUpon>PlotViewerForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="PythonWorkbench\PythonBridge.cs" />
+    <Compile Include="PythonWorkbench\PythonSymbolAnalyzer.cs" />
+    <Compile Include="PythonWorkbench\RunConfigurationDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PythonWorkbench\RunConfigurationDialog.Designer.cs">
+      <DependentUpon>RunConfigurationDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonWorkbench\SyntaxEditorHelper.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -86,18 +97,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="PythonWorkbench\PythonBridge.cs" />
-    <Compile Include="PythonWorkbench\PythonSymbolAnalyzer.cs" />
-    <Compile Include="PythonWorkbench\RunConfiguration.cs" />
-    <Compile Include="PythonWorkbench\RunConfigurationDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PythonWorkbench\RunConfigurationDialog.Designer.cs">
-      <DependentUpon>RunConfigurationDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PythonWorkbenchData\PythonVisibleAttribute.cs" />
-    <Compile Include="PythonWorkbench\SyntaxEditorHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.manifest" />
