@@ -401,6 +401,151 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             catch { }
         }
 
+        private void AppendBootstrapCode(StringBuilder sb, bool hasMemData, bool hasStreamData)
+        {
+            sb.AppendLine("import sys, io, base64, pandas as pd");
+            sb.AppendLine("import numpy as np");
+            sb.AppendLine("from PIL import Image as _PILImage");
+            sb.AppendLine("import csv as _csv");
+            sb.AppendLine("def _decode_img(s):");
+            sb.AppendLine("    if not isinstance(s, str) or not s.startswith('__IMG__:'): return s");
+            sb.AppendLine("    b = base64.b64decode(s[7:])");
+            sb.AppendLine("    return _PILImage.open(io.BytesIO(b))");
+            sb.AppendLine("def _decode_img_columns(df):");
+            sb.AppendLine("    for col in df.columns:");
+            sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
+            sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
+            sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
+            sb.AppendLine("    return df");
+            sb.AppendLine("class _DatasetRow:");
+            sb.AppendLine("    def __init__(self, series):");
+            sb.AppendLine("        object.__setattr__(self, '_s', series)");
+            sb.AppendLine("    def __getattr__(self, name):");
+            sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
+            sb.AppendLine("        if name in _s.index:");
+            sb.AppendLine("            return _s[name]");
+            sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
+            sb.AppendLine("    def __repr__(self):");
+            sb.AppendLine("        return repr(object.__getattribute__(self, '_s'))");
+            sb.AppendLine("    def __dir__(self):");
+            sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
+            sb.AppendLine("        return list(_s.index)");
+            sb.AppendLine("class _DotNetDataset:");
+            sb.AppendLine("    def __init__(self, df):");
+            sb.AppendLine("        object.__setattr__(self, '_df', df)");
+            sb.AppendLine("    def __getattr__(self, name):");
+            sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+            sb.AppendLine("        if name in _df.columns:");
+            sb.AppendLine("            return _df[name]");
+            sb.AppendLine("        return getattr(_df, name)");
+            sb.AppendLine("    def __repr__(self):");
+            sb.AppendLine("        return repr(object.__getattribute__(self, '_df'))");
+            sb.AppendLine("    def __len__(self):");
+            sb.AppendLine("        return len(object.__getattribute__(self, '_df'))");
+            sb.AppendLine("    def __getitem__(self, key):");
+            sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+            sb.AppendLine("        if isinstance(key, (int, slice)):");
+            sb.AppendLine("            result = _df.iloc[key]");
+            sb.AppendLine("            if isinstance(result, pd.Series):");
+            sb.AppendLine("                return _DatasetRow(result)");
+            sb.AppendLine("            return _DotNetDataset(result.reset_index(drop=True))");
+            sb.AppendLine("        return _df[key]");
+            sb.AppendLine("    def __iter__(self):");
+            sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
+            sb.AppendLine("        for i in range(len(_df)):");
+            sb.AppendLine("            yield _DatasetRow(_df.iloc[i])");
+            sb.AppendLine("    @property");
+            sb.AppendLine("    def df(self):");
+            sb.AppendLine("        return object.__getattribute__(self, '_df')");
+
+            if (hasStreamData)
+            {
+                sb.AppendLine("class _StreamRow:");
+                sb.AppendLine("    __slots__ = ('_data',)");
+                sb.AppendLine("    def __init__(self, data):");
+                sb.AppendLine("        object.__setattr__(self, '_data', data)");
+                sb.AppendLine("    def __getattr__(self, name):");
+                sb.AppendLine("        _data = object.__getattribute__(self, '_data')");
+                sb.AppendLine("        if name in _data:");
+                sb.AppendLine("            return _data[name]");
+                sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
+                sb.AppendLine("    def __getitem__(self, key):");
+                sb.AppendLine("        return object.__getattribute__(self, '_data')[key]");
+                sb.AppendLine("    def __repr__(self):");
+                sb.AppendLine("        return repr(object.__getattribute__(self, '_data'))");
+                sb.AppendLine("    def __dir__(self):");
+                sb.AppendLine("        return list(object.__getattribute__(self, '_data').keys())");
+                sb.AppendLine("class _DotNetStream:");
+                sb.AppendLine("    def __init__(self, name, columns):");
+                sb.AppendLine("        object.__setattr__(self, '_name', name)");
+                sb.AppendLine("        object.__setattr__(self, '_columns', columns)");
+                sb.AppendLine("        object.__setattr__(self, '_consumed', False)");
+                sb.AppendLine("    @property");
+                sb.AppendLine("    def columns(self):");
+                sb.AppendLine("        return list(object.__getattribute__(self, '_columns'))");
+                sb.AppendLine("    @property");
+                sb.AppendLine("    def name(self):");
+                sb.AppendLine("        return object.__getattribute__(self, '_name')");
+                sb.AppendLine("    def __repr__(self):");
+                sb.AppendLine("        _n = object.__getattribute__(self, '_name')");
+                sb.AppendLine("        _c = object.__getattribute__(self, '_consumed')");
+                sb.AppendLine("        return f'DotNetStream({_n}, columns={self.columns}, consumed={_c})'");
+                sb.AppendLine("    def __iter__(self):");
+                sb.AppendLine("        if object.__getattribute__(self, '_consumed'):");
+                sb.AppendLine("            raise RuntimeError('Stream has already been consumed. Re-register the data source for another pass.')");
+                sb.AppendLine("        object.__setattr__(self, '_consumed', True)");
+                sb.AppendLine("        _cols = object.__getattribute__(self, '_columns')");
+                sb.AppendLine("        while True:");
+                sb.AppendLine("            _raw = sys.stdin.readline()");
+                sb.AppendLine("            if not _raw:");
+                sb.AppendLine("                break");
+                sb.AppendLine("            _raw = _raw.rstrip('\\n')");
+                sb.AppendLine("            if _raw == '__STREAM_END__':");
+                sb.AppendLine("                break");
+                sb.AppendLine("            _row_vals = list(_csv.reader([_raw]))[0]");
+                sb.AppendLine("            _data = {}");
+                sb.AppendLine("            for _i, _col in enumerate(_cols):");
+                sb.AppendLine("                _v = _row_vals[_i] if _i < len(_row_vals) else ''");
+                sb.AppendLine("                if isinstance(_v, str) and _v.startswith('__IMG__:'):");
+                sb.AppendLine("                    _v = _decode_img(_v)");
+                sb.AppendLine("                _data[_col] = _v");
+                sb.AppendLine("            yield _StreamRow(_data)");
+            }
+
+            sb.AppendLine("import types as _types");
+            sb.AppendLine("_dotnet_mod = _types.ModuleType('DotNetData')");
+            sb.AppendLine("_dotnet_mod.__doc__ = 'Datasets piped from the .NET host application.'");
+            sb.AppendLine("_dotnet_mod.__all__ = []");
+            sb.AppendLine("sys.modules['DotNetData'] = _dotnet_mod");
+            sb.AppendLine("while True:");
+            sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
+            sb.AppendLine("    if _hdr == '__DONE__': break");
+            sb.AppendLine("    if _hdr.startswith('__DATASET__||'):");
+            sb.AppendLine("        _parts = _hdr.split('||')");
+            sb.AppendLine("        _name = _parts[1]");
+            sb.AppendLine("        _nlines = int(_parts[2])");
+            sb.AppendLine("        _lines = []");
+            sb.AppendLine("        for _ in range(_nlines):");
+            sb.AppendLine("            _lines.append(sys.stdin.readline())");
+            sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
+            sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
+            sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
+            sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
+
+            if (hasStreamData)
+            {
+                sb.AppendLine("    if _hdr.startswith('__STREAM__||'):");
+                sb.AppendLine("        _parts = _hdr.split('||')");
+                sb.AppendLine("        _sname = _parts[1]");
+                sb.AppendLine("        _scols = _parts[2].split(',')");
+                sb.AppendLine("        setattr(_dotnet_mod, _sname, _DotNetStream(_sname, _scols))");
+                sb.AppendLine("        _dotnet_mod.__all__.append(_sname)");
+            }
+
+            sb.AppendLine("del _types, _dotnet_mod");
+            sb.AppendLine();
+        }
+
         private PythonResult CreateUnavailableResult(string operation)
         {
             return new PythonResult
@@ -433,91 +578,24 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public PythonResult Execute(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, string preamble = null)
         {
+            return Execute(script, inMemoryData, null, preamble);
+        }
+
+        public PythonResult Execute(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, Dictionary<string, IStreamingDataSource> streamingData, string preamble = null)
+        {
             if (!pythonAvailable)
                 return CreateUnavailableResult("run script");
 
             bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
+            bool hasStreamData = streamingData != null && streamingData.Count > 0;
             bool hasPreamble = !string.IsNullOrEmpty(preamble);
 
             string fullScript;
             var sb = new StringBuilder();
 
-            if (hasMemData)
+            if (hasMemData || hasStreamData)
             {
-                sb.AppendLine("import sys, io, base64, pandas as pd");
-                sb.AppendLine("import numpy as np");
-                sb.AppendLine("from PIL import Image as _PILImage");
-                sb.AppendLine("def _decode_img(s):");
-                sb.AppendLine("    if not isinstance(s, str) or not s.startswith('__IMG__:'): return s");
-                sb.AppendLine("    b = base64.b64decode(s[7:])");
-                sb.AppendLine("    return _PILImage.open(io.BytesIO(b))");
-                sb.AppendLine("def _decode_img_columns(df):");
-                sb.AppendLine("    for col in df.columns:");
-                sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
-                sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
-                sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
-                sb.AppendLine("    return df");
-                sb.AppendLine("class _DatasetRow:");
-                sb.AppendLine("    def __init__(self, series):");
-                sb.AppendLine("        object.__setattr__(self, '_s', series)");
-                sb.AppendLine("    def __getattr__(self, name):");
-                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
-                sb.AppendLine("        if name in _s.index:");
-                sb.AppendLine("            return _s[name]");
-                sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
-                sb.AppendLine("    def __repr__(self):");
-                sb.AppendLine("        return repr(object.__getattribute__(self, '_s'))");
-                sb.AppendLine("    def __dir__(self):");
-                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
-                sb.AppendLine("        return list(_s.index)");
-                sb.AppendLine("class _DotNetDataset:");
-                sb.AppendLine("    def __init__(self, df):");
-                sb.AppendLine("        object.__setattr__(self, '_df', df)");
-                sb.AppendLine("    def __getattr__(self, name):");
-                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-                sb.AppendLine("        if name in _df.columns:");
-                sb.AppendLine("            return _df[name]");
-                sb.AppendLine("        return getattr(_df, name)");
-                sb.AppendLine("    def __repr__(self):");
-                sb.AppendLine("        return repr(object.__getattribute__(self, '_df'))");
-                sb.AppendLine("    def __len__(self):");
-                sb.AppendLine("        return len(object.__getattribute__(self, '_df'))");
-                sb.AppendLine("    def __getitem__(self, key):");
-                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-                sb.AppendLine("        if isinstance(key, (int, slice)):");
-                sb.AppendLine("            result = _df.iloc[key]");
-                sb.AppendLine("            if isinstance(result, pd.Series):");
-                sb.AppendLine("                return _DatasetRow(result)");
-                sb.AppendLine("            return _DotNetDataset(result.reset_index(drop=True))");
-                sb.AppendLine("        return _df[key]");
-                sb.AppendLine("    def __iter__(self):");
-                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-                sb.AppendLine("        for i in range(len(_df)):");
-                sb.AppendLine("            yield _DatasetRow(_df.iloc[i])");
-                sb.AppendLine("    @property");
-                sb.AppendLine("    def df(self):");
-                sb.AppendLine("        return object.__getattribute__(self, '_df')");
-                sb.AppendLine("import types as _types");
-                sb.AppendLine("_dotnet_mod = _types.ModuleType('DotNetData')");
-                sb.AppendLine("_dotnet_mod.__doc__ = 'Datasets piped from the .NET host application.'");
-                sb.AppendLine("_dotnet_mod.__all__ = []");
-                sb.AppendLine("sys.modules['DotNetData'] = _dotnet_mod");
-                sb.AppendLine("while True:");
-                sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
-                sb.AppendLine("    if _hdr == '__DONE__': break");
-                sb.AppendLine("    if _hdr.startswith('__DATASET__||'):");
-                sb.AppendLine("        _parts = _hdr.split('||')");
-                sb.AppendLine("        _name = _parts[1]");
-                sb.AppendLine("        _nlines = int(_parts[2])");
-                sb.AppendLine("        _lines = []");
-                sb.AppendLine("        for _ in range(_nlines):");
-                sb.AppendLine("            _lines.append(sys.stdin.readline())");
-                sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
-                sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
-                sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
-                sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
-                sb.AppendLine("del _decode_img, _decode_img_columns, _tmpdf, _types, _dotnet_mod");
-                sb.AppendLine();
+                AppendBootstrapCode(sb, hasMemData, hasStreamData);
             }
 
             if (hasPreamble)
@@ -525,7 +603,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 sb.AppendLine(preamble);
             }
 
-            if (hasMemData || hasPreamble)
+            if (hasMemData || hasStreamData || hasPreamble)
             {
                 sb.AppendLine(script);
                 fullScript = sb.ToString();
@@ -546,7 +624,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     Arguments = "\"" + tempScript + "\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    RedirectStandardInput = hasMemData,
+                    RedirectStandardInput = hasMemData || hasStreamData,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
@@ -559,17 +637,37 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 var proc = Process.Start(psi);
 
-                if (hasMemData)
+                if (hasMemData || hasStreamData)
                 {
-                    foreach (var kvp in inMemoryData)
+                    if (hasMemData)
                     {
-                        var source = kvp.Value;
-                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
-                        foreach (var line in source.StreamCsvLines())
-                            proc.StandardInput.WriteLine(line);
+                        foreach (var kvp in inMemoryData)
+                        {
+                            var source = kvp.Value;
+                            proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
+                            foreach (var line in source.StreamCsvLines())
+                                proc.StandardInput.WriteLine(line);
+                        }
+                    }
+                    if (hasStreamData)
+                    {
+                        foreach (var kvp in streamingData)
+                            proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
                     }
                     proc.StandardInput.WriteLine("__DONE__");
                     proc.StandardInput.Flush();
+
+                    if (hasStreamData)
+                    {
+                        foreach (var kvp in streamingData)
+                        {
+                            foreach (var line in kvp.Value.StreamCsvRows())
+                                proc.StandardInput.WriteLine(line);
+                            proc.StandardInput.WriteLine("__STREAM_END__");
+                        }
+                        proc.StandardInput.Flush();
+                    }
+
                     proc.StandardInput.Close();
                 }
 
@@ -639,7 +737,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             get { lock (_processLock) return _runningProcess != null; }
         }
 
-        public void ExecuteAsync(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, string preamble,
+        public void ExecuteAsync(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, Dictionary<string, IStreamingDataSource> streamingData, string preamble,
             Action<string> onOutputLine, Action<string> onErrorLine, Action<PythonResult> onComplete,
             string scriptArguments = null, string inputFilePath = null)
         {
@@ -651,87 +749,15 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
+            bool hasStreamData = streamingData != null && streamingData.Count > 0;
             bool hasPreamble = !string.IsNullOrEmpty(preamble);
 
             string fullScript;
             var sb = new StringBuilder();
 
-            if (hasMemData)
+            if (hasMemData || hasStreamData)
             {
-                sb.AppendLine("import sys, io, base64, pandas as pd");
-                sb.AppendLine("import numpy as np");
-                sb.AppendLine("from PIL import Image as _PILImage");
-                sb.AppendLine("def _decode_img(s):");
-                sb.AppendLine("    if not isinstance(s, str) or not s.startswith('__IMG__:'): return s");
-                sb.AppendLine("    b = base64.b64decode(s[7:])");
-                sb.AppendLine("    return _PILImage.open(io.BytesIO(b))");
-                sb.AppendLine("def _decode_img_columns(df):");
-                sb.AppendLine("    for col in df.columns:");
-                sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
-                sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
-                sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
-                sb.AppendLine("    return df");
-                sb.AppendLine("class _DatasetRow:");
-                sb.AppendLine("    def __init__(self, series):");
-                sb.AppendLine("        object.__setattr__(self, '_s', series)");
-                sb.AppendLine("    def __getattr__(self, name):");
-                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
-                sb.AppendLine("        if name in _s.index:");
-                sb.AppendLine("            return _s[name]");
-                sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
-                sb.AppendLine("    def __repr__(self):");
-                sb.AppendLine("        return repr(object.__getattribute__(self, '_s'))");
-                sb.AppendLine("    def __dir__(self):");
-                sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
-                sb.AppendLine("        return list(_s.index)");
-                sb.AppendLine("class _DotNetDataset:");
-                sb.AppendLine("    def __init__(self, df):");
-                sb.AppendLine("        object.__setattr__(self, '_df', df)");
-                sb.AppendLine("    def __getattr__(self, name):");
-                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-                sb.AppendLine("        if name in _df.columns:");
-                sb.AppendLine("            return _df[name]");
-                sb.AppendLine("        return getattr(_df, name)");
-                sb.AppendLine("    def __repr__(self):");
-                sb.AppendLine("        return repr(object.__getattribute__(self, '_df'))");
-                sb.AppendLine("    def __len__(self):");
-                sb.AppendLine("        return len(object.__getattribute__(self, '_df'))");
-                sb.AppendLine("    def __getitem__(self, key):");
-                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-                sb.AppendLine("        if isinstance(key, (int, slice)):");
-                sb.AppendLine("            result = _df.iloc[key]");
-                sb.AppendLine("            if isinstance(result, pd.Series):");
-                sb.AppendLine("                return _DatasetRow(result)");
-                sb.AppendLine("            return _DotNetDataset(result.reset_index(drop=True))");
-                sb.AppendLine("        return _df[key]");
-                sb.AppendLine("    def __iter__(self):");
-                sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-                sb.AppendLine("        for i in range(len(_df)):");
-                sb.AppendLine("            yield _DatasetRow(_df.iloc[i])");
-                sb.AppendLine("    @property");
-                sb.AppendLine("    def df(self):");
-                sb.AppendLine("        return object.__getattribute__(self, '_df')");
-                sb.AppendLine("import types as _types");
-                sb.AppendLine("_dotnet_mod = _types.ModuleType('DotNetData')");
-                sb.AppendLine("_dotnet_mod.__doc__ = 'Datasets piped from the .NET host application.'");
-                sb.AppendLine("_dotnet_mod.__all__ = []");
-                sb.AppendLine("sys.modules['DotNetData'] = _dotnet_mod");
-                sb.AppendLine("while True:");
-                sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
-                sb.AppendLine("    if _hdr == '__DONE__': break");
-                sb.AppendLine("    if _hdr.startswith('__DATASET__||'):");
-                sb.AppendLine("        _parts = _hdr.split('||')");
-                sb.AppendLine("        _name = _parts[1]");
-                sb.AppendLine("        _nlines = int(_parts[2])");
-                sb.AppendLine("        _lines = []");
-                sb.AppendLine("        for _ in range(_nlines):");
-                sb.AppendLine("            _lines.append(sys.stdin.readline())");
-                sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
-                sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
-                sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
-                sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
-                sb.AppendLine("del _decode_img, _decode_img_columns, _tmpdf, _types, _dotnet_mod");
-                sb.AppendLine();
+                AppendBootstrapCode(sb, hasMemData, hasStreamData);
             }
 
             if (hasPreamble)
@@ -739,7 +765,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 sb.AppendLine(preamble);
             }
 
-            if (hasMemData || hasPreamble)
+            if (hasMemData || hasStreamData || hasPreamble)
             {
                 sb.AppendLine(script);
                 fullScript = sb.ToString();
@@ -779,17 +805,36 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     _runningProcess = proc;
                 }
 
-                if (hasMemData)
+                if (hasMemData || hasStreamData)
                 {
-                    foreach (var kvp in inMemoryData)
+                    if (hasMemData)
                     {
-                        var source = kvp.Value;
-                        proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
-                        foreach (var line in source.StreamCsvLines())
-                            proc.StandardInput.WriteLine(line);
+                        foreach (var kvp in inMemoryData)
+                        {
+                            var source = kvp.Value;
+                            proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
+                            foreach (var line in source.StreamCsvLines())
+                                proc.StandardInput.WriteLine(line);
+                        }
+                    }
+                    if (hasStreamData)
+                    {
+                        foreach (var kvp in streamingData)
+                            proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
                     }
                     proc.StandardInput.WriteLine("__DONE__");
                     proc.StandardInput.Flush();
+
+                    if (hasStreamData)
+                    {
+                        foreach (var kvp in streamingData)
+                        {
+                            foreach (var line in kvp.Value.StreamCsvRows())
+                                proc.StandardInput.WriteLine(line);
+                            proc.StandardInput.WriteLine("__STREAM_END__");
+                        }
+                        proc.StandardInput.Flush();
+                    }
                 }
 
                 string[] _inputFileLines = null;
@@ -799,7 +844,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     catch { _inputFileLines = null; }
                 }
 
-                if (_inputFileLines != null && _inputFileLines.Length > 0)
+                bool hasInputFile = _inputFileLines != null && _inputFileLines.Length > 0;
+
+                if ((hasMemData || hasStreamData) && !hasInputFile)
+                {
+                    try { proc.StandardInput.Close(); } catch { }
+                }
+
+                if (hasInputFile)
                 {
                     var capturedLines = _inputFileLines;
                     var inputThread = new Thread(() =>

@@ -1466,6 +1466,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             item.Click += (s, e) => InsertSnippet(GetImageDisplaySnippet());
             insertSnippetBtn.DropDownItems.Add(item);
 
+            item = new ToolStripMenuItem("Stream Data (Lazy)");
+            item.Click += (s, e) => InsertSnippet(GetStreamDataSnippet());
+            insertSnippetBtn.DropDownItems.Add(item);
+
             var mlSeparator = new ToolStripSeparator();
             insertSnippetBtn.DropDownItems.Add(mlSeparator);
 
@@ -1490,6 +1494,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             RegisterInMemoryData<Customer>("customers", () => customers);
             RegisterInMemoryData<Employee>("employees", () => employees);
+
+            var streamQueue = new DataQueue<Customer>();
+            streamQueue.SetSource(GenerateStreamingCustomers(500));
+            RegisterStreamingData<Customer>("customer_stream", streamQueue);
+        }
+
+        private IEnumerable<Customer> GenerateStreamingCustomers(int count)
+        {
+            var streamGen = new DataGenerator(123);
+            var products = streamGen.GenerateProducts(50);
+            for (int i = 0; i < count; i++)
+            {
+                var batch = streamGen.GenerateCustomers(1, products);
+                yield return batch[0];
+            }
         }
 
         private void SetupRefSearch()
@@ -4090,10 +4109,12 @@ print(customers.df.describe())
         private string GetLoadDataSnippet()
         {
             return @"
-from DotNetData import customers, employees
+from DotNetData import customers, employees, customer_stream
 
 for name, ds in [('customers', customers), ('employees', employees)]:
     print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')
+
+print(f'  customer_stream: streaming, columns={customer_stream.columns}')
 ";
         }
 
@@ -4259,6 +4280,37 @@ else:
     print(f'Average R: {np.mean(r_avg):.1f}')
     print(f'Average G: {np.mean(g_avg):.1f}')
     print(f'Average B: {np.mean(b_avg):.1f}')
+";
+        }
+
+        private string GetStreamDataSnippet()
+        {
+            return @"
+from DotNetData import customer_stream
+
+print('=== Streaming Data Demo ===')
+print(f'Stream: {customer_stream}')
+print(f'Columns: {customer_stream.columns}')
+print()
+
+count = 0
+tier_counts = {}
+total_age = 0
+
+for row in customer_stream:
+    count += 1
+    tier = row.Tier
+    tier_counts[tier] = tier_counts.get(tier, 0) + 1
+
+    if count <= 3:
+        print(f'Row {count}: {row.FirstName} {row.LastName} - {row.Tier}')
+
+print(f'...')
+print(f'Total rows streamed: {count}')
+print()
+print('Tier distribution:')
+for tier, n in sorted(tier_counts.items()):
+    print(f'  {tier}: {n}')
 ";
         }
 

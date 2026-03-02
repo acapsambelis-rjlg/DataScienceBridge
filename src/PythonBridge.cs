@@ -495,11 +495,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 sb.AppendLine("            raise RuntimeError('Stream has already been consumed. Re-register the data source for another pass.')");
                 sb.AppendLine("        object.__setattr__(self, '_consumed', True)");
                 sb.AppendLine("        _cols = object.__getattribute__(self, '_columns')");
-                sb.AppendLine("        _reader = _csv.reader(iter(sys.stdin.readline, ''))");
-                sb.AppendLine("        for _row_vals in _reader:");
-                sb.AppendLine("            _line = ','.join(_row_vals)");
-                sb.AppendLine("            if _line == '__STREAM_END__':");
+                sb.AppendLine("        while True:");
+                sb.AppendLine("            _raw = sys.stdin.readline()");
+                sb.AppendLine("            if not _raw:");
                 sb.AppendLine("                break");
+                sb.AppendLine("            _raw = _raw.rstrip('\\n')");
+                sb.AppendLine("            if _raw == '__STREAM_END__':");
+                sb.AppendLine("                break");
+                sb.AppendLine("            _row_vals = list(_csv.reader([_raw]))[0]");
                 sb.AppendLine("            _data = {}");
                 sb.AppendLine("            for _i, _col in enumerate(_cols):");
                 sb.AppendLine("                _v = _row_vals[_i] if _i < len(_row_vals) else ''");
@@ -665,8 +668,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         proc.StandardInput.Flush();
                     }
 
-                    if (!hasStreamData)
-                        proc.StandardInput.Close();
+                    proc.StandardInput.Close();
                 }
 
                 string stdout = proc.StandardOutput.ReadToEnd();
@@ -842,7 +844,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     catch { _inputFileLines = null; }
                 }
 
-                if (_inputFileLines != null && _inputFileLines.Length > 0)
+                bool hasInputFile = _inputFileLines != null && _inputFileLines.Length > 0;
+
+                if ((hasMemData || hasStreamData) && !hasInputFile)
+                {
+                    try { proc.StandardInput.Close(); } catch { }
+                }
+
+                if (hasInputFile)
                 {
                     var capturedLines = _inputFileLines;
                     var inputThread = new Thread(() =>

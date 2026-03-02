@@ -35,6 +35,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private List<Diagnostic> syntaxDiagnostics = new List<Diagnostic>();
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
         private Dictionary<string, Func<IInMemoryDataSource>> inMemoryDataSources = new Dictionary<string, Func<IInMemoryDataSource>>();
+        private Dictionary<string, IStreamingDataSource> streamingDataSources = new Dictionary<string, IStreamingDataSource>();
         private Dictionary<string, Type> inMemoryDataTypes = new Dictionary<string, Type>();
         private Dictionary<string, PythonClassInfo> registeredPythonClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> contextVariables = new Dictionary<string, ContextVariable>();
@@ -751,6 +752,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             PopulateReferenceTree();
         }
 
+        public void RegisterStreamingData<T>(string name, DataQueue<T> queue) where T : class
+        {
+            inMemoryDataTypes[name] = typeof(T);
+            streamingDataSources[name] = queue;
+            UpdateDynamicSymbols();
+            PopulateReferenceTree();
+        }
+
         public void RegisterInMemoryData(string name, Func<System.Data.DataTable> dataProvider)
         {
             inMemoryDataSources[name] = () =>
@@ -781,6 +790,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public void UnregisterInMemoryData(string name)
         {
             inMemoryDataSources.Remove(name);
+            streamingDataSources.Remove(name);
             PopulateReferenceTree();
         }
 
@@ -1456,6 +1466,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             item.Click += (s, e) => InsertSnippet(GetImageDisplaySnippet());
             insertSnippetBtn.DropDownItems.Add(item);
 
+            item = new ToolStripMenuItem("Stream Data (Lazy)");
+            item.Click += (s, e) => InsertSnippet(GetStreamDataSnippet());
+            insertSnippetBtn.DropDownItems.Add(item);
+
             var mlSeparator = new ToolStripSeparator();
             insertSnippetBtn.DropDownItems.Add(mlSeparator);
 
@@ -1480,6 +1494,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             RegisterInMemoryData<Customer>("customers", () => customers);
             RegisterInMemoryData<Employee>("employees", () => employees);
+
+            var streamQueue = new DataQueue<Customer>();
+            streamQueue.SetSource(GenerateStreamingCustomers(500));
+            RegisterStreamingData<Customer>("customer_stream", streamQueue);
+        }
+
+        private IEnumerable<Customer> GenerateStreamingCustomers(int count)
+        {
+            var streamGen = new DataGenerator(123);
+            var products = streamGen.GenerateProducts(50);
+            for (int i = 0; i < count; i++)
+            {
+                var batch = streamGen.GenerateCustomers(1, products);
+                yield return batch[0];
+            }
         }
 
         private void SetupRefSearch()
@@ -2356,9 +2385,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (inMemoryDataSources.Count > 0)
                 memData = SerializeInMemoryData();
 
+            Dictionary<string, IStreamingDataSource> streamData = null;
+            if (streamingDataSources.Count > 0)
+                streamData = new Dictionary<string, IStreamingDataSource>(streamingDataSources);
+
             string preamble = BuildPreamble();
 
-            pythonRunner.ExecuteAsync(script, memData, preamble,
+            pythonRunner.ExecuteAsync(script, memData, streamData, preamble,
                 outputChunk => RunOnUIThread(() =>
                 {
                     string pendingInput = "";
@@ -4076,10 +4109,12 @@ print(customers.df.describe())
         private string GetLoadDataSnippet()
         {
             return @"
-from DotNetData import customers, employees
+from DotNetData import customers, employees, customer_stream
 
 for name, ds in [('customers', customers), ('employees', employees)]:
     print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')
+
+print(f'  customer_stream: streaming, columns={customer_stream.columns}')
 ";
         }
 
@@ -4245,6 +4280,37 @@ else:
     print(f'Average R: {np.mean(r_avg):.1f}')
     print(f'Average G: {np.mean(g_avg):.1f}')
     print(f'Average B: {np.mean(b_avg):.1f}')
+";
+        }
+
+        private string GetStreamDataSnippet()
+        {
+            return @"
+from DotNetData import customer_stream
+
+print('=== Streaming Data Demo ===')
+print(f'Stream: {customer_stream}')
+print(f'Columns: {customer_stream.columns}')
+print()
+
+count = 0
+tier_counts = {}
+total_age = 0
+
+for row in customer_stream:
+    count += 1
+    tier = row.Tier
+    tier_counts[tier] = tier_counts.get(tier, 0) + 1
+
+    if count <= 3:
+        print(f'Row {count}: {row.FirstName} {row.LastName} - {row.Tier}')
+
+print(f'...')
+print(f'Total rows streamed: {count}')
+print()
+print('Tier distribution:')
+for tier, n in sorted(tier_counts.items()):
+    print(f'  {tier}: {n}')
 ";
         }
 
