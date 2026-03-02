@@ -502,6 +502,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private void GoToNextBookmark()
         {
             if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
+            if (pythonEditor == null) return;
             int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
             var sorted = bookmarks.OrderBy(b => b).ToList();
             int next = sorted.FirstOrDefault(b => b > currentLine);
@@ -563,7 +564,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (Math.Abs(newSize - editorFontSize) < 0.01f) return;
 
             editorFontSize = newSize;
+            var oldFont = editorFont;
             editorFont = ResolveMonoFont(editorFontSize);
+            if (oldFont != null && oldFont != editorFont)
+            {
+                try { oldFont.Dispose(); } catch { }
+            }
 
             foreach (var tab in openFiles)
                 if (tab.Editor != null)
@@ -746,6 +752,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public void RegisterInMemoryData<T>(string name, DataQueue<T> queue) where T : class
         {
+            streamingDataSources.Remove(name);
             inMemoryDataTypes[name] = typeof(T);
             inMemoryDataSources[name] = () => queue;
             UpdateDynamicSymbols();
@@ -754,6 +761,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public void RegisterStreamingData<T>(string name, DataQueue<T> queue) where T : class
         {
+            inMemoryDataSources.Remove(name);
             inMemoryDataTypes[name] = typeof(T);
             streamingDataSources[name] = queue;
             UpdateDynamicSymbols();

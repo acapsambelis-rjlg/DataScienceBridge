@@ -98,18 +98,14 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             get
             {
                 _snapshotCount = _items.Count;
-                _locked = true;
                 return _snapshotCount + 1;
             }
         }
 
         public IEnumerable<string> StreamCsvLines()
         {
-            if (!_locked)
-            {
-                _snapshotCount = _items.Count;
-                _locked = true;
-            }
+            _snapshotCount = _items.Count;
+            _locked = true;
 
             yield return GetCsvHeader();
 
@@ -164,7 +160,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     s = PythonVisibleHelper.BitmapToBase64(bmp);
                 else
                     s = val != null ? val.ToString() : "";
-                if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                if (s.Contains(",") || s.Contains("\"") || s.Contains("\n") || s.Contains("\r"))
                     s = "\"" + s.Replace("\"", "\"\"") + "\"";
                 vals.Add(s);
             }

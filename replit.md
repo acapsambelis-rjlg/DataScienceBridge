@@ -13,11 +13,17 @@ The application uses Mono (C# / .NET Framework 4.7.2 compatible) with Python int
 
 **Dual-Project Structure:**
 - `src/`: Mono project using standard WinForms controls for Linux/Replit execution.
-- `DataScienceWorkbench/PythonWorkbench/`: Visual Studio project primarily utilizing Telerik UI for WinForms controls (for non-editor UI).
+- `DataScienceWorkbench/PythonWorkbench/`: Visual Studio project using Telerik UI for WinForms for non-editor UI (RadMenu, RadTreeView, RadPanel, etc.) and `CodeTextBox` for the editor.
 - `extern/SyntaxEditorControl/`: Git submodule providing the `CodeTextBox` editor control, shared by both projects.
 
-**Editor Control — CodeTextBox:**
-`CodeTextBox` provides features like syntax highlighting, code folding, completion/autocomplete, diagnostics (error squiggles), find/replace, bracket matching, auto-indent, tab indent/dedent, undo/redo, line numbers, and zoom.
+**Editor Control — CodeTextBox (migration COMPLETE):**
+`CodeTextBox` provides syntax highlighting, code folding, completion/autocomplete via `ICompletionProvider`, diagnostics (error squiggles) via `IDiagnosticProvider`/`SetDiagnostics()`, find/replace, bracket matching, auto-indent, tab indent/dedent, undo/redo, line numbers, zoom, and multi-cursor editing. Domain-specific completions are provided by `DataSciencePythonCompletionProvider` (implements `ICompletionProvider`). Extension methods in `SyntaxEditorHelper.cs` bridge CodeTextBox's API with legacy call patterns.
+
+**Key Editor Integration Classes:**
+- `DataSciencePythonCompletionProvider`: Context-aware Python completions (keywords, builtins, DataFrame methods, dataset columns, registered classes, dynamic symbols, library members)
+- `SyntaxEditorHelper`: Extension methods on `CodeTextBox` for text access, caret/selection manipulation, clipboard, undo/redo
+- `PythonSymbolAnalyzer`: Static analysis producing `Diagnostic` objects for the editor
+- `IndentFoldingProvider` (from SyntaxEditor): Python indentation-based code folding
 
 **Namespace Structure:**
 Namespaces are decoupled from file paths to align with the host application's hierarchy:

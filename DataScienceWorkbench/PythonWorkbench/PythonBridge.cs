@@ -107,8 +107,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     CreateNoWindow = true
                 };
                 var proc = Process.Start(psi);
-                proc.StandardOutput.ReadToEnd();
-                string stderr = proc.StandardError.ReadToEnd();
+                string _discard, stderr;
+                ReadProcessOutputs(proc, out _discard, out stderr, 120000);
                 bool exited = proc.WaitForExit(120000);
 
                 if (!exited)
@@ -340,8 +340,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     CreateNoWindow = true
                 };
                 var proc = Process.Start(psi);
-                string stdout = proc.StandardOutput.ReadToEnd().Trim();
-                string stderr = proc.StandardError.ReadToEnd().Trim();
+                string stdout, stderr;
+                ReadProcessOutputs(proc, out stdout, out stderr, 10000);
+                stdout = (stdout ?? "").Trim();
+                stderr = (stderr ?? "").Trim();
                 bool exited = proc.WaitForExit(10000);
 
                 if (!exited)
@@ -399,6 +401,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
             catch { }
+        }
+
+        private static void ReadProcessOutputs(Process proc, out string stdout, out string stderr, int timeoutMs)
+        {
+            string capturedStderr = null;
+            var stderrThread = new Thread(() => { try { capturedStderr = proc.StandardError.ReadToEnd(); } catch { capturedStderr = ""; } });
+            stderrThread.IsBackground = true;
+            stderrThread.Start();
+
+            stdout = proc.StandardOutput.ReadToEnd();
+            stderrThread.Join(timeoutMs > 0 ? timeoutMs : 30000);
+            stderr = capturedStderr ?? "";
         }
 
         private void AppendBootstrapCode(StringBuilder sb, bool hasMemData, bool hasStreamData)
@@ -671,8 +685,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     proc.StandardInput.Close();
                 }
 
-                string stdout = proc.StandardOutput.ReadToEnd();
-                string stderr = proc.StandardError.ReadToEnd();
+                string stdout, stderr;
+                ReadProcessOutputs(proc, out stdout, out stderr, 60000);
                 bool exited = proc.WaitForExit(60000);
 
                 if (!exited)
@@ -805,76 +819,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     _runningProcess = proc;
                 }
 
-                if (hasMemData || hasStreamData)
-                {
-                    if (hasMemData)
-                    {
-                        foreach (var kvp in inMemoryData)
-                        {
-                            var source = kvp.Value;
-                            proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
-                            foreach (var line in source.StreamCsvLines())
-                                proc.StandardInput.WriteLine(line);
-                        }
-                    }
-                    if (hasStreamData)
-                    {
-                        foreach (var kvp in streamingData)
-                            proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
-                    }
-                    proc.StandardInput.WriteLine("__DONE__");
-                    proc.StandardInput.Flush();
-
-                    if (hasStreamData)
-                    {
-                        foreach (var kvp in streamingData)
-                        {
-                            foreach (var line in kvp.Value.StreamCsvRows())
-                                proc.StandardInput.WriteLine(line);
-                            proc.StandardInput.WriteLine("__STREAM_END__");
-                        }
-                        proc.StandardInput.Flush();
-                    }
-                }
-
-                string[] _inputFileLines = null;
-                if (!string.IsNullOrEmpty(inputFilePath) && File.Exists(inputFilePath))
-                {
-                    try { _inputFileLines = File.ReadAllLines(inputFilePath); }
-                    catch { _inputFileLines = null; }
-                }
-
-                bool hasInputFile = _inputFileLines != null && _inputFileLines.Length > 0;
-
-                if ((hasMemData || hasStreamData) && !hasInputFile)
-                {
-                    try { proc.StandardInput.Close(); } catch { }
-                }
-
-                if (hasInputFile)
-                {
-                    var capturedLines = _inputFileLines;
-                    var inputThread = new Thread(() =>
-                    {
-                        try
-                        {
-                            Thread.Sleep(100);
-                            foreach (var line in capturedLines)
-                            {
-                                try
-                                {
-                                    proc.StandardInput.WriteLine(line);
-                                    proc.StandardInput.Flush();
-                                }
-                                catch { break; }
-                            }
-                        }
-                        catch { }
-                    });
-                    inputThread.IsBackground = true;
-                    inputThread.Start();
-                }
-
                 var plotPaths = new List<string>();
                 var stderrBuilder = new StringBuilder();
 
@@ -888,6 +832,78 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                 };
                 proc.BeginErrorReadLine();
+
+                string[] _inputFileLines = null;
+                if (!string.IsNullOrEmpty(inputFilePath) && File.Exists(inputFilePath))
+                {
+                    try { _inputFileLines = File.ReadAllLines(inputFilePath); }
+                    catch { _inputFileLines = null; }
+                }
+
+                bool hasInputFile = _inputFileLines != null && _inputFileLines.Length > 0;
+
+                var capturedMemData = hasMemData ? inMemoryData : null;
+                var capturedStreamData = hasStreamData ? streamingData : null;
+                var capturedInputLines = hasInputFile ? _inputFileLines : null;
+
+                var stdinThread = new Thread(() =>
+                {
+                    try
+                    {
+                        if (capturedMemData != null || capturedStreamData != null)
+                        {
+                            if (capturedMemData != null)
+                            {
+                                foreach (var kvp in capturedMemData)
+                                {
+                                    var source = kvp.Value;
+                                    proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
+                                    foreach (var line in source.StreamCsvLines())
+                                        proc.StandardInput.WriteLine(line);
+                                }
+                            }
+                            if (capturedStreamData != null)
+                            {
+                                foreach (var kvp in capturedStreamData)
+                                    proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
+                            }
+                            proc.StandardInput.WriteLine("__DONE__");
+                            proc.StandardInput.Flush();
+
+                            if (capturedStreamData != null)
+                            {
+                                foreach (var kvp in capturedStreamData)
+                                {
+                                    foreach (var line in kvp.Value.StreamCsvRows())
+                                        proc.StandardInput.WriteLine(line);
+                                    proc.StandardInput.WriteLine("__STREAM_END__");
+                                }
+                                proc.StandardInput.Flush();
+                            }
+                        }
+
+                        if (capturedInputLines != null)
+                        {
+                            Thread.Sleep(100);
+                            foreach (var line in capturedInputLines)
+                            {
+                                try
+                                {
+                                    proc.StandardInput.WriteLine(line);
+                                    proc.StandardInput.Flush();
+                                }
+                                catch { break; }
+                            }
+                        }
+                        else if (capturedMemData != null || capturedStreamData != null)
+                        {
+                            try { proc.StandardInput.Close(); } catch { }
+                        }
+                    }
+                    catch { }
+                });
+                stdinThread.IsBackground = true;
+                stdinThread.Start();
 
                 var worker = new BackgroundWorker();
                 worker.DoWork += (s, ev) =>
@@ -1029,8 +1045,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 ConfigurePipEnvironment(psi);
 
                 var proc = Process.Start(psi);
-                string stdout = proc.StandardOutput.ReadToEnd();
-                string stderr = proc.StandardError.ReadToEnd();
+                string stdout, stderr;
+                ReadProcessOutputs(proc, out stdout, out stderr, 120000);
                 bool exited = proc.WaitForExit(120000);
 
                 if (!exited)
@@ -1078,8 +1094,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 ConfigurePipEnvironment(psi);
 
                 var proc = Process.Start(psi);
-                string stdout = proc.StandardOutput.ReadToEnd();
-                string stderr = proc.StandardError.ReadToEnd();
+                string stdout, stderr;
+                ReadProcessOutputs(proc, out stdout, out stderr, 60000);
                 bool exited = proc.WaitForExit(60000);
 
                 if (!exited)
@@ -1241,8 +1257,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 };
 
                 var proc = Process.Start(psi);
-                string stdout = proc.StandardOutput.ReadToEnd();
-                string stderr = proc.StandardError.ReadToEnd();
+                string stdout, stderr;
+                ReadProcessOutputs(proc, out stdout, out stderr, 10000);
                 bool exited = proc.WaitForExit(10000);
 
                 if (!exited)
@@ -1362,8 +1378,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 ConfigurePipEnvironment(psi);
 
                 var proc = Process.Start(psi);
-                string stdout = proc.StandardOutput.ReadToEnd();
-                string stderr = proc.StandardError.ReadToEnd();
+                string stdout, stderr;
+                ReadProcessOutputs(proc, out stdout, out stderr, 30000);
                 bool exited = proc.WaitForExit(30000);
 
                 if (!exited)
