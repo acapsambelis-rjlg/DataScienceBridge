@@ -48,7 +48,7 @@ Namespaces are decoupled from file paths to align with the host application's hi
 - **Plot Viewer:** Captures and displays `matplotlib.pyplot` plots interactively.
 - **Python Class Registration and Context Hub:** Provides APIs for injecting Python class definitions and named variables into the execution environment.
 - **Public API (`DataScienceControl`):** Offers methods for data loading, registration, context setting, script execution, and environment reset, along with properties for editor content and output, and status update events.
-- **Custom Keyboard Shortcuts:** Includes shortcuts for line manipulation, bookmarking, and navigation.
+- **Custom Keyboard Shortcuts:** Includes shortcuts for line manipulation and navigation.
 
 ## External Dependencies
 - **System:** Mono runtime, libgdiplus, X11 libraries, gtk2, cairo, pango, fontconfig

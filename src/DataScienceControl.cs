@@ -45,7 +45,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private const float MaxFontSize = 28f;
         private const float DefaultFontSize = 10f;
         private Font editorFont;
-        private HashSet<int> bookmarks = new HashSet<int>();
         private CodeTextBox pythonEditor => activeFile?.Editor;
 
         private List<RunConfiguration> runConfigurations = new List<RunConfiguration>();
@@ -62,7 +61,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             public string Content;
             public int CursorPosition;
             public int ScrollPosition;
-            public HashSet<int> Bookmarks = new HashSet<int>();
             public bool IsModified;
             public CodeTextBox Editor;
             public FileDockContent DockContent;
@@ -299,10 +297,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 if (content == null) return;
                 var tab = openFiles.Find(f => f.DockContent == content);
                 if (tab == null || tab == activeFile) return;
-                if (activeFile != null)
-                    activeFile.Bookmarks = new HashSet<int>(bookmarks);
                 activeFile = tab;
-                bookmarks = new HashSet<int>(tab.Bookmarks);
                 if (pythonEditor != null)
                 {
                     UpdateCursorPositionStatus();
@@ -423,24 +418,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     e.SuppressKeyPress = true;
                     MoveLine(e.KeyCode == Keys.Up);
                 }
-                else if (e.Control && e.KeyCode == Keys.B)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    ToggleBookmarkAtCursor();
-                }
-                else if (e.KeyCode == Keys.F2 && !e.Shift)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    GoToNextBookmark();
-                }
-                else if (e.KeyCode == Keys.F2 && e.Shift)
-                {
-                    e.Handled = true;
-                    e.SuppressKeyPress = true;
-                    GoToPreviousBookmark();
-                }
             };
         }
 
@@ -488,42 +465,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             highlightTimer.Start();
         }
 
-        private void ToggleBookmarkAtCursor()
-        {
-            if (pythonEditor == null) return;
-            int line = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
-            if (bookmarks.Contains(line))
-                bookmarks.Remove(line);
-            else
-                bookmarks.Add(line);
-            RaiseStatus(bookmarks.Contains(line) ? "Bookmark set on line " + (line + 1) : "Bookmark removed from line " + (line + 1));
-        }
-
-        private void GoToNextBookmark()
-        {
-            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
-            if (pythonEditor == null) return;
-            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
-            var sorted = bookmarks.OrderBy(b => b).ToList();
-            int next = sorted.FirstOrDefault(b => b > currentLine);
-            if (next == 0 && !bookmarks.Contains(0))
-                next = sorted.FirstOrDefault(b => b != currentLine);
-            if (next == 0 && sorted.Count > 0) next = sorted[0];
-            GoToLine(next);
-        }
-
-        private void GoToPreviousBookmark()
-        {
-            if (bookmarks.Count == 0) { RaiseStatus("No bookmarks set"); return; }
-            int currentLine = pythonEditor.GetLineFromCharIndex(pythonEditor.GetCaretIndex());
-            var sorted = bookmarks.OrderByDescending(b => b).ToList();
-            int prev = sorted.FirstOrDefault(b => b < currentLine);
-            if (prev == 0 && !bookmarks.Contains(0))
-                prev = sorted.FirstOrDefault(b => b != currentLine);
-            if (prev == 0 && sorted.Count > 0) prev = sorted[0];
-            GoToLine(prev);
-        }
-
         private void GoToLine(int lineIndex)
         {
             if (pythonEditor == null) return;
@@ -534,8 +475,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             pythonEditor.ScrollToCaretPosition();
             RaiseStatus("Ln " + (lineIndex + 1));
         }
-
-        public HashSet<int> GetBookmarks() { return bookmarks; }
 
         private void UpdateCursorPositionStatus()
         {
@@ -1272,23 +1211,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             moveDownItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) MoveLine(false); };
             moveDownItem.ShortcutKeyDisplayString = "Alt+Down";
             editMenu.DropDownItems.Add(moveDownItem);
-
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
-
-            var toggleBookmarkItem = new ToolStripMenuItem("Toggle Bookmark");
-            toggleBookmarkItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) ToggleBookmarkAtCursor(); };
-            toggleBookmarkItem.ShortcutKeyDisplayString = "Ctrl+B";
-            editMenu.DropDownItems.Add(toggleBookmarkItem);
-
-            var nextBookmarkItem = new ToolStripMenuItem("Next Bookmark");
-            nextBookmarkItem.Click += (s, e) => GoToNextBookmark();
-            nextBookmarkItem.ShortcutKeyDisplayString = "F2";
-            editMenu.DropDownItems.Add(nextBookmarkItem);
-
-            var prevBookmarkItem = new ToolStripMenuItem("Previous Bookmark");
-            prevBookmarkItem.Click += (s, e) => GoToPreviousBookmark();
-            prevBookmarkItem.ShortcutKeyDisplayString = "Shift+F2";
-            editMenu.DropDownItems.Add(prevBookmarkItem);
 
             editMenu.DropDownItems.Add(new ToolStripSeparator());
             var clearOutputItem = new ToolStripMenuItem("Clear Output");
@@ -3250,7 +3172,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             if (activeFile == null || activeFile.Editor == null) return;
             activeFile.CursorPosition = activeFile.Editor.GetCaretIndex();
-            activeFile.Bookmarks = new HashSet<int>(bookmarks);
         }
 
         private void SwitchToFile(FileTab tab)
@@ -3264,14 +3185,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             SaveCurrentFileState();
 
-            if (activeFile != null)
-                activeFile.Bookmarks = new HashSet<int>(bookmarks);
-
             if (tab.DockContent == null || tab.DockContent.IsDisposed)
                 CreateEditorForTab(tab);
 
             activeFile = tab;
-            bookmarks = new HashSet<int>(tab.Bookmarks);
 
             tab.DockContent.Activate();
 
@@ -3993,11 +3910,6 @@ EDITING
   Shift+Tab             Unindent selected lines
   Delete                Delete selection
 
-BOOKMARKS
-  Ctrl+B                Toggle bookmark on current line
-  F2                    Jump to next bookmark
-  Shift+F2              Jump to previous bookmark
-
 EDITOR
   Ctrl+Mouse Wheel      Zoom in/out
   Escape                Close autocomplete / Find panel";
@@ -4030,7 +3942,6 @@ ERROR DETECTION
 
 LINE NUMBERS
   Displayed in the gutter on the left side.
-  Bookmark indicators appear as blue circles.
 
 BRACKET MATCHING
   Matching parentheses, brackets, and braces
