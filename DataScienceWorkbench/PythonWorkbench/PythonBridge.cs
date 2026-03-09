@@ -444,7 +444,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("    def __dir__(self):");
             sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
             sb.AppendLine("        return list(_s.index)");
-            sb.AppendLine("class _DotNetDataset:");
+            sb.AppendLine("class _IntelliSEMset:");
             sb.AppendLine("    def __init__(self, df):");
             sb.AppendLine("        object.__setattr__(self, '_df', df)");
             sb.AppendLine("    def __getattr__(self, name):");
@@ -462,7 +462,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("            result = _df.iloc[key]");
             sb.AppendLine("            if isinstance(result, pd.Series):");
             sb.AppendLine("                return _DatasetRow(result)");
-            sb.AppendLine("            return _DotNetDataset(result.reset_index(drop=True))");
+            sb.AppendLine("            return _IntelliSEMset(result.reset_index(drop=True))");
             sb.AppendLine("        return _df[key]");
             sb.AppendLine("    def __iter__(self):");
             sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
@@ -527,10 +527,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             sb.AppendLine("import types as _types");
-            sb.AppendLine("_dotnet_mod = _types.ModuleType('DotNetData')");
+            sb.AppendLine("_dotnet_mod = _types.ModuleType('IntelliSEM')");
             sb.AppendLine("_dotnet_mod.__doc__ = 'Datasets piped from the .NET host application.'");
             sb.AppendLine("_dotnet_mod.__all__ = []");
-            sb.AppendLine("sys.modules['DotNetData'] = _dotnet_mod");
+            sb.AppendLine("sys.modules['IntelliSEM'] = _dotnet_mod");
             sb.AppendLine("while True:");
             sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
             sb.AppendLine("    if _hdr == '__DONE__': break");
@@ -543,7 +543,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("            _lines.append(sys.stdin.readline())");
             sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
             sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
-            sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
+            sb.AppendLine("        setattr(_dotnet_mod, _name, _IntelliSEMset(_tmpdf))");
             sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
 
             if (hasStreamData)
