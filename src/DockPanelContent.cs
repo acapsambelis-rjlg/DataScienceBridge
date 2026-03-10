@@ -14,7 +14,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         DockAreas.DockTop | DockAreas.DockBottom |
                         DockAreas.Float;
             HideOnClose = true;
-            CloseButtonVisible = false;
+            CloseButton = true;
+            CloseButtonVisible = true;
         }
 
         protected override string GetPersistString()
