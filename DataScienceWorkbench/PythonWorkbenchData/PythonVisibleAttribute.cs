@@ -178,13 +178,47 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
         public static string GetPythonTypeName(Type t)
         {
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                Type inner = Nullable.GetUnderlyingType(t);
+                return GetPythonTypeName(inner) + " (nullable)";
+            }
             if (t == typeof(int) || t == typeof(long) || t == typeof(short) || t == typeof(byte)) return "int";
             if (t == typeof(double) || t == typeof(float) || t == typeof(decimal)) return "float";
             if (t == typeof(bool)) return "bool";
             if (t == typeof(string)) return "string";
             if (t == typeof(DateTime)) return "datetime";
             if (t == typeof(Bitmap) || t == typeof(Image)) return "image";
+            if (t.IsEnum)
+            {
+                string[] names = Enum.GetNames(t);
+                return "string (enum: " + string.Join(", ", names) + ")";
+            }
             return t.Name;
+        }
+
+        public static bool IsNullableType(Type t)
+        {
+            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+        public static bool IsEnumType(Type t)
+        {
+            if (t.IsEnum) return true;
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return Nullable.GetUnderlyingType(t).IsEnum;
+            return false;
+        }
+
+        public static Type GetUnderlyingEnumType(Type t)
+        {
+            if (t.IsEnum) return t;
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                Type inner = Nullable.GetUnderlyingType(t);
+                if (inner.IsEnum) return inner;
+            }
+            return null;
         }
     }
 }

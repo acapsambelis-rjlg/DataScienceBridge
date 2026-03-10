@@ -1826,6 +1826,28 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 AppendRefText("No description available.\n\n", Color.FromArgb(150, 150, 150), false, 10);
             }
 
+            bool isNullable = PythonVisibleHelper.IsNullableType(fp.LeafType);
+            bool isEnum = PythonVisibleHelper.IsEnumType(fp.LeafType);
+            Type enumType = PythonVisibleHelper.GetUnderlyingEnumType(fp.LeafType);
+
+            if (isNullable)
+            {
+                AppendRefText("Nullable\n", Color.FromArgb(0, 100, 0), true, 10);
+                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                AppendRefText("This field may contain empty/missing values (None/NaN in Python).\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            if (isEnum && enumType != null)
+            {
+                string[] enumNames = Enum.GetNames(enumType);
+                AppendRefText("Enum Values\n", Color.FromArgb(0, 100, 0), true, 10);
+                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                AppendRefText("Serialized as string. Possible values:\n", Color.FromArgb(100, 100, 100), false, 10);
+                foreach (string name in enumNames)
+                    AppendRefText("  \u2022 " + name + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
             AppendRefText("Dataset\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
             string className = GetClassNameForTag(datasetName);
@@ -1847,6 +1869,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             string customExample = attr != null ? attr.Example : null;
+            string baseTypeName = typeName;
+            if (baseTypeName.Contains(" (nullable)"))
+                baseTypeName = baseTypeName.Replace(" (nullable)", "");
+            if (baseTypeName.StartsWith("string (enum:"))
+                baseTypeName = "enum";
 
             if (!string.IsNullOrEmpty(customExample))
             {
@@ -1860,28 +1887,54 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         AppendRefText(line + "\n", Color.FromArgb(60, 60, 60), false, 10);
                 }
             }
-            else if (typeName == "string")
+            else if (baseTypeName == "enum")
+            {
+                AppendRefText("# Value counts\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText(datasetName + "." + fieldName + ".value_counts()\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                if (isNullable)
+                {
+                    AppendRefText("# Drop missing values\n", Color.FromArgb(0, 128, 0), false, 10);
+                    AppendRefText(datasetName + "." + fieldName + ".dropna().value_counts()\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
+                if (enumType != null)
+                {
+                    string[] enumNames = Enum.GetNames(enumType);
+                    if (enumNames.Length > 0)
+                    {
+                        AppendRefText("# Filter by specific value\n", Color.FromArgb(0, 128, 0), false, 10);
+                        AppendRefText(datasetName + "[" + datasetName + "." + fieldName + " == '" + enumNames[0] + "']\n\n", Color.FromArgb(60, 60, 60), false, 10);
+                    }
+                    AppendRefText("# Group by this field\n", Color.FromArgb(0, 128, 0), false, 10);
+                    AppendRefText(datasetName + ".groupby('" + fieldName + "').size()\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
+            }
+            else if (baseTypeName == "string")
             {
                 AppendRefText("# Value counts\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".value_counts()\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("# Unique values\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".unique()\n", Color.FromArgb(60, 60, 60), false, 10);
             }
-            else if (typeName == "bool")
+            else if (baseTypeName == "bool")
             {
                 AppendRefText("# Count true values\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".sum()\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("# Filter to true rows\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "[" + datasetName + "." + fieldName + "]\n", Color.FromArgb(60, 60, 60), false, 10);
             }
-            else if (typeName == "datetime")
+            else if (baseTypeName == "datetime")
             {
                 AppendRefText("# Date range\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".min(), " + datasetName + "." + fieldName + ".max()\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("# Extract year\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".dt.year\n", Color.FromArgb(60, 60, 60), false, 10);
+                if (isNullable)
+                {
+                    AppendRefText("\n# Drop missing dates\n", Color.FromArgb(0, 128, 0), false, 10);
+                    AppendRefText(datasetName + "." + fieldName + ".dropna()\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
             }
-            else if (typeName == "image")
+            else if (baseTypeName == "image")
             {
                 AppendRefText("# Access a single image via row indexing\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText("img = " + datasetName + "[0]." + fieldName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -1902,6 +1955,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 AppendRefText(datasetName + "." + fieldName + ".describe()\n\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("# Mean value\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + fieldName + ".mean()\n", Color.FromArgb(60, 60, 60), false, 10);
+                if (isNullable)
+                {
+                    AppendRefText("\n# Drop missing values\n", Color.FromArgb(0, 128, 0), false, 10);
+                    AppendRefText(datasetName + "." + fieldName + ".dropna().describe()\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
             }
 
             refDetailBox.SelectionStart = 0;

@@ -176,14 +176,66 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
         public static string GetPythonTypeName(Type t)
         {
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                Type inner = Nullable.GetUnderlyingType(t);
+                return GetPythonTypeName(inner) + " (nullable)";
+            }
             if (t == typeof(int) || t == typeof(long) || t == typeof(short) || t == typeof(byte)) return "int";
             if (t == typeof(double) || t == typeof(float) || t == typeof(decimal)) return "float";
             if (t == typeof(bool)) return "bool";
             if (t == typeof(string)) return "string";
             if (t == typeof(DateTime)) return "datetime";
             if (t == typeof(Bitmap) || t == typeof(Image)) return "image";
+            if (t.IsEnum)
+            {
+                string[] names = Enum.GetNames(t);
+                return "string (enum: " + string.Join(", ", names) + ")";
+            }
             return t.Name;
         }
+
+        public static bool IsNullableType(Type t)
+        {
+            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>);
+        }
+
+        public static bool IsEnumType(Type t)
+        {
+            if (t.IsEnum) return true;
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return Nullable.GetUnderlyingType(t).IsEnum;
+            return false;
+        }
+
+        public static Type GetUnderlyingEnumType(Type t)
+        {
+            if (t.IsEnum) return t;
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                Type inner = Nullable.GetUnderlyingType(t);
+                if (inner.IsEnum) return inner;
+            }
+            return null;
+        }
+    }
+
+    public enum LoyaltyTier
+    {
+        Bronze,
+        Silver,
+        Gold,
+        Platinum
+    }
+
+    public enum OrderStatus
+    {
+        Pending,
+        Processing,
+        Shipped,
+        Delivered,
+        Cancelled,
+        Returned
     }
 
     [PythonVisible("Customer mailing address")]
@@ -228,8 +280,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         [PythonVisible("Date the customer registered")]
         public DateTime RegistrationDate { get; set; }
 
-        [PythonVisible("Loyalty tier: Bronze, Silver, Gold, or Platinum")]
-        public string Tier { get; set; }
+        [PythonVisible("Customer loyalty tier")]
+        public LoyaltyTier Tier { get; set; }
 
         [PythonVisible("Maximum credit limit in dollars", Example = "# Credit limit distribution\n{dataset}.{field}.hist(bins=20)\nplt.xlabel('Credit Limit')\nplt.show()")]
         public double CreditLimit { get; set; }
@@ -291,7 +343,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         public int CustomerId { get; set; }
         public DateTime OrderDate { get; set; }
         public DateTime? ShipDate { get; set; }
-        public string Status { get; set; }
+        public OrderStatus Status { get; set; }
         public string ShipMethod { get; set; }
         public double ShippingCost { get; set; }
         public string PaymentMethod { get; set; }
@@ -397,10 +449,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         private static readonly string[] Departments = { "Engineering", "Sales", "Marketing", "Finance", "HR", "Operations", "Legal", "R&D", "Support", "Product" };
         private static readonly string[] Titles = { "Analyst", "Senior Analyst", "Manager", "Senior Manager", "Director", "VP", "Lead", "Specialist", "Coordinator", "Associate" };
         private static readonly string[] Offices = { "HQ - NYC", "West - SF", "South - Austin", "Midwest - Chicago", "Remote" };
-        private static readonly string[] OrderStatuses = { "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned" };
         private static readonly string[] ShipMethods = { "Standard", "Express", "Overnight", "Economy", "Two-Day" };
         private static readonly string[] PaymentMethods = { "Credit Card", "Debit Card", "PayPal", "Wire Transfer", "Check" };
-        private static readonly string[] Tiers = { "Bronze", "Silver", "Gold", "Platinum", "Diamond" };
         private static readonly string[] SensorTypes = { "Temperature", "Humidity", "Pressure", "Light", "Motion", "CO2", "Noise", "Vibration" };
         private static readonly string[] SensorLocations = { "Building A - Floor 1", "Building A - Floor 2", "Building B - Floor 1", "Building B - Floor 2", "Warehouse", "Parking Lot", "Roof", "Basement" };
         private static readonly string[] SensorUnits = { "°C", "%RH", "hPa", "lux", "count", "ppm", "dB", "mm/s" };
@@ -521,44 +571,37 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                 int age = (int)((new DateTime(2025, 6, 1) - dob).TotalDays / 365.25);
 
                 double tierRoll = rng.NextDouble();
-                string tier;
+                LoyaltyTier tier;
                 double creditBase;
                 double activeChance;
                 DateTime regEarliest;
                 if (age >= 50 && tierRoll < 0.35)
                 {
-                    tier = "Platinum";
+                    tier = LoyaltyTier.Platinum;
                     creditBase = GaussianNoise(35000, 8000);
                     activeChance = 0.92;
                     regEarliest = new DateTime(2018, 1, 1);
                 }
                 else if (age >= 40 && tierRoll < 0.50)
                 {
-                    tier = "Gold";
+                    tier = LoyaltyTier.Gold;
                     creditBase = GaussianNoise(22000, 5000);
                     activeChance = 0.88;
                     regEarliest = new DateTime(2019, 1, 1);
                 }
                 else if (age >= 30 && tierRoll < 0.60)
                 {
-                    tier = "Silver";
+                    tier = LoyaltyTier.Silver;
                     creditBase = GaussianNoise(12000, 3000);
                     activeChance = 0.82;
                     regEarliest = new DateTime(2020, 1, 1);
                 }
-                else if (tierRoll < 0.80)
+                else
                 {
-                    tier = "Bronze";
+                    tier = LoyaltyTier.Bronze;
                     creditBase = GaussianNoise(5000, 2000);
                     activeChance = 0.70;
                     regEarliest = new DateTime(2021, 1, 1);
-                }
-                else
-                {
-                    tier = "Diamond";
-                    creditBase = GaussianNoise(45000, 5000);
-                    activeChance = 0.95;
-                    regEarliest = new DateTime(2018, 1, 1);
                 }
 
                 double creditLimit = Math.Round(Clamp(creditBase, 500, 60000), 2);
@@ -603,9 +646,9 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             {
                 var cust = customers[rng.Next(customers.Count)];
                 var orderDate = RandDate(cust.RegistrationDate, new DateTime(2025, 12, 31));
-                var status = Pick(OrderStatuses);
+                var status = (OrderStatus)rng.Next(Enum.GetValues(typeof(OrderStatus)).Length);
                 DateTime? shipDate = null;
-                if (status == "Shipped" || status == "Delivered")
+                if (status == OrderStatus.Shipped || status == OrderStatus.Delivered)
                     shipDate = orderDate.AddDays(rng.Next(1, 14));
 
                 int itemCount = rng.Next(1, 6);
