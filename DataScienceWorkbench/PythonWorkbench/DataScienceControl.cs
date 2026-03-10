@@ -664,28 +664,38 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 foreach (var item in data)
                 {
-                    var vals = new List<string>();
-                    foreach (var fp in flatProps)
+                    if (PythonVisibleHelper.PrepareItem != null)
+                        PythonVisibleHelper.PrepareItem(item);
+                    try
                     {
-                        var val = fp.GetValue(item);
-                        string s;
-                        if (PythonVisibleHelper.IsImageType(fp.LeafType))
+                        var vals = new List<string>();
+                        foreach (var fp in flatProps)
                         {
-                            if (val is System.Drawing.Bitmap bmp)
-                                s = PythonVisibleHelper.BitmapToBase64(bmp);
-                            else if (val is System.Drawing.Image img)
-                                using (var tmp = new System.Drawing.Bitmap(img))
-                                    s = PythonVisibleHelper.BitmapToBase64(tmp);
+                            var val = fp.GetValue(item);
+                            string s;
+                            if (PythonVisibleHelper.IsImageType(fp.LeafType))
+                            {
+                                if (val is System.Drawing.Bitmap bmp)
+                                    s = PythonVisibleHelper.BitmapToBase64(bmp);
+                                else if (val is System.Drawing.Image img)
+                                    using (var tmp = new System.Drawing.Bitmap(img))
+                                        s = PythonVisibleHelper.BitmapToBase64(tmp);
+                                else
+                                    s = "";
+                            }
                             else
-                                s = "";
+                                s = val != null ? val.ToString() : "";
+                            if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                                s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                            vals.Add(s);
                         }
-                        else
-                            s = val != null ? val.ToString() : "";
-                        if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
-                            s = "\"" + s.Replace("\"", "\"\"") + "\"";
-                        vals.Add(s);
+                        sb.AppendLine(string.Join(",", vals));
                     }
-                    sb.AppendLine(string.Join(",", vals));
+                    finally
+                    {
+                        if (PythonVisibleHelper.ReleaseItem != null)
+                            PythonVisibleHelper.ReleaseItem(item);
+                    }
                 }
                 var imgCols = new List<string>();
                 foreach (var fp in flatProps)

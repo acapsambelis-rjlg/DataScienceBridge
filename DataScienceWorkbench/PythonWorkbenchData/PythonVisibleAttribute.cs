@@ -157,6 +157,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
         public static Action<Bitmap> PrepareBitmap { get; set; }
         public static Action<Bitmap> ReleaseBitmap { get; set; }
+        public static Action<object> PrepareItem { get; set; }
+        public static Action<object> ReleaseItem { get; set; }
 
         public static string BitmapToBase64(Bitmap bmp)
         {

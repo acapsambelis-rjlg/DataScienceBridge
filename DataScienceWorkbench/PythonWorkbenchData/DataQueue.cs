@@ -157,28 +157,38 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
         private string SerializeRow(T item)
         {
-            var vals = new List<string>();
-            foreach (var fp in _flatProps)
+            if (PythonVisibleHelper.PrepareItem != null)
+                PythonVisibleHelper.PrepareItem(item);
+            try
             {
-                var val = fp.GetValue(item);
-                string s;
-                if (PythonVisibleHelper.IsImageType(fp.LeafType))
+                var vals = new List<string>();
+                foreach (var fp in _flatProps)
                 {
-                    if (val is Bitmap bmp)
-                        s = PythonVisibleHelper.BitmapToBase64(bmp);
-                    else if (val is Image img)
-                        using (var tmp = new Bitmap(img))
-                            s = PythonVisibleHelper.BitmapToBase64(tmp);
+                    var val = fp.GetValue(item);
+                    string s;
+                    if (PythonVisibleHelper.IsImageType(fp.LeafType))
+                    {
+                        if (val is Bitmap bmp)
+                            s = PythonVisibleHelper.BitmapToBase64(bmp);
+                        else if (val is Image img)
+                            using (var tmp = new Bitmap(img))
+                                s = PythonVisibleHelper.BitmapToBase64(tmp);
+                        else
+                            s = "";
+                    }
                     else
-                        s = "";
+                        s = val != null ? val.ToString() : "";
+                    if (s.Contains(",") || s.Contains("\"") || s.Contains("\n") || s.Contains("\r"))
+                        s = "\"" + s.Replace("\"", "\"\"") + "\"";
+                    vals.Add(s);
                 }
-                else
-                    s = val != null ? val.ToString() : "";
-                if (s.Contains(",") || s.Contains("\"") || s.Contains("\n") || s.Contains("\r"))
-                    s = "\"" + s.Replace("\"", "\"\"") + "\"";
-                vals.Add(s);
+                return string.Join(",", vals);
             }
-            return string.Join(",", vals);
+            finally
+            {
+                if (PythonVisibleHelper.ReleaseItem != null)
+                    PythonVisibleHelper.ReleaseItem(item);
+            }
         }
 
         public string[] GetColumnNames()
