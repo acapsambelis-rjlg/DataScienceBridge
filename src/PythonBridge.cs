@@ -595,38 +595,123 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return Execute(script, inMemoryData, null, preamble);
         }
 
+        private string BuildFullScript(string script, Dictionary<string, IInMemoryDataSource> inMemoryData,
+            Dictionary<string, IStreamingDataSource> streamingData, string preamble)
+        {
+            bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
+            bool hasStreamData = streamingData != null && streamingData.Count > 0;
+            bool hasPreamble = !string.IsNullOrEmpty(preamble);
+
+            if (!hasMemData && !hasStreamData && !hasPreamble)
+                return script;
+
+            var sb = new StringBuilder();
+            if (hasMemData || hasStreamData)
+                AppendBootstrapCode(sb, hasMemData, hasStreamData);
+            if (hasPreamble)
+                sb.AppendLine(preamble);
+            sb.AppendLine(script);
+            return sb.ToString();
+        }
+
+        private void ConfigureProcessEnvironment(ProcessStartInfo psi)
+        {
+            psi.EnvironmentVariables["MPLBACKEND"] = "Agg";
+            string displayVar = Environment.GetEnvironmentVariable("DISPLAY");
+            if (!string.IsNullOrEmpty(displayVar))
+                psi.EnvironmentVariables["DISPLAY"] = displayVar;
+        }
+
+        private void PipeDataToStdin(Process proc, Dictionary<string, IInMemoryDataSource> inMemoryData,
+            Dictionary<string, IStreamingDataSource> streamingData)
+        {
+            bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
+            bool hasStreamData = streamingData != null && streamingData.Count > 0;
+            if (!hasMemData && !hasStreamData) return;
+
+            if (hasMemData)
+            {
+                foreach (var kvp in inMemoryData)
+                {
+                    var source = kvp.Value;
+                    proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
+                    foreach (var line in source.StreamCsvLines())
+                        proc.StandardInput.WriteLine(line);
+                }
+            }
+            if (hasStreamData)
+            {
+                foreach (var kvp in streamingData)
+                    proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
+            }
+            proc.StandardInput.WriteLine("__DONE__");
+            proc.StandardInput.Flush();
+
+            if (hasStreamData)
+            {
+                foreach (var kvp in streamingData)
+                {
+                    foreach (var line in kvp.Value.StreamCsvRows())
+                        proc.StandardInput.WriteLine(line);
+                    proc.StandardInput.WriteLine("__STREAM_END__");
+                }
+                proc.StandardInput.Flush();
+            }
+        }
+
+        private static void FilterPlotPaths(string stdout, out string cleanOutput, out List<string> plotPaths)
+        {
+            plotPaths = new List<string>();
+            var outputLines = stdout.Split('\n');
+            var filteredLines = new List<string>();
+            foreach (var line in outputLines)
+            {
+                string trimmed = line.TrimEnd('\r');
+                if (trimmed.StartsWith("__PLOT__:"))
+                {
+                    string path = trimmed.Substring(9).Trim();
+                    if (File.Exists(path))
+                        plotPaths.Add(path);
+                }
+                else
+                {
+                    filteredLines.Add(trimmed);
+                }
+            }
+            cleanOutput = string.Join("\n", filteredLines).TrimEnd('\n', '\r');
+            if (cleanOutput.Length > 0)
+                cleanOutput += "\n";
+        }
+
+        private void ProcessStreamingLine(string line, List<string> plotPaths, Action<string> onOutputLine)
+        {
+            if (line.StartsWith("__PLOT__:"))
+            {
+                string path = line.Substring(9).Trim();
+                if (File.Exists(path))
+                    plotPaths.Add(path);
+            }
+            else if (onOutputLine != null)
+            {
+                onOutputLine(line + "\n");
+            }
+        }
+
+        private static bool CouldBePlotMarker(string partial)
+        {
+            return partial.StartsWith("__PLOT__:") ||
+                (partial.Length < 9 && "__PLOT__:".StartsWith(partial));
+        }
+
         public PythonResult Execute(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, Dictionary<string, IStreamingDataSource> streamingData, string preamble = null)
         {
             if (!pythonAvailable)
                 return CreateUnavailableResult("run script");
 
-            bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
-            bool hasStreamData = streamingData != null && streamingData.Count > 0;
-            bool hasPreamble = !string.IsNullOrEmpty(preamble);
+            bool hasData = (inMemoryData != null && inMemoryData.Count > 0) ||
+                           (streamingData != null && streamingData.Count > 0);
 
-            string fullScript;
-            var sb = new StringBuilder();
-
-            if (hasMemData || hasStreamData)
-            {
-                AppendBootstrapCode(sb, hasMemData, hasStreamData);
-            }
-
-            if (hasPreamble)
-            {
-                sb.AppendLine(preamble);
-            }
-
-            if (hasMemData || hasStreamData || hasPreamble)
-            {
-                sb.AppendLine(script);
-                fullScript = sb.ToString();
-            }
-            else
-            {
-                fullScript = script;
-            }
-
+            string fullScript = BuildFullScript(script, inMemoryData, streamingData, preamble);
             string tempScript = GetTempFilePath(".py");
             File.WriteAllText(tempScript, fullScript);
 
@@ -638,50 +723,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     Arguments = "\"" + tempScript + "\"",
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    RedirectStandardInput = hasMemData || hasStreamData,
+                    RedirectStandardInput = hasData,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
-
-                psi.EnvironmentVariables["MPLBACKEND"] = "Agg";
-
-                string displayVar = Environment.GetEnvironmentVariable("DISPLAY");
-                if (!string.IsNullOrEmpty(displayVar))
-                    psi.EnvironmentVariables["DISPLAY"] = displayVar;
+                ConfigureProcessEnvironment(psi);
 
                 var proc = Process.Start(psi);
 
-                if (hasMemData || hasStreamData)
+                if (hasData)
                 {
-                    if (hasMemData)
-                    {
-                        foreach (var kvp in inMemoryData)
-                        {
-                            var source = kvp.Value;
-                            proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
-                            foreach (var line in source.StreamCsvLines())
-                                proc.StandardInput.WriteLine(line);
-                        }
-                    }
-                    if (hasStreamData)
-                    {
-                        foreach (var kvp in streamingData)
-                            proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
-                    }
-                    proc.StandardInput.WriteLine("__DONE__");
-                    proc.StandardInput.Flush();
-
-                    if (hasStreamData)
-                    {
-                        foreach (var kvp in streamingData)
-                        {
-                            foreach (var line in kvp.Value.StreamCsvRows())
-                                proc.StandardInput.WriteLine(line);
-                            proc.StandardInput.WriteLine("__STREAM_END__");
-                        }
-                        proc.StandardInput.Flush();
-                    }
-
+                    PipeDataToStdin(proc, inMemoryData, streamingData);
                     proc.StandardInput.Close();
                 }
 
@@ -701,28 +753,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     };
                 }
 
-                var plotPaths = new List<string>();
-                var outputLines = stdout.Split('\n');
-                var filteredLines = new List<string>();
-                foreach (var line in outputLines)
-                {
-                    string trimmed = line.TrimEnd('\r');
-                    if (trimmed.StartsWith("__PLOT__:"))
-                    {
-                        string path = trimmed.Substring(9).Trim();
-                        if (File.Exists(path))
-                            plotPaths.Add(path);
-                    }
-                    else
-                    {
-                        filteredLines.Add(trimmed);
-                    }
-                }
-
-                string cleanOutput = string.Join("\n", filteredLines);
-                cleanOutput = cleanOutput.TrimEnd('\n', '\r');
-                if (cleanOutput.Length > 0)
-                    cleanOutput += "\n";
+                string cleanOutput;
+                List<string> plotPaths;
+                FilterPlotPaths(stdout, out cleanOutput, out plotPaths);
 
                 return new PythonResult
                 {
@@ -762,33 +795,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
-            bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
-            bool hasStreamData = streamingData != null && streamingData.Count > 0;
-            bool hasPreamble = !string.IsNullOrEmpty(preamble);
-
-            string fullScript;
-            var sb = new StringBuilder();
-
-            if (hasMemData || hasStreamData)
-            {
-                AppendBootstrapCode(sb, hasMemData, hasStreamData);
-            }
-
-            if (hasPreamble)
-            {
-                sb.AppendLine(preamble);
-            }
-
-            if (hasMemData || hasStreamData || hasPreamble)
-            {
-                sb.AppendLine(script);
-                fullScript = sb.ToString();
-            }
-            else
-            {
-                fullScript = script;
-            }
-
+            string fullScript = BuildFullScript(script, inMemoryData, streamingData, preamble);
             string tempScript = GetTempFilePath(".py");
             File.WriteAllText(tempScript, fullScript);
 
@@ -804,13 +811,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
-
-                psi.EnvironmentVariables["MPLBACKEND"] = "Agg";
+                ConfigureProcessEnvironment(psi);
                 psi.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
-
-                string displayVar = Environment.GetEnvironmentVariable("DISPLAY");
-                if (!string.IsNullOrEmpty(displayVar))
-                    psi.EnvironmentVariables["DISPLAY"] = displayVar;
 
                 var proc = Process.Start(psi);
 
@@ -833,54 +835,23 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 };
                 proc.BeginErrorReadLine();
 
-                string[] _inputFileLines = null;
+                string[] inputFileLines = null;
                 if (!string.IsNullOrEmpty(inputFilePath) && File.Exists(inputFilePath))
                 {
-                    try { _inputFileLines = File.ReadAllLines(inputFilePath); }
-                    catch { _inputFileLines = null; }
+                    try { inputFileLines = File.ReadAllLines(inputFilePath); }
+                    catch { inputFileLines = null; }
                 }
 
-                bool hasInputFile = _inputFileLines != null && _inputFileLines.Length > 0;
-
-                var capturedMemData = hasMemData ? inMemoryData : null;
-                var capturedStreamData = hasStreamData ? streamingData : null;
-                var capturedInputLines = hasInputFile ? _inputFileLines : null;
+                bool hasData = (inMemoryData != null && inMemoryData.Count > 0) ||
+                               (streamingData != null && streamingData.Count > 0);
+                var capturedInputLines = (inputFileLines != null && inputFileLines.Length > 0) ? inputFileLines : null;
 
                 var stdinThread = new Thread(() =>
                 {
                     try
                     {
-                        if (capturedMemData != null || capturedStreamData != null)
-                        {
-                            if (capturedMemData != null)
-                            {
-                                foreach (var kvp in capturedMemData)
-                                {
-                                    var source = kvp.Value;
-                                    proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
-                                    foreach (var line in source.StreamCsvLines())
-                                        proc.StandardInput.WriteLine(line);
-                                }
-                            }
-                            if (capturedStreamData != null)
-                            {
-                                foreach (var kvp in capturedStreamData)
-                                    proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
-                            }
-                            proc.StandardInput.WriteLine("__DONE__");
-                            proc.StandardInput.Flush();
-
-                            if (capturedStreamData != null)
-                            {
-                                foreach (var kvp in capturedStreamData)
-                                {
-                                    foreach (var line in kvp.Value.StreamCsvRows())
-                                        proc.StandardInput.WriteLine(line);
-                                    proc.StandardInput.WriteLine("__STREAM_END__");
-                                }
-                                proc.StandardInput.Flush();
-                            }
-                        }
+                        if (hasData)
+                            PipeDataToStdin(proc, inMemoryData, streamingData);
 
                         if (capturedInputLines != null)
                         {
@@ -895,7 +866,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                                 catch { break; }
                             }
                         }
-                        else if (capturedMemData != null || capturedStreamData != null)
+                        else if (hasData)
                         {
                             try { proc.StandardInput.Close(); } catch { }
                         }
@@ -912,15 +883,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     {
                         char[] buffer = new char[1024];
                         var lineBuilder = new StringBuilder();
-                        var stdoutBuilder = new StringBuilder();
 
                         while (true)
                         {
                             int count = proc.StandardOutput.Read(buffer, 0, buffer.Length);
                             if (count <= 0) break;
-
-                            string chunk = new string(buffer, 0, count);
-                            stdoutBuilder.Append(chunk);
 
                             for (int i = 0; i < count; i++)
                             {
@@ -928,16 +895,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                                 if (c == '\n')
                                 {
                                     string line = lineBuilder.ToString().TrimEnd('\r');
-                                    if (line.StartsWith("__PLOT__:"))
-                                    {
-                                        string path = line.Substring(9).Trim();
-                                        if (File.Exists(path))
-                                            plotPaths.Add(path);
-                                    }
-                                    else if (onOutputLine != null)
-                                    {
-                                        onOutputLine(line + "\n");
-                                    }
+                                    ProcessStreamingLine(line, plotPaths, onOutputLine);
                                     lineBuilder.Clear();
                                 }
                                 else
@@ -949,9 +907,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                             if (lineBuilder.Length > 0 && onOutputLine != null)
                             {
                                 string partial = lineBuilder.ToString();
-                                bool couldBePlotMarker = partial.StartsWith("__PLOT__:") ||
-                                    (partial.Length < 9 && "__PLOT__:".StartsWith(partial));
-                                if (!couldBePlotMarker)
+                                if (!CouldBePlotMarker(partial))
                                 {
                                     onOutputLine(partial);
                                     lineBuilder.Clear();
