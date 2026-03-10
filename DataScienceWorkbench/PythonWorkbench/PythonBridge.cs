@@ -948,8 +948,29 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                             if (lineBuilder.Length > 0 && onOutputLine != null)
                             {
-                                onOutputLine(lineBuilder.ToString());
-                                lineBuilder.Clear();
+                                string partial = lineBuilder.ToString();
+                                bool couldBePlotMarker = partial.StartsWith("__PLOT__:") ||
+                                    (partial.Length < 9 && "__PLOT__:".StartsWith(partial));
+                                if (!couldBePlotMarker)
+                                {
+                                    onOutputLine(partial);
+                                    lineBuilder.Clear();
+                                }
+                            }
+                        }
+
+                        if (lineBuilder.Length > 0)
+                        {
+                            string remaining = lineBuilder.ToString().TrimEnd('\r');
+                            if (remaining.StartsWith("__PLOT__:"))
+                            {
+                                string path = remaining.Substring(9).Trim();
+                                if (File.Exists(path))
+                                    plotPaths.Add(path);
+                            }
+                            else if (onOutputLine != null)
+                            {
+                                onOutputLine(remaining);
                             }
                         }
 
