@@ -156,8 +156,16 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             {
                 var val = fp.GetValue(item);
                 string s;
-                if (PythonVisibleHelper.IsImageType(fp.LeafType) && val is Bitmap bmp)
-                    s = PythonVisibleHelper.BitmapToBase64(bmp);
+                if (PythonVisibleHelper.IsImageType(fp.LeafType))
+                {
+                    if (val is Bitmap bmp)
+                        s = PythonVisibleHelper.BitmapToBase64(bmp);
+                    else if (val is Image img)
+                        using (var tmp = new Bitmap(img))
+                            s = PythonVisibleHelper.BitmapToBase64(tmp);
+                    else
+                        s = "";
+                }
                 else
                     s = val != null ? val.ToString() : "";
                 if (s.Contains(",") || s.Contains("\"") || s.Contains("\n") || s.Contains("\r"))

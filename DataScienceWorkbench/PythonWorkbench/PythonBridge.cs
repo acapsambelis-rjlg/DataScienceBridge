@@ -422,9 +422,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("from PIL import Image as _PILImage");
             sb.AppendLine("import csv as _csv");
             sb.AppendLine("def _decode_img(s):");
-            sb.AppendLine("    if not isinstance(s, str) or not s.startswith('__IMG__:'): return s");
-            sb.AppendLine("    b = base64.b64decode(s[7:])");
-            sb.AppendLine("    return _PILImage.open(io.BytesIO(b))");
+            sb.AppendLine("    if s is None or (isinstance(s, float) and s != s): return None");
+            sb.AppendLine("    if not isinstance(s, str) or s == '': return None");
+            sb.AppendLine("    if not s.startswith('__IMG__:'): return s");
+            sb.AppendLine("    try:");
+            sb.AppendLine("        b = base64.b64decode(s[7:])");
+            sb.AppendLine("        return _PILImage.open(io.BytesIO(b))");
+            sb.AppendLine("    except Exception:");
+            sb.AppendLine("        return None");
             sb.AppendLine("def _decode_img_columns(df):");
             sb.AppendLine("    for col in df.columns:");
             sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
