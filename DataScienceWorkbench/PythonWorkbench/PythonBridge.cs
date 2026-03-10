@@ -543,11 +543,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("        _parts = _hdr.split('||')");
             sb.AppendLine("        _name = _parts[1]");
             sb.AppendLine("        _nlines = int(_parts[2])");
+            sb.AppendLine("        _img_cols = _parts[3].split(',') if len(_parts) > 3 and _parts[3] else []");
             sb.AppendLine("        _lines = []");
             sb.AppendLine("        for _ in range(_nlines):");
             sb.AppendLine("            _lines.append(sys.stdin.readline())");
             sb.AppendLine("        _tmpdf = pd.read_csv(io.StringIO(''.join(_lines)))");
-            sb.AppendLine("        _tmpdf = _decode_img_columns(_tmpdf)");
+            sb.AppendLine("        if _img_cols:");
+            sb.AppendLine("            for _ic in _img_cols:");
+            sb.AppendLine("                if _ic in _tmpdf.columns:");
+            sb.AppendLine("                    _tmpdf[_ic] = _tmpdf[_ic].apply(_decode_img)");
+            sb.AppendLine("        else:");
+            sb.AppendLine("            _tmpdf = _decode_img_columns(_tmpdf)");
             sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
             sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
 
@@ -699,7 +705,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 foreach (var kvp in inMemoryData)
                 {
                     var source = kvp.Value;
-                    proc.StandardInput.WriteLine("__DATASET__||" + kvp.Key + "||" + source.LineCount);
+                    var imgCols = source.GetImageColumnNames();
+                    string header = "__DATASET__||" + kvp.Key + "||" + source.LineCount;
+                    if (imgCols != null && imgCols.Length > 0)
+                        header += "||" + string.Join(",", imgCols);
+                    proc.StandardInput.WriteLine(header);
                     foreach (var line in source.StreamCsvLines())
                         proc.StandardInput.WriteLine(line);
                 }

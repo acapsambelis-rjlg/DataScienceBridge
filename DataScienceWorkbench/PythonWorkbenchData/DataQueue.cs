@@ -9,23 +9,29 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
     {
         int LineCount { get; }
         IEnumerable<string> StreamCsvLines();
+        string[] GetImageColumnNames();
     }
 
     public interface IStreamingDataSource
     {
         string GetCsvHeader();
         IEnumerable<string> StreamCsvRows();
+        string[] GetImageColumnNames();
     }
 
     internal class StringDataSource : IInMemoryDataSource
     {
         private readonly string _csv;
         private string[] _lines;
+        private readonly string[] _imageColumns;
 
-        public StringDataSource(string csv)
+        public StringDataSource(string csv, string[] imageColumns = null)
         {
             _csv = csv;
+            _imageColumns = imageColumns ?? new string[0];
         }
+
+        public string[] GetImageColumnNames() { return _imageColumns; }
 
         private string[] GetLines()
         {
@@ -181,6 +187,17 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             for (int i = 0; i < _flatProps.Length; i++)
                 names[i] = _flatProps[i].ColumnName;
             return names;
+        }
+
+        public string[] GetImageColumnNames()
+        {
+            var result = new List<string>();
+            foreach (var fp in _flatProps)
+            {
+                if (PythonVisibleHelper.IsImageType(fp.LeafType))
+                    result.Add(fp.ColumnName);
+            }
+            return result.ToArray();
         }
 
         public FlattenedProperty[] GetFlattenedProperties()

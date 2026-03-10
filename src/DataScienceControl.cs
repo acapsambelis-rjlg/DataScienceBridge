@@ -690,7 +690,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                     sb.AppendLine(string.Join(",", vals));
                 }
-                return new StringDataSource(sb.ToString());
+                var imgCols = new List<string>();
+                foreach (var fp in flatProps)
+                {
+                    if (PythonVisibleHelper.IsImageType(fp.LeafType))
+                        imgCols.Add(fp.ColumnName);
+                }
+                return new StringDataSource(sb.ToString(), imgCols.ToArray());
             };
             UpdateDynamicSymbols();
             PopulateReferenceTree();
