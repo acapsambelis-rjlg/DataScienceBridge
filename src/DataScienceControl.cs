@@ -2778,6 +2778,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private void BeginNodeRename(TreeNode node)
         {
             if (node == null) return;
+            string tag = node.Tag as string;
+            if (tag != null && !tag.StartsWith("UNSAVED:"))
+                node.Text = Path.GetFileName(tag);
+            else if (tag != null && tag.StartsWith("UNSAVED:"))
+                node.Text = tag.Substring("UNSAVED:".Length);
             fileTreeView.LabelEdit = true;
             node.BeginEdit();
         }

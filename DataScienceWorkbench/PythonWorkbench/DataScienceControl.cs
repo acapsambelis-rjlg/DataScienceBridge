@@ -2784,6 +2784,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private void BeginNodeRename(RadTreeNode node)
         {
             if (node == null) return;
+            string tag = node.Tag as string;
+            if (tag != null && !tag.StartsWith("UNSAVED:"))
+                node.Text = Path.GetFileName(tag);
+            else if (tag != null && tag.StartsWith("UNSAVED:"))
+                node.Text = tag.Substring("UNSAVED:".Length);
             fileTreeView.AllowEdit = true;
             node.BeginEdit();
         }
@@ -2978,12 +2983,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             fileTreeView.AllowEdit = false;
 
-            string oldValue = e.Node != null ? e.Node.Text : null;
+            string oldPath = e.Node.Tag as string;
+            if (oldPath == null || oldPath.StartsWith("UNSAVED:"))
+                return;
+
+            string oldName = Path.GetFileName(oldPath);
             string newName = e.Node.Text?.Trim();
 
-            if (string.IsNullOrEmpty(newName) || newName == oldValue)
+            if (string.IsNullOrEmpty(newName) || newName == oldName)
             {
-                if (oldValue != null) e.Node.Text = oldValue;
+                e.Node.Text = oldName;
                 return;
             }
 
@@ -2992,18 +3001,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 if (Array.IndexOf(invalidChars, c) >= 0)
                 {
-                    e.Node.Text = oldValue;
+                    e.Node.Text = oldName;
                     MessageBox.Show("The name contains invalid characters.", "Invalid Name",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-            }
-
-            string oldPath = e.Node.Tag as string;
-            if (oldPath == null || oldPath.StartsWith("UNSAVED:"))
-            {
-                if (oldValue != null) e.Node.Text = oldValue;
-                return;
             }
 
             bool isFolder = Directory.Exists(oldPath);
@@ -3016,13 +3018,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             if (newPath.Equals(oldPath, StringComparison.OrdinalIgnoreCase))
             {
-                if (oldValue != null) e.Node.Text = oldValue;
+                e.Node.Text = oldName;
                 return;
             }
 
             if ((isFolder && Directory.Exists(newPath)) || (!isFolder && File.Exists(newPath)))
             {
-                if (oldValue != null) e.Node.Text = oldValue;
+                e.Node.Text = oldName;
                 MessageBox.Show("An item with this name already exists.", "Name Conflict",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -3065,7 +3067,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
             catch (Exception ex)
             {
-                if (oldValue != null) e.Node.Text = oldValue;
+                e.Node.Text = oldName;
                 MessageBox.Show("Failed to rename: " + ex.Message, "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
