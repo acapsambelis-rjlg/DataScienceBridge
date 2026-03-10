@@ -8,6 +8,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
     internal class ToolDockContent : DockContent
     {
+        private Panel headerPanel;
+        private Button closeBtn;
+        private Button autoHideBtn;
+
         public ToolDockContent()
         {
             DockAreas = DockAreas.DockLeft | DockAreas.DockRight |
@@ -16,6 +20,78 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             HideOnClose = true;
             CloseButton = true;
             CloseButtonVisible = true;
+            CreateHeaderPanel();
+        }
+
+        private void CreateHeaderPanel()
+        {
+            headerPanel = new Panel();
+            headerPanel.Dock = DockStyle.Top;
+            headerPanel.Height = 22;
+            headerPanel.BackColor = Color.FromArgb(230, 230, 230);
+            headerPanel.Padding = new Padding(0);
+
+            closeBtn = new Button();
+            closeBtn.Text = "\u2715";
+            closeBtn.Dock = DockStyle.Right;
+            closeBtn.Width = 24;
+            closeBtn.FlatStyle = FlatStyle.Flat;
+            closeBtn.FlatAppearance.BorderSize = 0;
+            closeBtn.Font = new Font("Segoe UI", 8f);
+            closeBtn.ForeColor = Color.FromArgb(100, 100, 100);
+            closeBtn.BackColor = Color.Transparent;
+            closeBtn.Cursor = Cursors.Hand;
+            closeBtn.TabStop = false;
+            closeBtn.Click += (s, e) => { this.DockState = DockState.Hidden; };
+            closeBtn.MouseEnter += (s, e) => { closeBtn.ForeColor = Color.White; closeBtn.BackColor = Color.FromArgb(200, 60, 60); };
+            closeBtn.MouseLeave += (s, e) => { closeBtn.ForeColor = Color.FromArgb(100, 100, 100); closeBtn.BackColor = Color.Transparent; };
+
+            autoHideBtn = new Button();
+            autoHideBtn.Text = "\u2012";
+            autoHideBtn.Dock = DockStyle.Right;
+            autoHideBtn.Width = 24;
+            autoHideBtn.FlatStyle = FlatStyle.Flat;
+            autoHideBtn.FlatAppearance.BorderSize = 0;
+            autoHideBtn.Font = new Font("Segoe UI", 8f);
+            autoHideBtn.ForeColor = Color.FromArgb(100, 100, 100);
+            autoHideBtn.BackColor = Color.Transparent;
+            autoHideBtn.Cursor = Cursors.Hand;
+            autoHideBtn.TabStop = false;
+            autoHideBtn.Click += (s, e) => AutoHidePanel();
+            autoHideBtn.MouseEnter += (s, e) => { autoHideBtn.ForeColor = Color.White; autoHideBtn.BackColor = Color.FromArgb(120, 120, 120); };
+            autoHideBtn.MouseLeave += (s, e) => { autoHideBtn.ForeColor = Color.FromArgb(100, 100, 100); autoHideBtn.BackColor = Color.Transparent; };
+
+            headerPanel.Controls.Add(closeBtn);
+            headerPanel.Controls.Add(autoHideBtn);
+            Controls.Add(headerPanel);
+        }
+
+        private void AutoHidePanel()
+        {
+            switch (DockState)
+            {
+                case DockState.DockBottom:
+                    DockState = DockState.DockBottomAutoHide;
+                    break;
+                case DockState.DockLeft:
+                    DockState = DockState.DockLeftAutoHide;
+                    break;
+                case DockState.DockRight:
+                    DockState = DockState.DockRightAutoHide;
+                    break;
+                case DockState.DockTop:
+                    DockState = DockState.DockTopAutoHide;
+                    break;
+                default:
+                    DockState = DockState.Hidden;
+                    break;
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            e.Cancel = true;
+            DockState = DockState.Hidden;
         }
 
         protected override string GetPersistString()
