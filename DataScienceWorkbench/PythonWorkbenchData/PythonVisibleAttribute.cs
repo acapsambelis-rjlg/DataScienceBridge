@@ -155,26 +155,16 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             return t == typeof(Bitmap) || t == typeof(Image);
         }
 
-        public static Action<Bitmap> PrepareBitmap { get; set; }
-        public static Action<Bitmap> ReleaseBitmap { get; set; }
         public static Action<object> PrepareItem { get; set; }
         public static Action<object> ReleaseItem { get; set; }
 
         public static string BitmapToBase64(Bitmap bmp)
         {
             if (bmp == null) return "";
-            try
+            using (var ms = new System.IO.MemoryStream())
             {
-                if (PrepareBitmap != null) PrepareBitmap(bmp);
-                using (var ms = new System.IO.MemoryStream())
-                {
-                    bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                    return "__IMG__:" + Convert.ToBase64String(ms.ToArray());
-                }
-            }
-            finally
-            {
-                if (ReleaseBitmap != null) ReleaseBitmap(bmp);
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                return "__IMG__:" + Convert.ToBase64String(ms.ToArray());
             }
         }
 
