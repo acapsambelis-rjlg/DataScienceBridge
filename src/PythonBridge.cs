@@ -596,22 +596,82 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         }
 
         private string BuildFullScript(string script, Dictionary<string, IInMemoryDataSource> inMemoryData,
-            Dictionary<string, IStreamingDataSource> streamingData, string preamble)
+            Dictionary<string, IStreamingDataSource> streamingData, string preamble, out int preambleLineCount)
         {
             bool hasMemData = inMemoryData != null && inMemoryData.Count > 0;
             bool hasStreamData = streamingData != null && streamingData.Count > 0;
             bool hasPreamble = !string.IsNullOrEmpty(preamble);
 
             if (!hasMemData && !hasStreamData && !hasPreamble)
+            {
+                preambleLineCount = 0;
                 return script;
+            }
 
             var sb = new StringBuilder();
             if (hasMemData || hasStreamData)
                 AppendBootstrapCode(sb, hasMemData, hasStreamData);
             if (hasPreamble)
                 sb.AppendLine(preamble);
+            preambleLineCount = CountLines(sb.ToString());
             sb.AppendLine(script);
             return sb.ToString();
+        }
+
+        private static int CountLines(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return 0;
+            int count = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\n') count++;
+            }
+            if (text.Length > 0 && text[text.Length - 1] != '\n') count++;
+            return count;
+        }
+
+        private static string RemapErrorLineNumbers(string stderr, int preambleLineCount, string tempScriptPath)
+        {
+            if (string.IsNullOrEmpty(stderr) || (preambleLineCount == 0 && string.IsNullOrEmpty(tempScriptPath)))
+                return stderr;
+
+            var lines = stderr.Split('\n');
+            var result = new StringBuilder();
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i].TrimEnd('\r');
+                bool isScriptLine = !string.IsNullOrEmpty(tempScriptPath) && line.Contains(tempScriptPath);
+
+                if (isScriptLine)
+                    line = line.Replace(tempScriptPath, "<script>");
+
+                if (preambleLineCount > 0 && isScriptLine)
+                {
+                    int lineMarker = line.IndexOf(", line ", StringComparison.Ordinal);
+                    if (lineMarker >= 0)
+                    {
+                        int numStart = lineMarker + 7;
+                        int numEnd = numStart;
+                        while (numEnd < line.Length && char.IsDigit(line[numEnd]))
+                            numEnd++;
+                        if (numEnd > numStart)
+                        {
+                            int origLine;
+                            if (int.TryParse(line.Substring(numStart, numEnd - numStart), out origLine))
+                            {
+                                int adjusted = origLine - preambleLineCount;
+                                if (adjusted < 1) adjusted = origLine;
+                                line = line.Substring(0, numStart) + adjusted + line.Substring(numEnd);
+                            }
+                        }
+                    }
+                }
+
+                result.Append(line);
+                if (i < lines.Length - 1)
+                    result.Append('\n');
+            }
+            return result.ToString();
         }
 
         private void ConfigureProcessEnvironment(ProcessStartInfo psi)
@@ -711,7 +771,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             bool hasData = (inMemoryData != null && inMemoryData.Count > 0) ||
                            (streamingData != null && streamingData.Count > 0);
 
-            string fullScript = BuildFullScript(script, inMemoryData, streamingData, preamble);
+            int preambleLines;
+            string fullScript = BuildFullScript(script, inMemoryData, streamingData, preamble, out preambleLines);
             string tempScript = GetTempFilePath(".py");
             File.WriteAllText(tempScript, fullScript);
 
@@ -761,7 +822,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 {
                     ExitCode = proc.ExitCode,
                     Output = cleanOutput,
-                    Error = stderr,
+                    Error = RemapErrorLineNumbers(stderr, preambleLines, tempScript),
                     Success = proc.ExitCode == 0,
                     PlotPaths = plotPaths
                 };
@@ -795,7 +856,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return;
             }
 
-            string fullScript = BuildFullScript(script, inMemoryData, streamingData, preamble);
+            int preambleLines;
+            string fullScript = BuildFullScript(script, inMemoryData, streamingData, preamble, out preambleLines);
             string tempScript = GetTempFilePath(".py");
             File.WriteAllText(tempScript, fullScript);
 
@@ -823,14 +885,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 var plotPaths = new List<string>();
                 var stderrBuilder = new StringBuilder();
+                int capturedPreambleLines = preambleLines;
+                string capturedTempScript = tempScript;
 
                 proc.ErrorDataReceived += (s, ev) =>
                 {
                     if (ev.Data != null)
                     {
-                        stderrBuilder.AppendLine(ev.Data);
+                        string remapped = RemapErrorLineNumbers(ev.Data, capturedPreambleLines, capturedTempScript);
+                        stderrBuilder.AppendLine(remapped);
                         if (onErrorLine != null)
-                            onErrorLine(ev.Data);
+                            onErrorLine(remapped);
                     }
                 };
                 proc.BeginErrorReadLine();
