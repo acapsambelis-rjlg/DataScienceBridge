@@ -116,6 +116,8 @@
     <EmbeddedResource Include="PythonWorkbench\RunConfigurationDialog.resx">
       <DependentUpon>RunConfigurationDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PythonWorkbench\Helpers\display_images.py" />
+    <EmbeddedResource Include="PythonWorkbench\Helpers\image_stats.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\extern\SyntaxEditorControl\SyntaxEditor\SyntaxEditor.csproj">

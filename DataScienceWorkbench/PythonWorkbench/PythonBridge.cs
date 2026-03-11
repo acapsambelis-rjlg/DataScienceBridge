@@ -573,86 +573,74 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine();
         }
 
-        public static readonly string[] BuiltInHelperNames = {
-            "display_images", "display_image", "compare_images", "image_stats"
-        };
+        private static List<string> _builtInHelperNames;
+
+        public static string[] BuiltInHelperNames
+        {
+            get
+            {
+                if (_builtInHelperNames == null)
+                    _builtInHelperNames = LoadHelperNames();
+                return _builtInHelperNames.ToArray();
+            }
+        }
+
+        private static List<string> LoadHelperNames()
+        {
+            var names = new List<string>();
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            foreach (var resName in assembly.GetManifestResourceNames())
+            {
+                if (!resName.EndsWith(".py")) continue;
+                using (var stream = assembly.GetManifestResourceStream(resName))
+                using (var reader = new System.IO.StreamReader(stream))
+                {
+                    string firstLine = reader.ReadLine();
+                    if (firstLine != null && firstLine.StartsWith("# exports:"))
+                    {
+                        foreach (var name in firstLine.Substring(10).Split(','))
+                        {
+                            string trimmed = name.Trim();
+                            if (trimmed.Length > 0)
+                                names.Add(trimmed);
+                        }
+                    }
+                }
+            }
+            return names;
+        }
 
         private void AppendHelperFunctions(StringBuilder sb)
         {
-            sb.AppendLine("def _dn_display_images(images, cols=4, figsize=None, title=None, titles=None, cmap=None):");
-            sb.AppendLine("    import matplotlib.pyplot as _plt");
-            sb.AppendLine("    import numpy as _np");
-            sb.AppendLine("    imgs = [img for img in images if img is not None]");
-            sb.AppendLine("    if not imgs:");
-            sb.AppendLine("        print('No images to display.')");
-            sb.AppendLine("        return");
-            sb.AppendLine("    n = len(imgs)");
-            sb.AppendLine("    rows = (n + cols - 1) // cols");
-            sb.AppendLine("    if figsize is None: figsize = (2.5 * cols, 2.5 * rows)");
-            sb.AppendLine("    fig, axes = _plt.subplots(rows, cols, figsize=figsize)");
-            sb.AppendLine("    if rows == 1 and cols == 1: axes = [[axes]]");
-            sb.AppendLine("    elif rows == 1: axes = [axes]");
-            sb.AppendLine("    elif cols == 1: axes = [[ax] for ax in axes]");
-            sb.AppendLine("    for idx in range(rows * cols):");
-            sb.AppendLine("        ax = axes[idx // cols][idx % cols]");
-            sb.AppendLine("        if idx < n:");
-            sb.AppendLine("            ax.imshow(_np.array(imgs[idx]), cmap=cmap)");
-            sb.AppendLine("            if titles and idx < len(titles): ax.set_title(titles[idx], fontsize=8)");
-            sb.AppendLine("        ax.axis('off')");
-            sb.AppendLine("    if title: _plt.suptitle(title, fontsize=12)");
-            sb.AppendLine("    _plt.tight_layout()");
-            sb.AppendLine("    _plt.show()");
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var exports = new List<string>();
 
-            sb.AppendLine("def _dn_display_image(image, title=None, figsize=None, cmap=None):");
-            sb.AppendLine("    import matplotlib.pyplot as _plt");
-            sb.AppendLine("    import numpy as _np");
-            sb.AppendLine("    if image is None:");
-            sb.AppendLine("        print('No image to display.')");
-            sb.AppendLine("        return");
-            sb.AppendLine("    if figsize is None: figsize = (5, 5)");
-            sb.AppendLine("    fig, ax = _plt.subplots(1, 1, figsize=figsize)");
-            sb.AppendLine("    ax.imshow(_np.array(image), cmap=cmap)");
-            sb.AppendLine("    if title: ax.set_title(title, fontsize=10)");
-            sb.AppendLine("    ax.axis('off')");
-            sb.AppendLine("    _plt.tight_layout()");
-            sb.AppendLine("    _plt.show()");
+            foreach (var resName in assembly.GetManifestResourceNames())
+            {
+                if (!resName.EndsWith(".py")) continue;
+                string code;
+                using (var stream = assembly.GetManifestResourceStream(resName))
+                using (var reader = new System.IO.StreamReader(stream))
+                    code = reader.ReadToEnd();
 
-            sb.AppendLine("def _dn_compare_images(images, titles=None, figsize=None, cmap=None):");
-            sb.AppendLine("    import matplotlib.pyplot as _plt");
-            sb.AppendLine("    import numpy as _np");
-            sb.AppendLine("    imgs = [img for img in images if img is not None]");
-            sb.AppendLine("    if not imgs:");
-            sb.AppendLine("        print('No images to compare.')");
-            sb.AppendLine("        return");
-            sb.AppendLine("    n = len(imgs)");
-            sb.AppendLine("    if figsize is None: figsize = (4 * n, 4)");
-            sb.AppendLine("    fig, axes = _plt.subplots(1, n, figsize=figsize)");
-            sb.AppendLine("    if n == 1: axes = [axes]");
-            sb.AppendLine("    for idx, ax in enumerate(axes):");
-            sb.AppendLine("        ax.imshow(_np.array(imgs[idx]), cmap=cmap)");
-            sb.AppendLine("        if titles and idx < len(titles): ax.set_title(titles[idx], fontsize=10)");
-            sb.AppendLine("        ax.axis('off')");
-            sb.AppendLine("    _plt.tight_layout()");
-            sb.AppendLine("    _plt.show()");
+                string firstLine = code.Substring(0, code.IndexOf('\n')).Trim();
+                if (!firstLine.StartsWith("# exports:")) continue;
 
-            sb.AppendLine("def _dn_image_stats(images, labels=None):");
-            sb.AppendLine("    import numpy as _np");
-            sb.AppendLine("    for idx, img in enumerate(images):");
-            sb.AppendLine("        if img is None: continue");
-            sb.AppendLine("        arr = _np.array(img)");
-            sb.AppendLine("        label = labels[idx] if labels and idx < len(labels) else f'Image {idx + 1}'");
-            sb.AppendLine("        if arr.ndim == 2:");
-            sb.AppendLine("            print(f'{label}: grayscale mean={arr.mean():.1f}, std={arr.std():.1f}')");
-            sb.AppendLine("        elif arr.shape[2] >= 3:");
-            sb.AppendLine("            r, g, b = arr[:,:,0], arr[:,:,1], arr[:,:,2]");
-            sb.AppendLine("            print(f'{label}: R={r.mean():.1f} G={g.mean():.1f} B={b.mean():.1f} (std R={r.std():.1f} G={g.std():.1f} B={b.std():.1f})')");
+                foreach (var name in firstLine.Substring(10).Split(','))
+                {
+                    string trimmed = name.Trim();
+                    if (trimmed.Length > 0)
+                        exports.Add(trimmed);
+                }
 
-            sb.AppendLine("setattr(_dotnet_mod, 'display_images', _dn_display_images)");
-            sb.AppendLine("setattr(_dotnet_mod, 'display_image', _dn_display_image)");
-            sb.AppendLine("setattr(_dotnet_mod, 'compare_images', _dn_compare_images)");
-            sb.AppendLine("setattr(_dotnet_mod, 'image_stats', _dn_image_stats)");
-            sb.AppendLine("_dotnet_mod.__all__.extend(['display_images', 'display_image', 'compare_images', 'image_stats'])");
-            sb.AppendLine("del _dn_display_images, _dn_display_image, _dn_compare_images, _dn_image_stats");
+                sb.AppendLine(code);
+            }
+
+            foreach (var name in exports)
+            {
+                sb.AppendLine("setattr(_dotnet_mod, '" + name + "', " + name + ")");
+                sb.AppendLine("_dotnet_mod.__all__.append('" + name + "')");
+            }
         }
 
         private PythonResult CreateUnavailableResult(string operation)

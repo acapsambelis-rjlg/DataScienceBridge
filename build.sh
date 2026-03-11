@@ -15,10 +15,16 @@ echo "Building Data Science Workbench..."
 
 REFS="-r:System.Windows.Forms.dll -r:System.Drawing.dll -r:System.dll -r:System.Data.dll -r:System.Core.dll -r:System.Xml.dll -r:SyntaxEditor.dll -r:lib/WeifenLuo.WinFormsUI.Docking.dll -r:lib/WeifenLuo.WinFormsUI.Docking.ThemeVS2015.dll"
 
+HELPERS=""
+for f in src/Helpers/*.py; do
+    [ -f "$f" ] && HELPERS="$HELPERS -resource:$f"
+done
+
 mcs $REFS \
     -target:winexe \
     -out:DataScienceWorkbench.exe \
     -langversion:7 \
+    $HELPERS \
     src/DataModels.cs \
     src/DataQueue.cs \
     src/RunConfiguration.cs \
