@@ -7,20 +7,8 @@ using CodeEditor;
 
 namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 {
-    public class DataSciencePythonTooltipProvider : ITooltipProvider
+    public class DataSciencePythonTooltipProvider : TooltipProviderBase
     {
-        private Dictionary<string, TooltipInfo> _tooltips = new Dictionary<string, TooltipInfo>();
-
-        public void RegisterTooltip(string name, string signature, string description)
-        {
-            _tooltips[name] = new TooltipInfo(signature, description);
-        }
-
-        public void RegisterTooltip(string name, TooltipInfo info)
-        {
-            _tooltips[name] = info;
-        }
-
         public void LoadFromEmbeddedResources()
         {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
@@ -55,7 +43,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 string docstring = ExtractDocstring(code, m.Index + m.Length);
 
-                _tooltips[funcName] = new TooltipInfo(signature, docstring ?? "");
+                RegisterTooltip(funcName, signature, docstring ?? "");
             }
 
             var classPattern = new Regex(@"^class\s+([a-zA-Z_]\w*)\s*(?:\([^)]*\))?\s*:", RegexOptions.Multiline);
@@ -79,10 +67,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         docstring = initDoc;
                 }
 
-                _tooltips[className] = new TooltipInfo(
+                RegisterTooltip(className, new TooltipInfo(
                     initSig ?? className + "()",
                     docstring ?? ""
-                );
+                ));
             }
         }
 
@@ -152,38 +140,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 foreach (var f in kvp.Value.Functions)
                 {
                     string qualName = prefix + "." + f;
-                    if (!_tooltips.ContainsKey(qualName))
-                        _tooltips[qualName] = new TooltipInfo(f + "(...)", moduleName + "." + f);
+                    if (!HasTooltip(qualName))
+                        RegisterTooltip(qualName, f + "(...)", moduleName + "." + f);
                 }
             }
-        }
-
-        public TooltipInfo GetTooltip(string text, TextPosition position, string word)
-        {
-            if (_tooltips.ContainsKey(word))
-                return _tooltips[word];
-
-            string lineText = null;
-            var lines = text.Split('\n');
-            if (position.Line >= 0 && position.Line < lines.Length)
-                lineText = lines[position.Line];
-
-            if (lineText != null)
-            {
-                int dotIdx = lineText.LastIndexOf('.', Math.Min(position.Column, lineText.Length - 1));
-                if (dotIdx >= 0)
-                {
-                    int objStart = dotIdx - 1;
-                    while (objStart >= 0 && (char.IsLetterOrDigit(lineText[objStart]) || lineText[objStart] == '_'))
-                        objStart--;
-                    objStart++;
-                    string qualName = lineText.Substring(objStart, dotIdx - objStart) + "." + word;
-                    if (_tooltips.ContainsKey(qualName))
-                        return _tooltips[qualName];
-                }
-            }
-
-            return null;
         }
     }
 }

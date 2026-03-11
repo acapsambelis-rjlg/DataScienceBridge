@@ -24,7 +24,8 @@ The application uses Mono (C# / .NET Framework 4.7.2 compatible) with Python int
 
 **Key Editor Integration Classes:**
 - `DataSciencePythonCompletionProvider`: Context-aware Python completions (keywords, builtins, DataFrame methods, dataset columns, registered classes, dynamic symbols, library members)
-- `DataSciencePythonTooltipProvider`: Hover tooltips via `ITooltipProvider` — auto-extracts function signatures and docstrings from embedded helper `.py` resources and module introspection data. Registered on `CodeTextBox.TooltipProvider`.
+- `TooltipProviderBase` (from SyntaxEditor): Reusable base class implementing `ITooltipProvider` with dictionary-backed tooltip registration, qualified-name lookup (`obj.member`), and management methods (`RegisterTooltip`, `RemoveTooltip`, `ClearTooltips`, `HasTooltip`). Subclass and override `GetTooltip` for custom lookup logic.
+- `DataSciencePythonTooltipProvider`: Extends `TooltipProviderBase` with Python-specific logic — auto-extracts function signatures and docstrings from embedded helper `.py` resources and module introspection data. Registered on `CodeTextBox.TooltipProvider`.
 - `SyntaxEditorHelper`: Extension methods on `CodeTextBox` for text access, caret/selection manipulation, clipboard, undo/redo
 - `PythonSymbolAnalyzer`: Static analysis producing `Diagnostic` objects for the editor
 - `IndentFoldingProvider` (from SyntaxEditor): Python indentation-based code folding
