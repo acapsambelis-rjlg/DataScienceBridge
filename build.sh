@@ -33,6 +33,7 @@ mcs $REFS \
     src/PythonSymbolAnalyzer.cs \
     src/SyntaxEditorHelper.cs \
     src/DataSciencePythonCompletionProvider.cs \
+    src/DataSciencePythonTooltipProvider.cs \
     src/DockPanelContent.cs \
     src/DataScienceControl.Designer.cs \
     src/RunConfigurationDialog.cs \

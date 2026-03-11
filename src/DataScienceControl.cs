@@ -31,6 +31,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private bool textDirty;
 
         private DataSciencePythonCompletionProvider completionProvider;
+        private DataSciencePythonTooltipProvider tooltipProvider;
         private List<Diagnostic> symbolDiagnostics = new List<Diagnostic>();
         private List<Diagnostic> syntaxDiagnostics = new List<Diagnostic>();
         private PythonSymbolAnalyzer symbolAnalyzer = new PythonSymbolAnalyzer();
@@ -320,6 +321,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             completionProvider = new DataSciencePythonCompletionProvider();
             completionProvider.SetHelperFunctions(PythonRunner.BuiltInHelperNames);
+            tooltipProvider = new DataSciencePythonTooltipProvider();
+            tooltipProvider.LoadFromEmbeddedResources();
             UpdateDynamicSymbols();
 
             highlightTimer = new System.Windows.Forms.Timer();
@@ -342,6 +345,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editor.Ruleset = SyntaxRuleset.CreatePythonRuleset();
             editor.FoldingProvider = new IndentFoldingProvider();
             editor.CompletionProvider = completionProvider;
+            editor.TooltipProvider = tooltipProvider;
 
             tab.Editor = editor;
 
@@ -1011,6 +1015,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     {
                         completionProvider.SetImportAliases(CommonImportAliases);
                         completionProvider.SetModuleCompletions(moduleData);
+                    }
+                    if (tooltipProvider != null)
+                    {
+                        tooltipProvider.SetModuleTooltips(moduleData, CommonImportAliases);
                     }
 
                     foreach (var kvp in moduleData)
