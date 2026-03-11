@@ -316,9 +316,31 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             };
         }
 
+        private List<string> ScanHelperFunctions()
+        {
+            var names = new List<string>();
+            string appDir = AppDomain.CurrentDomain.BaseDirectory;
+            string helpersDir = System.IO.Path.Combine(appDir, "python", "helpers");
+            if (!System.IO.Directory.Exists(helpersDir)) return names;
+
+            var defRegex = new System.Text.RegularExpressions.Regex(@"^def\s+([a-zA-Z_]\w*)\s*\(", System.Text.RegularExpressions.RegexOptions.Multiline);
+            foreach (var file in System.IO.Directory.GetFiles(helpersDir, "*.py"))
+            {
+                string content = System.IO.File.ReadAllText(file);
+                foreach (System.Text.RegularExpressions.Match m in defRegex.Matches(content))
+                {
+                    string name = m.Groups[1].Value;
+                    if (!name.StartsWith("_"))
+                        names.Add(name);
+                }
+            }
+            return names;
+        }
+
         private void SetupSyntaxHighlighting()
         {
             completionProvider = new DataSciencePythonCompletionProvider();
+            completionProvider.SetHelperFunctions(ScanHelperFunctions());
             UpdateDynamicSymbols();
 
             highlightTimer = new System.Windows.Forms.Timer();

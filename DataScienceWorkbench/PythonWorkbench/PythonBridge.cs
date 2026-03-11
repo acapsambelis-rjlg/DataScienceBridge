@@ -567,6 +567,19 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 sb.AppendLine("        _dotnet_mod.__all__.append(_sname)");
             }
 
+            sb.AppendLine("import os as _os, glob as _glob");
+            sb.AppendLine("_helpers_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(sys.argv[0] if sys.argv[0] else __file__))), 'helpers')");
+            sb.AppendLine("if _os.path.isdir(_helpers_dir):");
+            sb.AppendLine("    for _hf in sorted(_glob.glob(_os.path.join(_helpers_dir, '*.py'))):");
+            sb.AppendLine("        _hns = {}");
+            sb.AppendLine("        with open(_hf, 'r') as _fh:");
+            sb.AppendLine("            exec(compile(_fh.read(), _hf, 'exec'), _hns)");
+            sb.AppendLine("        for _hk, _hv in _hns.items():");
+            sb.AppendLine("            if not _hk.startswith('_') and callable(_hv):");
+            sb.AppendLine("                setattr(_dotnet_mod, _hk, _hv)");
+            sb.AppendLine("                _dotnet_mod.__all__.append(_hk)");
+            sb.AppendLine("del _os, _glob");
+
             sb.AppendLine("del _types, _dotnet_mod");
             sb.AppendLine();
         }

@@ -36,6 +36,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private Dictionary<string, List<string>> _datasetColumns = new Dictionary<string, List<string>>();
         private Dictionary<string, PythonClassInfo> _registeredClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> _contextVariables = new Dictionary<string, ContextVariable>();
+        private List<string> _helperFunctions = new List<string>();
 
         public void SetModuleCompletions(Dictionary<string, ModuleIntrospection> moduleData)
         {
@@ -81,6 +82,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public void SetDynamicSymbols(IEnumerable<string> symbols)
         {
             _dynamicSymbols = new List<string>(symbols);
+        }
+
+        public void SetHelperFunctions(IEnumerable<string> names)
+        {
+            _helperFunctions = new List<string>(names);
         }
 
         public void SetDataSources(Dictionary<string, List<string>> datasetColumns)
@@ -130,6 +136,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     .OrderBy(k => k)
                     .Select(k => new CompletionItem(k, CompletionItemKind.Module, "dataset"))
                     .ToList();
+
+                importItems.AddRange(_helperFunctions
+                    .Where(k => k.StartsWith(lastToken, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(k => k)
+                    .Select(k => new CompletionItem(k, CompletionItemKind.Function, "helper")));
 
                 if (importItems.Count > 0)
                     return importItems;
@@ -210,6 +221,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (objectName == "DotNetData")
             {
                 members.AddRange(_datasetColumns.Keys);
+                members.AddRange(_helperFunctions);
             }
             else if (isRowAccess && _datasetColumns.ContainsKey(baseName))
             {
