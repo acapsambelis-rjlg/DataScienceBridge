@@ -363,6 +363,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             editor.SetText(tab.Content ?? "");
             editor.SetCaretIndex(Math.Min(tab.CursorPosition, (tab.Content ?? "").Length));
             editor.ClearSelection();
+            if (tab.CursorPosition == 0)
+                editor.ScrollToTop();
             suppressHighlight = false;
             editor.Refresh();
         }
