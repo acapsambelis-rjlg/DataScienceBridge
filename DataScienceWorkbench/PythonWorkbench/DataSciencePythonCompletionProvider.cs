@@ -120,7 +120,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             string prefix = text.Substring(wordStart, pos - wordStart);
 
             string lineText = GetCurrentLine(text, pos);
-            var fromImportMatch = Regex.Match(lineText, @"^\s*from\s+DotNetData\s+import\s+(.*)$");
+            var fromImportMatch = Regex.Match(lineText, @"^\s*from\s+IntelliSEM\s+import\s+(.*)$");
             if (fromImportMatch.Success)
             {
                 string afterImport = fromImportMatch.Groups[1].Value;
@@ -218,7 +218,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 isRowAccess = true;
             }
 
-            if (objectName == "DotNetData")
+            if (objectName == "IntelliSEM")
             {
                 members.AddRange(_datasetColumns.Keys);
                 members.AddRange(_helperFunctions);
