@@ -25,8 +25,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileNewBtn = new System.Windows.Forms.Button();
             this.fileOpenBtn = new System.Windows.Forms.Button();
             this.fileCloseBtn = new System.Windows.Forms.Button();
-            this.editorMenuBar = new System.Windows.Forms.MenuStrip();
-            this.insertSnippetBtn = new System.Windows.Forms.ToolStripMenuItem();
+            this.insertSnippetBtn = new System.Windows.Forms.ToolStripDropDownButton();
+            this.clearOutputBtn = new System.Windows.Forms.ToolStripButton();
+            this.viewDataRefBtn = new System.Windows.Forms.ToolStripButton();
+            this.resetLayoutBtn = new System.Windows.Forms.ToolStripButton();
             this.editorToolBar = new System.Windows.Forms.ToolStrip();
             this.configDropDown = new System.Windows.Forms.ToolStripDropDownButton();
             this.runToolBtn = new System.Windows.Forms.ToolStripButton();
@@ -60,7 +62,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.pkgLabel = new System.Windows.Forms.Label();
             this.fileListPanel.SuspendLayout();
             this.fileListButtonPanel.SuspendLayout();
-            this.editorMenuBar.SuspendLayout();
             this.outputPanel.SuspendLayout();
             this.refPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.refSplit)).BeginInit();
@@ -154,19 +155,33 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.fileCloseBtn.Text = "\u00d7";
             this.fileCloseBtn.UseVisualStyleBackColor = true;
             //
-            // editorMenuBar
-            //
-            this.editorMenuBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.insertSnippetBtn});
-            this.editorMenuBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.editorMenuBar.Name = "editorMenuBar";
-            this.editorMenuBar.Size = new System.Drawing.Size(792, 24);
-            //
             // insertSnippetBtn
             //
+            this.insertSnippetBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.insertSnippetBtn.Name = "insertSnippetBtn";
-            this.insertSnippetBtn.Size = new System.Drawing.Size(95, 20);
-            this.insertSnippetBtn.Text = "Insert Snippet";
+            this.insertSnippetBtn.Text = "Snippets";
+            this.insertSnippetBtn.ToolTipText = "Insert code snippet";
+            //
+            // clearOutputBtn
+            //
+            this.clearOutputBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.clearOutputBtn.Name = "clearOutputBtn";
+            this.clearOutputBtn.Text = "Clear";
+            this.clearOutputBtn.ToolTipText = "Clear Output";
+            //
+            // viewDataRefBtn
+            //
+            this.viewDataRefBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.viewDataRefBtn.Name = "viewDataRefBtn";
+            this.viewDataRefBtn.Text = "Data Ref";
+            this.viewDataRefBtn.ToolTipText = "View Data Reference";
+            //
+            // resetLayoutBtn
+            //
+            this.resetLayoutBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.resetLayoutBtn.Name = "resetLayoutBtn";
+            this.resetLayoutBtn.Text = "Reset Layout";
+            this.resetLayoutBtn.ToolTipText = "Reset panel layout";
             //
             // editorToolBar
             //
@@ -182,7 +197,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.undoToolBtn,
             this.redoToolBtn,
             new System.Windows.Forms.ToolStripSeparator(),
-            this.findToolBtn});
+            this.findToolBtn,
+            new System.Windows.Forms.ToolStripSeparator(),
+            this.clearOutputBtn,
+            this.viewDataRefBtn,
+            this.resetLayoutBtn,
+            new System.Windows.Forms.ToolStripSeparator(),
+            this.insertSnippetBtn});
             this.editorToolBar.Dock = System.Windows.Forms.DockStyle.Top;
             this.editorToolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.editorToolBar.Name = "editorToolBar";
@@ -480,13 +501,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.dockPanel);
             this.Controls.Add(this.editorToolBar);
-            this.Controls.Add(this.editorMenuBar);
             this.Name = "DataScienceControl";
             this.Size = new System.Drawing.Size(800, 600);
             this.fileListButtonPanel.ResumeLayout(false);
             this.fileListPanel.ResumeLayout(false);
-            this.editorMenuBar.ResumeLayout(false);
-            this.editorMenuBar.PerformLayout();
             this.outputPanel.ResumeLayout(false);
             this.refPanel.ResumeLayout(false);
             this.refSplit.Panel1.ResumeLayout(false);
@@ -503,8 +521,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         #endregion
 
         private WeifenLuo.WinFormsUI.Docking.DockPanel dockPanel;
-        private System.Windows.Forms.MenuStrip editorMenuBar;
-        private System.Windows.Forms.ToolStripMenuItem insertSnippetBtn;
+        private System.Windows.Forms.ToolStripDropDownButton insertSnippetBtn;
+        private System.Windows.Forms.ToolStripButton clearOutputBtn;
+        private System.Windows.Forms.ToolStripButton viewDataRefBtn;
+        private System.Windows.Forms.ToolStripButton resetLayoutBtn;
         private System.Windows.Forms.ToolStrip editorToolBar;
         private System.Windows.Forms.ToolStripDropDownButton configDropDown;
         private System.Windows.Forms.ToolStripButton runToolBtn;

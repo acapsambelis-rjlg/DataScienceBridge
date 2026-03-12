@@ -213,8 +213,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             CreateFileTreeIcons();
             ResolveRuntimeFonts();
             InitializeData();
-            SetupEditorMenuBar();
             SetupSnippetMenu();
+            SetupToolbarActions();
             SetupSyntaxHighlighting();
             RegisterAllDatasetsInMemory();
             PopulateReferenceTree();
@@ -1153,182 +1153,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
-        private void SetupEditorMenuBar()
+        private void SetupToolbarActions()
         {
-            var fileMenu = new ToolStripMenuItem("File");
-
-            var newFileItem = new ToolStripMenuItem("New File");
-            newFileItem.Click += OnNewFile;
-            newFileItem.ShortcutKeyDisplayString = "Ctrl+N";
-            fileMenu.DropDownItems.Add(newFileItem);
-
-            var openFileItem = new ToolStripMenuItem("Open File...");
-            openFileItem.Click += OnOpenFile;
-            fileMenu.DropDownItems.Add(openFileItem);
-
-            var saveItem = new ToolStripMenuItem("Save");
-            saveItem.Click += OnSaveFile;
-            saveItem.ShortcutKeys = Keys.Control | Keys.S;
-            fileMenu.DropDownItems.Add(saveItem);
-
-            var saveAsItem = new ToolStripMenuItem("Save As...");
-            saveAsItem.Click += OnSaveFileAs;
-            fileMenu.DropDownItems.Add(saveAsItem);
-            fileMenu.DropDownItems.Add(new ToolStripSeparator());
-
-            var closeItem = new ToolStripMenuItem("Close File");
-            closeItem.Click += OnCloseFile;
-            closeItem.ShortcutKeyDisplayString = "Ctrl+W";
-            fileMenu.DropDownItems.Add(closeItem);
-
-            var editMenu = new ToolStripMenuItem("&Edit");
-
-            var undoItem = new ToolStripMenuItem("Undo");
-            undoItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformUndo(); };
-            undoItem.ShortcutKeyDisplayString = "Ctrl+Z";
-            editMenu.DropDownItems.Add(undoItem);
-
-            var redoItem = new ToolStripMenuItem("Redo");
-            redoItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformRedo(); };
-            redoItem.ShortcutKeyDisplayString = "Ctrl+Y";
-            editMenu.DropDownItems.Add(redoItem);
-
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
-
-            var cutItem = new ToolStripMenuItem("Cut");
-            cutItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformCut(); };
-            cutItem.ShortcutKeyDisplayString = "Ctrl+X";
-            editMenu.DropDownItems.Add(cutItem);
-
-            var copyItem = new ToolStripMenuItem("Copy");
-            copyItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformCopy(); };
-            copyItem.ShortcutKeyDisplayString = "Ctrl+C";
-            editMenu.DropDownItems.Add(copyItem);
-
-            var pasteItem = new ToolStripMenuItem("Paste");
-            pasteItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformPaste(); };
-            pasteItem.ShortcutKeyDisplayString = "Ctrl+V";
-            editMenu.DropDownItems.Add(pasteItem);
-
-            var deleteItem = new ToolStripMenuItem("Delete");
-            deleteItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus && pythonEditor.SelectionLength > 0) pythonEditor.DeleteSelectionText(); };
-            deleteItem.ShortcutKeyDisplayString = "Del";
-            editMenu.DropDownItems.Add(deleteItem);
-
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
-
-            var selectAllItem = new ToolStripMenuItem("Select All");
-            selectAllItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) pythonEditor.PerformSelectAll(); };
-            selectAllItem.ShortcutKeyDisplayString = "Ctrl+A";
-            editMenu.DropDownItems.Add(selectAllItem);
-
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
-
-            var findItem = new ToolStripMenuItem("Find && Replace...");
-            findItem.Click += (s, e) => pythonEditor?.ShowReplace();
-            findItem.ShortcutKeyDisplayString = "Ctrl+H";
-            editMenu.DropDownItems.Add(findItem);
-
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
-
-            var dupLineItem = new ToolStripMenuItem("Duplicate Line");
-            dupLineItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) DuplicateLine(); };
-            dupLineItem.ShortcutKeyDisplayString = "Ctrl+D";
-            editMenu.DropDownItems.Add(dupLineItem);
-
-            var moveUpItem = new ToolStripMenuItem("Move Line Up");
-            moveUpItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) MoveLine(true); };
-            moveUpItem.ShortcutKeyDisplayString = "Alt+Up";
-            editMenu.DropDownItems.Add(moveUpItem);
-
-            var moveDownItem = new ToolStripMenuItem("Move Line Down");
-            moveDownItem.Click += (s, e) => { if (pythonEditor != null && pythonEditor.ContainsFocus) MoveLine(false); };
-            moveDownItem.ShortcutKeyDisplayString = "Alt+Down";
-            editMenu.DropDownItems.Add(moveDownItem);
-
-            editMenu.DropDownItems.Add(new ToolStripSeparator());
-            var clearOutputItem = new ToolStripMenuItem("Clear Output");
-            clearOutputItem.Click += (s, e) => outputBox.Clear();
-            editMenu.DropDownItems.Add(clearOutputItem);
-
-            editMenu.DropDownOpening += (s, e) =>
-            {
-                bool editorFocused = pythonEditor != null && pythonEditor.ContainsFocus;
-                undoItem.Enabled = editorFocused;
-                redoItem.Enabled = editorFocused;
-                bool hasSelection = editorFocused && pythonEditor.SelectionLength > 0;
-                cutItem.Enabled = hasSelection;
-                copyItem.Enabled = hasSelection;
-                deleteItem.Enabled = hasSelection;
-            };
-
-            var runMenu = new ToolStripMenuItem("Run");
-            var executeItem = new ToolStripMenuItem("Execute Script (F5)");
-            executeItem.Click += OnRunScript;
-            runMenu.DropDownItems.Add(executeItem);
-            var checkSyntaxItem = new ToolStripMenuItem("Check Syntax");
-            checkSyntaxItem.Click += OnCheckSyntax;
-            runMenu.DropDownItems.Add(checkSyntaxItem);
-            runMenu.DropDownItems.Add(new ToolStripSeparator());
-            var resetEnvItem = new ToolStripMenuItem("Reset Python Environment");
-            resetEnvItem.Click += (s, e) =>
-            {
-                var confirm = MessageBox.Show(
-                    "This will delete the virtual environment and recreate it.\nAll installed packages will need to be reinstalled.\n\nContinue?",
-                    "Reset Python Environment", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                if (confirm == DialogResult.Yes)
-                    ResetPythonEnvironment();
-            };
-            runMenu.DropDownItems.Add(resetEnvItem);
-
-            var viewMenu = new ToolStripMenuItem("&View");
-            var showFilesItem = new ToolStripMenuItem("Files Panel");
-            showFilesItem.Click += (s, e) => ShowDockPanel(filesDockContent);
-            viewMenu.DropDownItems.Add(showFilesItem);
-            var showOutputItem = new ToolStripMenuItem("Output Panel");
-            showOutputItem.Click += (s, e) => ShowDockPanel(outputDockContent);
-            viewMenu.DropDownItems.Add(showOutputItem);
-            var showRefItem = new ToolStripMenuItem("Data Reference");
-            showRefItem.Click += (s, e) => FloatPanel(referenceDockContent);
-            viewMenu.DropDownItems.Add(showRefItem);
-            var showPkgItem = new ToolStripMenuItem("Package Manager");
-            showPkgItem.Click += (s, e) => ShowDockPanel(packagesDockContent);
-            viewMenu.DropDownItems.Add(showPkgItem);
-            viewMenu.DropDownItems.Add(new ToolStripSeparator());
-            var resetLayoutItem = new ToolStripMenuItem("Reset Layout");
-            resetLayoutItem.Click += (s, e) => ResetDockLayout();
-            viewMenu.DropDownItems.Add(resetLayoutItem);
-
-            var helpMenu = new ToolStripMenuItem("Help");
-            var quickStartItem = new ToolStripMenuItem("Quick Start Guide");
-            quickStartItem.Click += OnShowHelp;
-            helpMenu.DropDownItems.Add(quickStartItem);
-            var shortcutsItem = new ToolStripMenuItem("Keyboard Shortcuts");
-            shortcutsItem.Click += OnShowKeyboardShortcuts;
-            helpMenu.DropDownItems.Add(shortcutsItem);
-            var editorFeaturesItem = new ToolStripMenuItem("Editor Features");
-            editorFeaturesItem.Click += OnShowEditorFeatures;
-            helpMenu.DropDownItems.Add(editorFeaturesItem);
-            helpMenu.DropDownItems.Add(new ToolStripSeparator());
-            var aboutItem = new ToolStripMenuItem("About");
-            aboutItem.Click += (s, e) => MessageBox.Show(
-                "Data Science Workbench v1.0\n\n" +
-                "A .NET Windows Forms control with\n" +
-                "integrated Python scripting for data analysis.\n\n" +
-                "Built with Mono + Python 3",
-                "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            helpMenu.DropDownItems.Add(aboutItem);
-
-            editorMenuBar.Items.Insert(0, fileMenu);
-            editorMenuBar.Items.Insert(1, editMenu);
-            editorMenuBar.Items.Insert(2, runMenu);
-            editorMenuBar.Items.Insert(3, viewMenu);
-            editorMenuBar.Items.Add(helpMenu);
+            clearOutputBtn.Click += (s, e) => outputBox.Clear();
+            viewDataRefBtn.Click += (s, e) => FloatPanel(referenceDockContent);
+            resetLayoutBtn.Click += (s, e) => ResetDockLayout();
         }
 
         public MenuStrip CreateMenuStrip()
         {
-            return editorMenuBar;
+            return null;
         }
 
         public bool HandleKeyDown(Keys keyCode)

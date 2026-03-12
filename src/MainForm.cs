@@ -18,9 +18,6 @@ namespace DataScienceWorkbench
         {
             dataScienceControl.StatusChanged += (s, msg) => SetStatus(msg);
 
-            var menuBar = dataScienceControl.CreateMenuStrip();
-            this.MainMenuStrip = menuBar;
-
             this.KeyDown += (s, e) =>
             {
                 if (dataScienceControl.HandleKeyDown(e.KeyCode))
