@@ -137,11 +137,58 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
 
                 string prefix = alias ?? moduleName;
+                var funcDocs = kvp.Value.FunctionDocs;
+                var classDocs = kvp.Value.ClassDocs;
+
                 foreach (var f in kvp.Value.Functions)
                 {
                     string qualName = prefix + "." + f;
-                    if (!HasTooltip(qualName))
+                    if (HasTooltip(qualName)) continue;
+
+                    DocEntry doc;
+                    if (funcDocs != null && funcDocs.TryGetValue(f, out doc) && !string.IsNullOrEmpty(doc.Signature))
+                        RegisterTooltip(qualName, doc.Signature, doc.DocString ?? "");
+                    else
                         RegisterTooltip(qualName, f + "(...)", moduleName + "." + f);
+                }
+
+                foreach (var cls in kvp.Value.Classes)
+                {
+                    string clsQualName = prefix + "." + cls.Key;
+                    if (!HasTooltip(clsQualName))
+                    {
+                        DocEntry doc;
+                        if (classDocs != null && classDocs.TryGetValue(cls.Key, out doc) && !string.IsNullOrEmpty(doc.Signature))
+                            RegisterTooltip(clsQualName, doc.Signature, doc.DocString ?? "");
+                        else
+                            RegisterTooltip(clsQualName, cls.Key + "(...)", moduleName + "." + cls.Key);
+                    }
+
+                    foreach (var member in cls.Value)
+                    {
+                        string memberName = member.EndsWith("()") ? member.Substring(0, member.Length - 2) : member;
+                        string memberQualName = prefix + "." + cls.Key + "." + memberName;
+                        if (HasTooltip(memberQualName)) continue;
+
+                        string docKey = cls.Key + "." + memberName;
+                        DocEntry mdoc;
+                        if (funcDocs != null && funcDocs.TryGetValue(docKey, out mdoc) && !string.IsNullOrEmpty(mdoc.Signature))
+                            RegisterTooltip(memberQualName, mdoc.Signature, mdoc.DocString ?? "");
+                        else if (member.EndsWith("()"))
+                            RegisterTooltip(memberQualName, memberName + "(...)", moduleName + "." + docKey);
+                    }
+
+                    foreach (var member in cls.Value)
+                    {
+                        string memberName = member.EndsWith("()") ? member.Substring(0, member.Length - 2) : member;
+                        string shortQualName = prefix + "." + memberName;
+                        if (HasTooltip(shortQualName)) continue;
+
+                        string docKey = cls.Key + "." + memberName;
+                        DocEntry mdoc;
+                        if (funcDocs != null && funcDocs.TryGetValue(docKey, out mdoc) && !string.IsNullOrEmpty(mdoc.Signature))
+                            RegisterTooltip(shortQualName, mdoc.Signature, mdoc.DocString ?? "");
+                    }
                 }
             }
         }

@@ -1548,12 +1548,22 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public List<string> PlotPaths { get; set; } = new List<string>();
     }
 
+    public class DocEntry
+    {
+        public string Signature { get; set; }
+        public string DocString { get; set; }
+        public DocEntry() { Signature = ""; DocString = ""; }
+        public DocEntry(string sig, string doc) { Signature = sig ?? ""; DocString = doc ?? ""; }
+    }
+
     public class ModuleIntrospection
     {
         public List<string> Functions { get; set; }
         public Dictionary<string, List<string>> Classes { get; set; }
         public List<string> Constants { get; set; }
         public List<string> Submodules { get; set; }
+        public Dictionary<string, DocEntry> FunctionDocs { get; set; }
+        public Dictionary<string, DocEntry> ClassDocs { get; set; }
 
         public ModuleIntrospection()
         {
@@ -1561,6 +1571,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             Classes = new Dictionary<string, List<string>>();
             Constants = new List<string>();
             Submodules = new List<string>();
+            FunctionDocs = new Dictionary<string, DocEntry>();
+            ClassDocs = new Dictionary<string, DocEntry>();
         }
 
         public List<string> GetAllMembers()
@@ -1633,6 +1645,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 {
                     intro.Classes = ReadJsonDictOfStringArrays(json, ref pos);
                 }
+                else if (key == "function_docs" || key == "class_docs")
+                {
+                    var docs = ReadJsonDictOfDocEntries(json, ref pos);
+                    if (key == "function_docs") intro.FunctionDocs = docs;
+                    else intro.ClassDocs = docs;
+                }
                 else
                 {
                     var arr = ReadJsonStringArray(json, ref pos);
@@ -1661,7 +1679,35 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 if (json[pos] == '\\' && pos + 1 < json.Length)
                 {
                     pos++;
-                    sb.Append(json[pos]);
+                    char esc = json[pos];
+                    switch (esc)
+                    {
+                        case 'n': sb.Append('\n'); break;
+                        case 't': sb.Append('\t'); break;
+                        case 'r': sb.Append('\r'); break;
+                        case '"': sb.Append('"'); break;
+                        case '\\': sb.Append('\\'); break;
+                        case '/': sb.Append('/'); break;
+                        case 'b': sb.Append('\b'); break;
+                        case 'f': sb.Append('\f'); break;
+                        case 'u':
+                            if (pos + 4 < json.Length)
+                            {
+                                string hex = json.Substring(pos + 1, 4);
+                                int code;
+                                if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out code))
+                                {
+                                    sb.Append((char)code);
+                                    pos += 4;
+                                }
+                                else
+                                    sb.Append(esc);
+                            }
+                            else
+                                sb.Append(esc);
+                            break;
+                        default: sb.Append(esc); break;
+                    }
                 }
                 else
                 {
@@ -1717,6 +1763,62 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             return dict;
+        }
+
+        private static Dictionary<string, DocEntry> ReadJsonDictOfDocEntries(string json, ref int pos)
+        {
+            var dict = new Dictionary<string, DocEntry>();
+            SkipWhitespace(json, ref pos);
+            if (pos >= json.Length || json[pos] != '{') return dict;
+            pos++;
+
+            while (pos < json.Length)
+            {
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] == '}') { pos++; break; }
+                if (json[pos] == ',') { pos++; continue; }
+
+                string key = ReadJsonString(json, ref pos);
+                if (key == null) break;
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] != ':') break;
+                pos++;
+
+                var entry = ReadDocEntryObject(json, ref pos);
+                if (entry != null)
+                    dict[key] = entry;
+            }
+
+            return dict;
+        }
+
+        private static DocEntry ReadDocEntryObject(string json, ref int pos)
+        {
+            SkipWhitespace(json, ref pos);
+            if (pos >= json.Length || json[pos] != '{') return null;
+            pos++;
+
+            string sig = "";
+            string doc = "";
+
+            while (pos < json.Length)
+            {
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] == '}') { pos++; break; }
+                if (json[pos] == ',') { pos++; continue; }
+
+                string k = ReadJsonString(json, ref pos);
+                if (k == null) break;
+                SkipWhitespace(json, ref pos);
+                if (pos >= json.Length || json[pos] != ':') break;
+                pos++;
+
+                string v = ReadJsonString(json, ref pos);
+                if (k == "sig") sig = v ?? "";
+                else if (k == "doc") doc = v ?? "";
+            }
+
+            return new DocEntry(sig, doc);
         }
     }
 }
