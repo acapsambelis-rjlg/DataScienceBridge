@@ -1,0 +1,32 @@
+System.Runtime.InteropServices.COMException (0x8000000A): The data necessary to complete this operation is not yet available. (Exception from HRESULT: 0x8000000A)
+   at System.Windows.Forms.UnsafeNativeMethods.ITextRange.ScrollIntoView(Int32 value)
+   at System.Windows.Forms.TextBoxBase.ScrollToCaret()
+   at RJLG.IntelliSEM.WindowsForms.Controls.DataScience.DataScienceControl.ShowDatasetDetail(String tag) in C:\TFS\IntelliSEM20\RJLG.IntelliSEM\RJLG.IntelliSEM.UI\Controls\DataScience\DataScienceControl.cs:line 1811
+   at RJLG.IntelliSEM.WindowsForms.Controls.DataScience.DataScienceControl.OnRefTreeSelect(Object sender, RadTreeViewEventArgs e) in C:\TFS\IntelliSEM20\RJLG.IntelliSEM\RJLG.IntelliSEM.UI\Controls\DataScience\DataScienceControl.cs:line 1504
+   at Telerik.WinControls.UI.RadTreeView.RadTreeViewEventHandler.Invoke(Object sender, RadTreeViewEventArgs e)
+   at Telerik.WinControls.UI.RadTreeViewElement.OnSelectedNodeChanged(RadTreeViewEventArgs args)
+   at Telerik.WinControls.UI.RadTreeViewElement.ProcessSelection(RadTreeNode node, Keys modifierKeys, Boolean isMouseSelection, RadTreeViewAction selectionAction)
+   at Telerik.WinControls.UI.RadTreeViewElement.set_SelectedNode(RadTreeNode value)
+   at RJLG.IntelliSEM.WindowsForms.Controls.DataScience.DataScienceControl.PopulateReferenceTree() in C:\TFS\IntelliSEM20\RJLG.IntelliSEM\RJLG.IntelliSEM.UI\Controls\DataScience\DataScienceControl.cs:line 1453
+   at RJLG.IntelliSEM.WindowsForms.Controls.DataScience.DataScienceControl.FilterReferenceTree(String filter) in C:\TFS\IntelliSEM20\RJLG.IntelliSEM\RJLG.IntelliSEM.UI\Controls\DataScience\DataScienceControl.cs:line 1192
+   at RJLG.IntelliSEM.WindowsForms.Controls.DataScience.DataScienceControl.<SetupRefSearch>b__97_2(Object s, EventArgs e) in C:\TFS\IntelliSEM20\RJLG.IntelliSEM\RJLG.IntelliSEM.UI\Controls\DataScience\DataScienceControl.cs:line 1184
+   at System.Windows.Forms.Control.OnTextChanged(EventArgs e)
+   at System.EventHandler.Invoke(Object sender, EventArgs e)
+   at Telerik.WinControls.RadItem.OnTextChanged(EventArgs e)
+   at Telerik.WinControls.RadHostItem.OnPropertyChanged(RadPropertyChangedEventArgs e)
+   at Telerik.WinControls.UI.RadTextBoxItem.OnPropertyChanged(RadPropertyChangedEventArgs e)
+   at Telerik.WinControls.RadObject.RaisePropertyNotifications(RadPropertyValue propVal, Object oldValue, Object newValue, ValueSource oldSource)
+   at Telerik.WinControls.RadObject.SetValueCore(RadPropertyValue propVal, Object propModifier, Object newValue, ValueSource source)
+   at Telerik.WinControls.UI.RadTextBoxItem.set_Text(String value)
+   at Telerik.WinControls.UI.RadTextBoxBase.set_Text(String value)
+   at RJLG.IntelliSEM.WindowsForms.Controls.DataScience.DataScienceControl.<SetupRefSearch>b__97_1(Object s, EventArgs e) in C:\TFS\IntelliSEM20\RJLG.IntelliSEM\RJLG.IntelliSEM.UI\Controls\DataScience\DataScienceControl.cs:line 1176
+   at System.Windows.Forms.Control.OnLostFocus(EventArgs e)
+   at Telerik.WinControls.UI.RadTextBoxBase.OnLostFocus(EventArgs e)
+   at System.EventHandler.Invoke(Object sender, EventArgs e)
+   at System.Windows.Forms.Control.OnLostFocus(EventArgs e)
+   at System.Windows.Forms.Control.WmKillFocus(Message& m)
+   at System.Windows.Forms.Control.WndProc(Message& m)
+   at System.Windows.Forms.TextBoxBase.WndProc(Message& m)
+   at System.Windows.Forms.TextBox.WndProc(Message& m)
+   at Telerik.WinControls.UI.HostedTextBoxBase.WndProc(Message& message)
+   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)

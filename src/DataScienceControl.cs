@@ -1815,7 +1815,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             refDetailBox.SelectionStart = 0;
-            refDetailBox.ScrollToCaret();
+            SafeScrollToCaret(refDetailBox);
         }
 
         private void ShowSubclassDetail(string datasetName, string prefix, TreeNode node)
@@ -1894,7 +1894,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             refDetailBox.SelectionStart = 0;
-            refDetailBox.ScrollToCaret();
+            SafeScrollToCaret(refDetailBox);
         }
 
         private void ShowDatasetDetail(string tag)
@@ -1942,7 +1942,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AppendRefText(example + "\n", Color.FromArgb(60, 60, 60), false, 10);
 
             refDetailBox.SelectionStart = 0;
-            refDetailBox.ScrollToCaret();
+            SafeScrollToCaret(refDetailBox);
         }
 
         private void ShowRegisteredClassDetail(string tag)
@@ -2016,7 +2016,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             refDetailBox.SelectionStart = 0;
-            refDetailBox.ScrollToCaret();
+            SafeScrollToCaret(refDetailBox);
         }
 
         private void ShowContextDetail(string tag)
@@ -2077,7 +2077,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             refDetailBox.SelectionStart = 0;
-            refDetailBox.ScrollToCaret();
+            SafeScrollToCaret(refDetailBox);
+        }
+
+        private void SafeScrollToCaret(RichTextBox rtb)
+        {
+            if (!rtb.IsHandleCreated) return;
+            try { rtb.ScrollToCaret(); }
+            catch (System.Runtime.InteropServices.ExternalException) { }
         }
 
         private void AppendRefText(string text, Color color, bool bold, float size)
@@ -2259,7 +2266,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         outputBox.SelectionLength = 0;
                         outputBox.SelectionColor = Color.FromArgb(0, 100, 0);
                         outputBox.AppendText(pendingInput);
-                        outputBox.ScrollToCaret();
+                        SafeScrollToCaret(outputBox);
                     }
                 }),
                 errorLine => RunOnUIThread(() =>
@@ -3902,7 +3909,7 @@ PLOT VIEWER
                 outputBox.SelectionLength = 0;
                 outputBox.SelectionColor = color;
                 outputBox.AppendText(text);
-                outputBox.ScrollToCaret();
+                SafeScrollToCaret(outputBox);
             });
         }
 
