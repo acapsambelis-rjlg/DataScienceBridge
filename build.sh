@@ -20,11 +20,17 @@ for f in src/Helpers/*.py; do
     [ -f "$f" ] && HELPERS="$HELPERS -resource:$f"
 done
 
+SNIPPETS=""
+for f in src/Snippets/*.py; do
+    [ -f "$f" ] && SNIPPETS="$SNIPPETS -resource:$f"
+done
+
 mcs $REFS \
     -target:winexe \
     -out:DataScienceWorkbench.exe \
     -langversion:7 \
     $HELPERS \
+    $SNIPPETS \
     src/DataModels.cs \
     src/DataQueue.cs \
     src/RunConfiguration.cs \

@@ -120,6 +120,19 @@
     <EmbeddedResource Include="PythonWorkbench\Helpers\display_images.py" />
     <EmbeddedResource Include="PythonWorkbench\Helpers\image_stats.py" />
     <EmbeddedResource Include="PythonWorkbench\Helpers\introspect_modules.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\01_list_datasets.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\02_basic_statistics.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\03_plot_histogram.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\04_scatter_plot.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\05_group_by.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\06_correlation_matrix.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\07_time_series.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\08_display_images.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\09_stream_data.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\10_ml_linear_regression.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\11_ml_classification.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\12_ml_clustering.py" />
+    <EmbeddedResource Include="PythonWorkbench\Snippets\13_ml_pca.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\extern\SyntaxEditorControl\SyntaxEditor\SyntaxEditor.csproj">

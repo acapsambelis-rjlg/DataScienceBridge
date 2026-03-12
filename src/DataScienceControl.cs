@@ -1398,60 +1398,53 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void SetupSnippetMenu()
         {
-            var item = new ToolStripMenuItem("List Datasets");
-            item.Click += (s, e) => InsertSnippet(GetLoadDataSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var snippetResources = new List<string>();
+            foreach (var name in assembly.GetManifestResourceNames())
+            {
+                if (name.EndsWith(".py") && name.Contains("Snippets"))
+                    snippetResources.Add(name);
+            }
+            snippetResources.Sort();
 
-            item = new ToolStripMenuItem("Basic Statistics");
-            item.Click += (s, e) => InsertSnippet(GetStatsSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
+            foreach (var resourceName in snippetResources)
+            {
+                string content;
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                using (var reader = new System.IO.StreamReader(stream))
+                    content = reader.ReadToEnd();
 
-            item = new ToolStripMenuItem("Plot Histogram");
-            item.Click += (s, e) => InsertSnippet(GetHistogramSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
+                string label = null;
+                bool separatorBefore = false;
+                var lines = content.Split('\n');
+                int codeStart = 0;
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    var line = lines[i].TrimEnd('\r');
+                    if (line.StartsWith("# snippet:"))
+                    {
+                        label = line.Substring("# snippet:".Length).Trim();
+                        codeStart = i + 1;
+                    }
+                    else if (line.StartsWith("# separator:"))
+                    {
+                        separatorBefore = true;
+                        codeStart = i + 1;
+                    }
+                    else break;
+                }
 
-            item = new ToolStripMenuItem("Scatter Plot");
-            item.Click += (s, e) => InsertSnippet(GetScatterSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
+                if (label == null) continue;
 
-            item = new ToolStripMenuItem("Group By Analysis");
-            item.Click += (s, e) => InsertSnippet(GetGroupBySnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
+                string code = string.Join("\n", lines, codeStart, lines.Length - codeStart);
 
-            item = new ToolStripMenuItem("Correlation Matrix");
-            item.Click += (s, e) => InsertSnippet(GetCorrelationSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
+                if (separatorBefore)
+                    insertSnippetBtn.DropDownItems.Add(new ToolStripSeparator());
 
-            item = new ToolStripMenuItem("Time Series Plot");
-            item.Click += (s, e) => InsertSnippet(GetTimeSeriesSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
-
-            item = new ToolStripMenuItem("Display Images");
-            item.Click += (s, e) => InsertSnippet(GetImageDisplaySnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
-
-            item = new ToolStripMenuItem("Stream Data (Lazy)");
-            item.Click += (s, e) => InsertSnippet(GetStreamDataSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
-
-            var mlSeparator = new ToolStripSeparator();
-            insertSnippetBtn.DropDownItems.Add(mlSeparator);
-
-            item = new ToolStripMenuItem("ML: Salary Prediction (Linear Regression)");
-            item.Click += (s, e) => InsertSnippet(GetLinearRegressionSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
-
-            item = new ToolStripMenuItem("ML: Department Classifier (Random Forest)");
-            item.Click += (s, e) => InsertSnippet(GetClassificationSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
-
-            item = new ToolStripMenuItem("ML: Employee Clustering (K-Means)");
-            item.Click += (s, e) => InsertSnippet(GetClusteringSnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
-
-            item = new ToolStripMenuItem("ML: Customer Segmentation (PCA)");
-            item.Click += (s, e) => InsertSnippet(GetPCASnippet());
-            insertSnippetBtn.DropDownItems.Add(item);
+                var item = new ToolStripMenuItem(label);
+                item.Click += (s, e) => InsertSnippet(code);
+                insertSnippetBtn.DropDownItems.Add(item);
+            }
         }
 
         private void RegisterAllDatasetsInMemory()
@@ -2658,8 +2651,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
             return -1;
         }
-
-
 
         private void LoadRunConfigurations()
         {
@@ -4119,526 +4110,6 @@ print(f'Average credit limit: ${customers.CreditLimit.mean():.2f}')
 print()
 print('=== Customer Summary ===')
 print(customers.df.describe())
-";
-        }
-
-        private string GetLoadDataSnippet()
-        {
-            return @"
-from DotNetData import customers, employees, customer_stream
-
-for name, ds in [('customers', customers), ('employees', employees)]:
-    print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')
-
-print(f'  customer_stream: streaming, columns={customer_stream.columns}')
-";
-        }
-
-        private string GetStatsSnippet()
-        {
-            return @"
-from DotNetData import customers
-
-print('=== Descriptive Statistics ===')
-print(customers.df.describe())
-print()
-print('=== Data Types ===')
-print(customers.df.dtypes)
-print()
-print('=== Missing Values ===')
-print(customers.df.isnull().sum())
-";
-        }
-
-        private string GetHistogramSnippet()
-        {
-            return @"
-from DotNetData import employees
-import matplotlib.pyplot as plt
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.hist(employees.Salary, bins=30, edgecolor='black', alpha=0.7)
-ax.set_xlabel('Salary ($)')
-ax.set_ylabel('Count')
-ax.set_title('Employee Salary Distribution')
-plt.tight_layout()
-plt.show()
-";
-        }
-
-        private string GetScatterSnippet()
-        {
-            return @"
-from DotNetData import employees
-import matplotlib.pyplot as plt
-
-fig, ax = plt.subplots(figsize=(10, 6))
-ax.scatter(employees.Salary, employees.PerformanceScore,
-           alpha=0.6, edgecolors='black', linewidth=0.5)
-ax.set_xlabel('Salary ($)')
-ax.set_ylabel('Performance Score')
-ax.set_title('Salary vs Performance Score')
-plt.tight_layout()
-plt.show()
-";
-        }
-
-        private string GetGroupBySnippet()
-        {
-            return @"
-from DotNetData import employees
-
-print('=== Average Salary by Department ===')
-group = employees.df.groupby('Department').agg(
-    Count=('Id', 'count'),
-    Avg_Salary=('Salary', 'mean'),
-    Avg_Performance=('PerformanceScore', 'mean')
-).round(2)
-print(group.sort_values('Avg_Salary', ascending=False))
-";
-        }
-
-        private string GetCorrelationSnippet()
-        {
-            return @"
-from DotNetData import employees
-import matplotlib.pyplot as plt
-
-numeric_cols = employees.df.select_dtypes(include='number')
-corr = numeric_cols.corr()
-print('=== Correlation Matrix ===')
-print(corr.round(3))
-
-fig, ax = plt.subplots(figsize=(10, 8))
-im = ax.imshow(corr, cmap='coolwarm', vmin=-1, vmax=1)
-ax.set_xticks(range(len(corr.columns)))
-ax.set_yticks(range(len(corr.columns)))
-ax.set_xticklabels(corr.columns, rotation=45, ha='right')
-ax.set_yticklabels(corr.columns)
-plt.colorbar(im)
-ax.set_title('Employee Data Correlation Matrix')
-plt.tight_layout()
-plt.show()
-";
-        }
-
-        private string GetTimeSeriesSnippet()
-        {
-            return @"
-from DotNetData import customers
-import pandas as pd
-import matplotlib.pyplot as plt
-
-df = customers.df.copy()
-df['RegistrationDate'] = pd.to_datetime(df['RegistrationDate'])
-monthly = df.set_index('RegistrationDate').resample('M').size()
-
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.plot(monthly.index, monthly.values, linewidth=1.5, marker='o', markersize=3)
-ax.set_xlabel('Date')
-ax.set_ylabel('New Registrations')
-ax.set_title('Customer Registrations Over Time')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
-";
-        }
-
-        private string GetImageDisplaySnippet()
-        {
-            return @"
-from DotNetData import customers
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image
-
-# Find the first image column in a dataset
-dataset = customers
-img_col = None
-for col in dataset.columns:
-    val = dataset[col].dropna().iloc[0] if len(dataset[col].dropna()) > 0 else None
-    if isinstance(val, Image.Image):
-        img_col = col
-        break
-
-if img_col is None:
-    print('No image columns found in dataset.')
-elif len(dataset[img_col].dropna()) == 0:
-    print('Image column found but contains no data.')
-else:
-    imgs = dataset[img_col].dropna().reset_index(drop=True)
-    n = min(16, len(imgs))
-    cols = 4
-    rows = (n + cols - 1) // cols
-
-    fig, axes = plt.subplots(rows, cols, figsize=(8, 2 * rows))
-    if rows == 1:
-        axes = [axes]
-    for idx in range(rows * cols):
-        ax = axes[idx // cols][idx % cols] if cols > 1 else axes[idx // cols]
-        if idx < n:
-            img = imgs.iloc[idx]
-            ax.imshow(np.array(img))
-            ax.set_title(f""Image {idx+1}"", fontsize=8)
-        ax.axis('off')
-    plt.suptitle(img_col + ' images')
-    plt.tight_layout()
-    plt.show()
-
-    # Compute average color across all images
-    r_avg, g_avg, b_avg = [], [], []
-    for img in imgs:
-        arr = np.array(img)
-        r_avg.append(arr[:,:,0].mean())
-        g_avg.append(arr[:,:,1].mean())
-        b_avg.append(arr[:,:,2].mean())
-
-    print(f'Average R: {np.mean(r_avg):.1f}')
-    print(f'Average G: {np.mean(g_avg):.1f}')
-    print(f'Average B: {np.mean(b_avg):.1f}')
-";
-        }
-
-        private string GetStreamDataSnippet()
-        {
-            return @"
-from DotNetData import customer_stream
-
-print('=== Streaming Data Demo ===')
-print(f'Stream: {customer_stream}')
-print(f'Columns: {customer_stream.columns}')
-print()
-
-count = 0
-tier_counts = {}
-total_age = 0
-
-for row in customer_stream:
-    count += 1
-    tier = row.Tier
-    tier_counts[tier] = tier_counts.get(tier, 0) + 1
-
-    if count <= 3:
-        print(f'Row {count}: {row.FirstName} {row.LastName} - {row.Tier}')
-
-print(f'...')
-print(f'Total rows streamed: {count}')
-print()
-print('Tier distribution:')
-for tier, n in sorted(tier_counts.items()):
-    print(f'  {tier}: {n}')
-";
-        }
-
-        private string GetLinearRegressionSnippet()
-        {
-            return @"
-from DotNetData import employees
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, r2_score
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-# Salary is generated from: DeptBase + YearsEmployed*$2800 + TitleLevel*12% + noise
-# This model should recover those relationships with high R²
-
-df = employees.df.copy()
-
-features = pd.get_dummies(df[['YearsEmployed', 'PerformanceScore', 'IsRemote', 'Department']], drop_first=True)
-target = df['Salary']
-
-X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.25, random_state=42)
-
-model = LinearRegression()
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
-
-print('=== Salary Prediction — Linear Regression ===')
-print()
-print('Known data correlations (built into the dataset):')
-print('  Salary = DepartmentBase + YearsEmployed * ~$2,800 + TitleLevel * 12%')
-print('  Engineering base ~$115K, Support base ~$60K')
-print()
-print(f'R² Score:           {r2_score(y_test, y_pred):.4f}')
-print(f'Mean Absolute Error: ${mean_absolute_error(y_test, y_pred):,.2f}')
-print()
-
-coefs = pd.Series(model.coef_, index=features.columns).sort_values()
-print('Recovered Coefficients (compare to known structure):')
-tenure_coef = coefs.get('YearsEmployed', 0)
-print(f'  YearsEmployed coefficient: ${tenure_coef:+,.0f}/yr  (expected ~$2,800/yr)')
-print()
-print('All feature coefficients:')
-for name, val in coefs.items():
-    print(f'  {name:30s} {val:+,.2f}')
-
-# Show the actual correlations in the raw data
-print()
-print('Raw correlation matrix (key columns):')
-corr_cols = ['Salary', 'YearsEmployed', 'PerformanceScore', 'IsRemote']
-print(df[corr_cols].corr().round(3).to_string())
-
-fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-axes[0].scatter(df['YearsEmployed'], df['Salary'], alpha=0.4, c='steelblue', edgecolors='black', linewidth=0.3)
-z = np.polyfit(df['YearsEmployed'], df['Salary'], 1)
-x_line = np.linspace(df['YearsEmployed'].min(), df['YearsEmployed'].max(), 100)
-axes[0].plot(x_line, np.polyval(z, x_line), 'r-', linewidth=2, label=f'slope=${z[0]:,.0f}/yr')
-axes[0].set_xlabel('Years Employed')
-axes[0].set_ylabel('Salary ($)')
-axes[0].set_title('Tenure → Salary (Known Correlation)')
-axes[0].legend()
-
-axes[1].scatter(y_test, y_pred, alpha=0.5, edgecolors='black', linewidth=0.5)
-mn, mx = min(y_test.min(), y_pred.min()), max(y_test.max(), y_pred.max())
-axes[1].plot([mn, mx], [mn, mx], 'r--', linewidth=1)
-axes[1].set_xlabel('Actual Salary ($)')
-axes[1].set_ylabel('Predicted Salary ($)')
-axes[1].set_title(f'Actual vs Predicted (R²={r2_score(y_test, y_pred):.3f})')
-
-top_coefs = coefs.abs().nlargest(10).index
-coefs[top_coefs].sort_values().plot.barh(ax=axes[2], color=['#d9534f' if v < 0 else '#5cb85c' for v in coefs[top_coefs].sort_values()])
-axes[2].set_xlabel('Coefficient Value')
-axes[2].set_title('Top 10 Feature Coefficients')
-
-plt.tight_layout()
-plt.show()
-";
-        }
-
-        private string GetClassificationSnippet()
-        {
-            return @"
-from DotNetData import employees
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-# Each department has distinct salary ranges, remote rates, and performance profiles:
-#   Engineering: base $115K, 60% remote  |  Support: base $60K, 65% remote
-#   Finance: base $95K, 25% remote       |  Sales: base $75K, 40% remote
-# Salary is the strongest signal since each dept has a unique base salary.
-
-df = employees.df.copy()
-
-# Show the correlations the classifier will exploit
-print('=== Department Classification — Random Forest ===')
-print()
-print('Department salary ranges (the key signal):')
-dept_stats = df.groupby('Department')['Salary'].agg(['mean', 'std']).sort_values('mean', ascending=False)
-for dept, row in dept_stats.iterrows():
-    remote_pct = df[df['Department'] == dept]['IsRemote'].mean() * 100
-    print(f'  {dept:15s}  avg ${row[""mean""]:>9,.0f} ± ${row[""std""]:>7,.0f}   remote: {remote_pct:.0f}%')
-print()
-
-feature_cols = ['Salary', 'PerformanceScore', 'YearsEmployed', 'IsRemote']
-X = df[feature_cols].copy()
-X['IsRemote'] = X['IsRemote'].astype(int)
-y = df['Department']
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42, stratify=y)
-
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
-
-print(f'Accuracy: {model.score(X_test, y_test):.2%}')
-print()
-print(classification_report(y_test, y_pred, zero_division=0))
-
-importances = pd.Series(model.feature_importances_, index=feature_cols).sort_values()
-print('Feature importance (Salary dominates because each dept has a unique base):')
-for feat, imp in importances.sort_values(ascending=False).items():
-    print(f'  {feat:20s} {imp:.3f}')
-
-fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-importances.plot.barh(ax=axes[0], color='steelblue')
-axes[0].set_xlabel('Importance')
-axes[0].set_title('Feature Importance')
-
-for dept in sorted(df['Department'].unique()):
-    mask = df['Department'] == dept
-    axes[1].scatter(df.loc[mask, 'Salary'], df.loc[mask, 'IsRemote'].astype(int) + np.random.uniform(-0.15, 0.15, mask.sum()),
-                    alpha=0.5, label=dept, s=20)
-axes[1].set_xlabel('Salary ($)')
-axes[1].set_ylabel('Is Remote (jittered)')
-axes[1].set_title('Dept Separation by Salary & Remote')
-axes[1].legend(fontsize=6, ncol=2, loc='center right')
-
-labels = sorted(y.unique())
-cm = confusion_matrix(y_test, y_pred, labels=labels)
-im = axes[2].imshow(cm, cmap='Blues')
-axes[2].set_xticks(range(len(labels)))
-axes[2].set_yticks(range(len(labels)))
-axes[2].set_xticklabels(labels, rotation=45, ha='right', fontsize=7)
-axes[2].set_yticklabels(labels, fontsize=7)
-axes[2].set_xlabel('Predicted')
-axes[2].set_ylabel('Actual')
-axes[2].set_title('Confusion Matrix')
-for i in range(len(labels)):
-    for j in range(len(labels)):
-        axes[2].text(j, i, str(cm[i, j]), ha='center', va='center',
-                     color='white' if cm[i, j] > cm.max() / 2 else 'black', fontsize=7)
-
-plt.tight_layout()
-plt.show()
-";
-        }
-
-        private string GetClusteringSnippet()
-        {
-            return @"
-from DotNetData import employees
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-df = employees.df.copy()
-
-cluster_features = ['Salary', 'PerformanceScore', 'YearsEmployed']
-X = df[cluster_features].dropna()
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-inertias = []
-K_range = range(2, 9)
-for k in K_range:
-    km = KMeans(n_clusters=k, random_state=42, n_init=10)
-    km.fit(X_scaled)
-    inertias.append(km.inertia_)
-
-n_clusters = 4
-kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-df.loc[X.index, 'Cluster'] = kmeans.fit_predict(X_scaled)
-
-print('=== Employee Clustering — K-Means ===')
-print(f'Number of clusters: {n_clusters}')
-print()
-for c in range(n_clusters):
-    subset = df[df['Cluster'] == c]
-    print(f'Cluster {c} ({len(subset)} employees):')
-    print(f'  Avg Salary:      ${subset[""Salary""].mean():,.0f}')
-    print(f'  Avg Performance:  {subset[""PerformanceScore""].mean():.2f}')
-    print(f'  Avg Tenure:       {subset[""YearsEmployed""].mean():.1f} years')
-    print(f'  Top Departments:  {"", "".join(subset[""Department""].value_counts().head(3).index)}')
-    print()
-
-fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-axes[0].plot(list(K_range), inertias, 'bo-')
-axes[0].axvline(x=n_clusters, color='r', linestyle='--', alpha=0.7)
-axes[0].set_xlabel('Number of Clusters (k)')
-axes[0].set_ylabel('Inertia')
-axes[0].set_title('Elbow Method')
-
-colors = plt.cm.Set2(np.linspace(0, 1, n_clusters))
-for c in range(n_clusters):
-    mask = df['Cluster'] == c
-    axes[1].scatter(df.loc[mask, 'Salary'], df.loc[mask, 'PerformanceScore'],
-                    c=[colors[c]], label=f'Cluster {c}', alpha=0.6, edgecolors='black', linewidth=0.3)
-axes[1].set_xlabel('Salary ($)')
-axes[1].set_ylabel('Performance Score')
-axes[1].set_title('Clusters: Salary vs Performance')
-axes[1].legend()
-
-for c in range(n_clusters):
-    mask = df['Cluster'] == c
-    axes[2].scatter(df.loc[mask, 'YearsEmployed'], df.loc[mask, 'Salary'],
-                    c=[colors[c]], label=f'Cluster {c}', alpha=0.6, edgecolors='black', linewidth=0.3)
-axes[2].set_xlabel('Years Employed')
-axes[2].set_ylabel('Salary ($)')
-axes[2].set_title('Clusters: Tenure vs Salary')
-axes[2].legend()
-
-plt.tight_layout()
-plt.show()
-";
-        }
-
-        private string GetPCASnippet()
-        {
-            return @"
-from DotNetData import customers
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
-
-df = customers.df.copy()
-
-tier_enc = LabelEncoder()
-df['TierEncoded'] = tier_enc.fit_transform(df['Tier'])
-
-feature_cols = ['Age', 'CreditLimit', 'TierEncoded', 'IsActive']
-X = df[feature_cols].copy()
-X['IsActive'] = X['IsActive'].astype(int)
-X = X.dropna()
-
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-pca = PCA()
-X_pca = pca.fit_transform(X_scaled)
-
-print('=== Customer Segmentation — PCA ===')
-print()
-print('Explained Variance Ratio:')
-for i, var in enumerate(pca.explained_variance_ratio_):
-    cumulative = sum(pca.explained_variance_ratio_[:i+1])
-    bar = '#' * int(var * 50)
-    print(f'  PC{i+1}: {var:.3f} (cumulative: {cumulative:.3f})  {bar}')
-print()
-
-print('Principal Component Loadings:')
-loadings = pd.DataFrame(pca.components_.T, index=feature_cols,
-                         columns=[f'PC{i+1}' for i in range(len(feature_cols))])
-print(loadings.round(3))
-
-fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-axes[0].bar(range(1, len(pca.explained_variance_ratio_) + 1),
-            pca.explained_variance_ratio_, color='steelblue', alpha=0.8)
-axes[0].plot(range(1, len(pca.explained_variance_ratio_) + 1),
-             np.cumsum(pca.explained_variance_ratio_), 'ro-')
-axes[0].set_xlabel('Principal Component')
-axes[0].set_ylabel('Variance Explained')
-axes[0].set_title('Scree Plot')
-axes[0].set_xticks(range(1, len(feature_cols) + 1))
-
-tiers = df.loc[X.index, 'Tier']
-tier_names = sorted(tiers.unique())
-colors = plt.cm.Set1(np.linspace(0, 1, len(tier_names)))
-for i, tier in enumerate(tier_names):
-    mask = tiers == tier
-    axes[1].scatter(X_pca[mask, 0], X_pca[mask, 1],
-                    c=[colors[i]], label=tier, alpha=0.5, edgecolors='black', linewidth=0.3)
-axes[1].set_xlabel('PC1')
-axes[1].set_ylabel('PC2')
-axes[1].set_title('Customers in PCA Space (by Tier)')
-axes[1].legend()
-
-for i, feat in enumerate(feature_cols):
-    axes[2].arrow(0, 0, pca.components_[0, i], pca.components_[1, i],
-                  head_width=0.05, head_length=0.02, fc='steelblue', ec='steelblue')
-    axes[2].text(pca.components_[0, i] * 1.15, pca.components_[1, i] * 1.15,
-                 feat, fontsize=9, ha='center')
-axes[2].set_xlabel('PC1')
-axes[2].set_ylabel('PC2')
-axes[2].set_title('Feature Loadings (Biplot)')
-axes[2].axhline(y=0, color='gray', linestyle='--', linewidth=0.5)
-axes[2].axvline(x=0, color='gray', linestyle='--', linewidth=0.5)
-
-plt.tight_layout()
-plt.show()
 ";
         }
 
