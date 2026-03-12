@@ -30,7 +30,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private Dictionary<string, ModuleIntrospection> _moduleData = new Dictionary<string, ModuleIntrospection>();
         private Dictionary<string, string> _importAliases = new Dictionary<string, string>();
-        private List<string> _moduleTopLevelItems = new List<string>();
 
         private List<string> _dynamicSymbols = new List<string>();
         private Dictionary<string, List<string>> _datasetColumns = new Dictionary<string, List<string>>();
@@ -41,42 +40,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public void SetModuleCompletions(Dictionary<string, ModuleIntrospection> moduleData)
         {
             _moduleData = new Dictionary<string, ModuleIntrospection>(moduleData);
-            RebuildModuleTopLevelItems();
         }
 
         public void SetImportAliases(Dictionary<string, string> aliases)
         {
             _importAliases = new Dictionary<string, string>(aliases);
-            if (_moduleData.Count > 0)
-                RebuildModuleTopLevelItems();
-        }
-
-        private void RebuildModuleTopLevelItems()
-        {
-            var items = new List<string>();
-            foreach (var kvp in _moduleData)
-            {
-                string moduleName = kvp.Key;
-                string alias = null;
-                foreach (var a in _importAliases)
-                {
-                    if (a.Value == moduleName)
-                    {
-                        alias = a.Key;
-                        break;
-                    }
-                }
-
-                string prefix = alias ?? moduleName;
-                foreach (var f in kvp.Value.Functions)
-                    items.Add(prefix + "." + f);
-                foreach (var c in kvp.Value.Constants)
-                    items.Add(prefix + "." + c);
-                foreach (var cls in kvp.Value.Classes.Keys)
-                    items.Add(prefix + "." + cls);
-            }
-            items.Sort(StringComparer.OrdinalIgnoreCase);
-            _moduleTopLevelItems = items;
         }
 
         public void SetDynamicSymbols(IEnumerable<string> symbols)
@@ -172,10 +140,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     items.Add(new CompletionItem(b, CompletionItemKind.Function, "builtin"));
             }
 
-            foreach (var item in _moduleTopLevelItems)
+            foreach (var alias in _importAliases.Keys)
             {
-                if (item.StartsWith(partialWord, StringComparison.OrdinalIgnoreCase) && seen.Add(item))
-                    items.Add(new CompletionItem(item, CompletionItemKind.Function, "library"));
+                if (alias.StartsWith(partialWord, StringComparison.OrdinalIgnoreCase) && seen.Add(alias))
+                    items.Add(new CompletionItem(alias, CompletionItemKind.Module, "module"));
+            }
+
+            foreach (var modName in _moduleData.Keys)
+            {
+                if (!_importAliases.ContainsValue(modName) &&
+                    modName.StartsWith(partialWord, StringComparison.OrdinalIgnoreCase) && seen.Add(modName))
+                    items.Add(new CompletionItem(modName, CompletionItemKind.Module, "module"));
             }
 
             foreach (var sym in _dynamicSymbols)
