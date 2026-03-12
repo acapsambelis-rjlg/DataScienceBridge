@@ -1421,6 +1421,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
         }
 
+        private string ExtractIntrospectScript()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            foreach (var resName in assembly.GetManifestResourceNames())
+            {
+                if (resName.EndsWith("introspect_modules.py"))
+                {
+                    using (var stream = assembly.GetManifestResourceStream(resName))
+                    using (var reader = new System.IO.StreamReader(stream))
+                        return reader.ReadToEnd();
+                }
+            }
+            return null;
+        }
+
         public Dictionary<string, ModuleIntrospection> IntrospectModules(IEnumerable<string> moduleNames)
         {
             var result = new Dictionary<string, ModuleIntrospection>();
@@ -1429,15 +1444,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             var modules = new List<string>(moduleNames);
             if (modules.Count == 0) return result;
 
-            string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "python", "introspect_modules.py");
-            if (!File.Exists(scriptPath)) return result;
+            string scriptCode = ExtractIntrospectScript();
+            if (scriptCode == null) return result;
 
-            string args = "\"" + scriptPath + "\"";
-            foreach (var m in modules)
-                args += " " + m;
-
+            string tempPath = Path.Combine(Path.GetTempPath(), "introspect_modules_" + Guid.NewGuid().ToString("N") + ".py");
             try
             {
+                File.WriteAllText(tempPath, scriptCode);
+
+                string args = "\"" + tempPath + "\"";
+                foreach (var m in modules)
+                    args += " " + m;
+
                 var psi = new ProcessStartInfo
                 {
                     FileName = pythonPath,
@@ -1473,6 +1491,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 result = ModuleIntrospection.ParseJson(json);
             }
             catch { }
+            finally
+            {
+                try { if (File.Exists(tempPath)) File.Delete(tempPath); } catch { }
+            }
 
             return result;
         }

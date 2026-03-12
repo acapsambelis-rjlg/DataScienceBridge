@@ -119,6 +119,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonWorkbench\Helpers\display_images.py" />
     <EmbeddedResource Include="PythonWorkbench\Helpers\image_stats.py" />
+    <EmbeddedResource Include="PythonWorkbench\Helpers\introspect_modules.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\extern\SyntaxEditorControl\SyntaxEditor\SyntaxEditor.csproj">
