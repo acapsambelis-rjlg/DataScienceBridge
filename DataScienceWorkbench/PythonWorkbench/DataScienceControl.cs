@@ -1901,7 +1901,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             string customExample = attr != null ? attr.Example : null;
             string baseTypeName = typeName;
@@ -2065,7 +2065,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AppendRefText("\n", Color.Black, false, 10);
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             AppendRefText("# Select all " + displayName + " columns\n", Color.FromArgb(0, 128, 0), false, 10);
             AppendRefText(datasetName + "[[c for c in " + datasetName + ".columns if c.startswith('" + prefix + "')]]\n\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -2097,7 +2097,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AppendRefText(count.ToString("N0") + "\n", Color.FromArgb(0, 0, 0), false, 10);
 
             AppendRefText("Import:    ", Color.FromArgb(100, 100, 100), false, 10);
-            AppendRefText("from IntelliSEM import " + tag + "\n", Color.FromArgb(0, 0, 0), false, 10);
+            AppendRefText("from DotNetData import " + tag + "\n", Color.FromArgb(0, 0, 0), false, 10);
 
             AppendRefText("Access:    ", Color.FromArgb(100, 100, 100), false, 10);
             AppendRefText(tag + ".column_name  (e.g. " + tag + ".head())\n\n", Color.FromArgb(0, 0, 0), false, 10);
@@ -2294,11 +2294,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             switch (tag)
             {
                 case "customers":
-                    return "from IntelliSEM import customers\n\n# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
+                    return "from DotNetData import customers\n\n# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
                 case "employees":
-                    return "from IntelliSEM import employees\n\n# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
+                    return "from DotNetData import employees\n\n# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
                 default:
-                    return "from IntelliSEM import " + tag + "\n\nprint(" + tag + ".head())\nprint(" + tag + ".describe())";
+                    return "from DotNetData import " + tag + "\n\nprint(" + tag + ".head())\nprint(" + tag + ".describe())";
             }
         }
 
@@ -3955,7 +3955,7 @@ AVAILABLE DATASETS:
   employees        - 100 employees with salary, dept
 
 HOW TO USE:
-  1. Import datasets: from IntelliSEM import customers, employees
+  1. Import datasets: from DotNetData import customers, employees
   2. Write Python code in the editor
   3. Press F5 or click Run to execute
   4. Access columns directly: customers.CreditLimit.mean()
@@ -3965,7 +3965,7 @@ HOW TO USE:
   8. Install packages via Package Manager tab
 
 EXAMPLE:
-  from IntelliSEM import customers
+  from DotNetData import customers
   print(customers[0].FullName)
   print(customers.CreditLimit.mean())
 
@@ -4021,7 +4021,7 @@ SYNTAX HIGHLIGHTING
 AUTOCOMPLETE
   Displays suggestions as you type, including:
   - Python keywords and built-in functions
-  - Dataset names after 'from IntelliSEM import'
+  - Dataset names after 'from DotNetData import'
   - Dataset column names (e.g. customers.CreditLimit)
   - Row indexing (e.g. customers[0].FullName, customers[0:5])
   - DataFrame methods (after .df.)
@@ -4098,7 +4098,7 @@ PLOT VIEWER
 
         private string GetDefaultScript()
         {
-            return @"from IntelliSEM import customers, employees
+            return @"from DotNetData import customers, employees
 
 # Access columns directly: customers.CreditLimit.mean()
 # Access rows by index: customers[0].FullName
@@ -4121,7 +4121,7 @@ print(customers.df.describe())
         private string GetLoadDataSnippet()
         {
             return @"
-from IntelliSEM import customers, employees, customer_stream
+from DotNetData import customers, employees, customer_stream
 
 for name, ds in [('customers', customers), ('employees', employees)]:
     print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')
@@ -4133,7 +4133,7 @@ print(f'  customer_stream: streaming, columns={customer_stream.columns}')
         private string GetStatsSnippet()
         {
             return @"
-from IntelliSEM import customers
+from DotNetData import customers
 
 print('=== Descriptive Statistics ===')
 print(customers.df.describe())
@@ -4149,7 +4149,7 @@ print(customers.df.isnull().sum())
         private string GetHistogramSnippet()
         {
             return @"
-from IntelliSEM import employees
+from DotNetData import employees
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -4165,7 +4165,7 @@ plt.show()
         private string GetScatterSnippet()
         {
             return @"
-from IntelliSEM import employees
+from DotNetData import employees
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))
@@ -4182,7 +4182,7 @@ plt.show()
         private string GetGroupBySnippet()
         {
             return @"
-from IntelliSEM import employees
+from DotNetData import employees
 
 print('=== Average Salary by Department ===')
 group = employees.df.groupby('Department').agg(
@@ -4197,7 +4197,7 @@ print(group.sort_values('Avg_Salary', ascending=False))
         private string GetCorrelationSnippet()
         {
             return @"
-from IntelliSEM import employees
+from DotNetData import employees
 import matplotlib.pyplot as plt
 
 numeric_cols = employees.df.select_dtypes(include='number')
@@ -4221,7 +4221,7 @@ plt.show()
         private string GetTimeSeriesSnippet()
         {
             return @"
-from IntelliSEM import customers
+from DotNetData import customers
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -4243,7 +4243,7 @@ plt.show()
         private string GetImageDisplaySnippet()
         {
             return @"
-from IntelliSEM import customers
+from DotNetData import customers
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -4298,7 +4298,7 @@ else:
         private string GetStreamDataSnippet()
         {
             return @"
-from IntelliSEM import customer_stream
+from DotNetData import customer_stream
 
 print('=== Streaming Data Demo ===')
 print(f'Stream: {customer_stream}')
@@ -4329,7 +4329,7 @@ for tier, n in sorted(tier_counts.items()):
         private string GetLinearRegressionSnippet()
         {
             return @"
-from IntelliSEM import employees
+from DotNetData import employees
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, r2_score
@@ -4407,7 +4407,7 @@ plt.show()
         private string GetClassificationSnippet()
         {
             return @"
-from IntelliSEM import employees
+from DotNetData import employees
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
@@ -4490,7 +4490,7 @@ plt.show()
         private string GetClusteringSnippet()
         {
             return @"
-from IntelliSEM import employees
+from DotNetData import employees
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -4562,7 +4562,7 @@ plt.show()
         private string GetPCASnippet()
         {
             return @"
-from IntelliSEM import customers
+from DotNetData import customers
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import matplotlib.pyplot as plt
