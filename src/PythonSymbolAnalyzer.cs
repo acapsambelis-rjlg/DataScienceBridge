@@ -264,13 +264,13 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         {
             char[] masked = code.ToCharArray();
 
+            MaskPattern(masked, code, CommentRegex);
             MaskPattern(masked, code, TripleDoubleQuoteRegex);
             MaskPattern(masked, code, TripleSingleQuoteRegex);
             MaskPattern(masked, code, FStringRegex);
             MaskPattern(masked, code, FSingleRegex);
             MaskPattern(masked, code, DoubleQuoteRegex);
             MaskPattern(masked, code, SingleQuoteRegex);
-            MaskPattern(masked, code, CommentRegex);
 
             return new string(masked);
         }
