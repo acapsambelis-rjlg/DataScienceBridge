@@ -1700,14 +1700,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 AppendRefText("\n", Color.FromArgb(60, 60, 60), false, 10);
             }
 
-            if (PythonVisibleHelper.IsSortedListType(fp.LeafType))
+            if (PythonVisibleHelper.IsDictionaryType(fp.LeafType))
             {
                 var genArgs = fp.LeafType.GetGenericArguments();
-                AppendRefText("Sorted Dictionary\n", Color.FromArgb(0, 100, 0), true, 10);
+                bool isSorted = PythonVisibleHelper.IsSortedDictionaryType(fp.LeafType);
+                AppendRefText(isSorted ? "Sorted Dictionary\n" : "Dictionary\n", Color.FromArgb(0, 100, 0), true, 10);
                 AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                AppendRefText("Serialized as a Python dict (key-sorted). Key type: " + PythonVisibleHelper.GetPythonTypeName(genArgs[0])
+                AppendRefText("Serialized as a Python dict" + (isSorted ? " (key-sorted)" : "") + ". Key type: " + PythonVisibleHelper.GetPythonTypeName(genArgs[0])
                     + ", Value type: " + PythonVisibleHelper.GetPythonTypeName(genArgs[1]) + ".\n", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("Keys are ordered by .NET SortedList<> guarantees.\n\n", Color.FromArgb(100, 100, 100), false, 10);
+                if (isSorted)
+                    AppendRefText("Keys are ordered by .NET sort guarantees.\n\n", Color.FromArgb(100, 100, 100), false, 10);
+                else
+                    AppendRefText("\n", Color.FromArgb(100, 100, 100), false, 10);
             }
 
             AppendRefText("Dataset\n", Color.FromArgb(0, 100, 0), true, 10);
@@ -1736,8 +1740,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 baseTypeName = baseTypeName.Replace(" (nullable)", "");
             if (baseTypeName.StartsWith("string (enum:"))
                 baseTypeName = "enum";
-            if (baseTypeName.StartsWith("dict (sorted"))
-                baseTypeName = "sorted_dict";
+            if (baseTypeName.StartsWith("dict ("))
+                baseTypeName = "dict";
 
             if (!string.IsNullOrEmpty(customExample))
             {
@@ -1798,7 +1802,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     AppendRefText(datasetName + "." + fieldName + ".dropna()\n", Color.FromArgb(60, 60, 60), false, 10);
                 }
             }
-            else if (baseTypeName == "sorted_dict")
+            else if (baseTypeName == "dict")
             {
                 AppendRefText("# Access the dict for a specific row\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText("d = " + datasetName + "[0]." + fieldName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);

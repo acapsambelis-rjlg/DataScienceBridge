@@ -55,8 +55,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType) && !IsUserVisibleClass(p.PropertyType)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType) && IsUserVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsDictionaryType(p.PropertyType) && !IsUserVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsDictionaryType(p.PropertyType) && IsUserVisibleClass(p.PropertyType)) continue;
 
                 if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
@@ -73,7 +73,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsDictionaryType(p.PropertyType)) continue;
                 result.Add(p);
             }
             return result;
@@ -109,7 +109,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
                 bool isNestedVisibleClass = p.PropertyType.IsClass
                     && p.PropertyType != typeof(string)
-                    && !IsSortedListType(p.PropertyType)
+                    && !IsDictionaryType(p.PropertyType)
                     && IsUserVisibleClass(p.PropertyType);
 
                 if (isNestedVisibleClass)
@@ -125,7 +125,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     continue;
                 }
 
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsDictionaryType(p.PropertyType)) continue;
 
                 if (anyMarked && p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length == 0) continue;
 
@@ -154,12 +154,21 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             return t == typeof(Bitmap) || t == typeof(Image);
         }
 
-        public static bool IsSortedListType(Type t)
+        public static bool IsDictionaryType(Type t)
         {
-            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SortedList<,>);
+            if (!t.IsGenericType) return false;
+            var gd = t.GetGenericTypeDefinition();
+            return gd == typeof(Dictionary<,>) || gd == typeof(SortedDictionary<,>) || gd == typeof(SortedList<,>);
         }
 
-        public static string SortedListToJson(object obj)
+        public static bool IsSortedDictionaryType(Type t)
+        {
+            if (!t.IsGenericType) return false;
+            var gd = t.GetGenericTypeDefinition();
+            return gd == typeof(SortedDictionary<,>) || gd == typeof(SortedList<,>);
+        }
+
+        public static string DictionaryToJson(object obj)
         {
             if (obj == null) return "";
             var dict = obj as System.Collections.IDictionary;
@@ -251,10 +260,11 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             if (t == typeof(string)) return "string";
             if (t == typeof(DateTime)) return "datetime";
             if (t == typeof(Bitmap) || t == typeof(Image)) return "image";
-            if (IsSortedListType(t))
+            if (IsDictionaryType(t))
             {
                 var args = t.GetGenericArguments();
-                return "dict (sorted, " + GetPythonTypeName(args[0]) + " → " + GetPythonTypeName(args[1]) + ")";
+                string sortedLabel = IsSortedDictionaryType(t) ? "sorted, " : "";
+                return "dict (" + sortedLabel + GetPythonTypeName(args[0]) + " → " + GetPythonTypeName(args[1]) + ")";
             }
             if (t.IsEnum)
             {
