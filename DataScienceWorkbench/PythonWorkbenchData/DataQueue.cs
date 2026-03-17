@@ -176,6 +176,10 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                         else
                             s = "";
                     }
+                    else if (PythonVisibleHelper.IsSortedListType(fp.LeafType))
+                    {
+                        s = PythonVisibleHelper.SortedListToJson(val);
+                    }
                     else
                         s = val != null ? val.ToString() : "";
                     if (s.Contains(",") || s.Contains("\"") || s.Contains("\n") || s.Contains("\r"))

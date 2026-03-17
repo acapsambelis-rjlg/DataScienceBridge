@@ -57,8 +57,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsPythonVisibleClass(p.PropertyType)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && IsPythonVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType) && !IsPythonVisibleClass(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType) && IsPythonVisibleClass(p.PropertyType)) continue;
 
                 if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
@@ -75,7 +75,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType)) continue;
                 result.Add(p);
             }
             return result;
@@ -111,6 +111,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
                 bool isNestedVisibleClass = p.PropertyType.IsClass
                     && p.PropertyType != typeof(string)
+                    && !IsSortedListType(p.PropertyType)
                     && IsPythonVisibleClass(p.PropertyType);
 
                 if (isNestedVisibleClass)
@@ -126,7 +127,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     continue;
                 }
 
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType)) continue;
+                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsSortedListType(p.PropertyType)) continue;
 
                 if (anyMarked && p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length == 0) continue;
 
@@ -155,6 +156,77 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             return t == typeof(Bitmap) || t == typeof(Image);
         }
 
+        public static bool IsSortedListType(Type t)
+        {
+            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(SortedList<,>);
+        }
+
+        public static string SortedListToJson(object obj)
+        {
+            if (obj == null) return "";
+            var dict = obj as System.Collections.IDictionary;
+            if (dict == null) return "";
+            var sb = new System.Text.StringBuilder();
+            sb.Append("__DICT__:{");
+            bool first = true;
+            foreach (System.Collections.DictionaryEntry entry in dict)
+            {
+                if (!first) sb.Append(",");
+                first = false;
+                sb.Append("\"");
+                sb.Append(JsonEscapeString(entry.Key.ToString()));
+                sb.Append("\":");
+                if (entry.Value is double d)
+                    sb.Append(d.ToString("G", System.Globalization.CultureInfo.InvariantCulture));
+                else if (entry.Value is float f)
+                    sb.Append(f.ToString("G", System.Globalization.CultureInfo.InvariantCulture));
+                else if (entry.Value is decimal dec)
+                    sb.Append(dec.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                else if (entry.Value is int iv)
+                    sb.Append(iv);
+                else if (entry.Value is long lv)
+                    sb.Append(lv);
+                else if (entry.Value is bool bv)
+                    sb.Append(bv ? "true" : "false");
+                else if (entry.Value == null)
+                    sb.Append("null");
+                else
+                {
+                    sb.Append("\"");
+                    sb.Append(JsonEscapeString(entry.Value.ToString()));
+                    sb.Append("\"");
+                }
+            }
+            sb.Append("}");
+            return sb.ToString();
+        }
+
+        private static string JsonEscapeString(string s)
+        {
+            if (s == null) return "";
+            var sb = new System.Text.StringBuilder(s.Length);
+            foreach (char c in s)
+            {
+                switch (c)
+                {
+                    case '\\': sb.Append("\\\\"); break;
+                    case '"': sb.Append("\\\""); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    case '\b': sb.Append("\\b"); break;
+                    case '\f': sb.Append("\\f"); break;
+                    default:
+                        if (c < ' ')
+                            sb.AppendFormat("\\u{0:X4}", (int)c);
+                        else
+                            sb.Append(c);
+                        break;
+                }
+            }
+            return sb.ToString();
+        }
+
         public static Action<object> PrepareItem { get; set; }
         public static Action<object> ReleaseItem { get; set; }
 
@@ -181,6 +253,11 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             if (t == typeof(string)) return "string";
             if (t == typeof(DateTime)) return "datetime";
             if (t == typeof(Bitmap) || t == typeof(Image)) return "image";
+            if (IsSortedListType(t))
+            {
+                var args = t.GetGenericArguments();
+                return "dict (sorted, " + GetPythonTypeName(args[0]) + " → " + GetPythonTypeName(args[1]) + ")";
+            }
             if (t.IsEnum)
             {
                 string[] names = Enum.GetNames(t);

@@ -109,6 +109,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         public bool IsDiscontinued { get; set; }
         public DateTime DateAdded { get; set; }
 
+        public SortedList<string, double> PriceHistory { get; set; }
+
         public double Margin { get { return Price - Cost; } }
         public double MarginPercent { get { return Cost > 0 ? (Margin / Cost) * 100 : 0; } }
     }
@@ -326,10 +328,27 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     Rating = Math.Round(RandDouble(1, 5), 1),
                     ReviewCount = rng.Next(0, 5000),
                     IsDiscontinued = rng.NextDouble() < 0.1,
-                    DateAdded = RandDate(new DateTime(2020, 1, 1), new DateTime(2025, 12, 31))
+                    DateAdded = RandDate(new DateTime(2020, 1, 1), new DateTime(2025, 12, 31)),
+                    PriceHistory = GeneratePriceHistory(Math.Round(RandDouble(5, 500), 2))
                 });
             }
             return products;
+        }
+
+        private SortedList<string, double> GeneratePriceHistory(double basePrice)
+        {
+            var history = new SortedList<string, double>();
+            int months = rng.Next(3, 13);
+            DateTime start = new DateTime(2024, 1, 1);
+            double price = basePrice;
+            for (int m = 0; m < months; m++)
+            {
+                DateTime dt = start.AddMonths(m);
+                string key = dt.ToString("yyyy-MM");
+                history[key] = Math.Round(price, 2);
+                price *= (1.0 + (rng.NextDouble() * 0.1 - 0.05));
+            }
+            return history;
         }
 
         private double Clamp(double val, double min, double max)

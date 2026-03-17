@@ -417,7 +417,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private void AppendBootstrapCode(StringBuilder sb, bool hasMemData, bool hasStreamData)
         {
-            sb.AppendLine("import sys, io, base64, pandas as pd");
+            sb.AppendLine("import sys, io, base64, json as _json, pandas as pd");
             sb.AppendLine("import numpy as np");
             sb.AppendLine("from PIL import Image as _PILImage");
             sb.AppendLine("import csv as _csv");
@@ -435,6 +435,20 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
             sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
             sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
+            sb.AppendLine("    return df");
+            sb.AppendLine("def _decode_dict(s):");
+            sb.AppendLine("    if s is None or (isinstance(s, float) and s != s): return None");
+            sb.AppendLine("    if not isinstance(s, str) or s == '': return None");
+            sb.AppendLine("    if not s.startswith('__DICT__:'): return s");
+            sb.AppendLine("    try:");
+            sb.AppendLine("        return _json.loads(s[8:])");
+            sb.AppendLine("    except Exception:");
+            sb.AppendLine("        return s");
+            sb.AppendLine("def _decode_dict_columns(df):");
+            sb.AppendLine("    for col in df.columns:");
+            sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
+            sb.AppendLine("        if isinstance(first, str) and first.startswith('__DICT__:'):");
+            sb.AppendLine("            df[col] = df[col].apply(_decode_dict)");
             sb.AppendLine("    return df");
             sb.AppendLine("class _DatasetRow:");
             sb.AppendLine("    def __init__(self, series):");
@@ -527,6 +541,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 sb.AppendLine("                _v = _row_vals[_i] if _i < len(_row_vals) else ''");
                 sb.AppendLine("                if isinstance(_v, str) and _v.startswith('__IMG__:'):");
                 sb.AppendLine("                    _v = _decode_img(_v)");
+                sb.AppendLine("                elif isinstance(_v, str) and _v.startswith('__DICT__:'):");
+                sb.AppendLine("                    _v = _decode_dict(_v)");
                 sb.AppendLine("                _data[_col] = _v");
                 sb.AppendLine("            yield _StreamRow(_data)");
             }
@@ -554,6 +570,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("                    _tmpdf[_ic] = _tmpdf[_ic].apply(_decode_img)");
             sb.AppendLine("        else:");
             sb.AppendLine("            _tmpdf = _decode_img_columns(_tmpdf)");
+            sb.AppendLine("        _tmpdf = _decode_dict_columns(_tmpdf)");
             sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
             sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
 
