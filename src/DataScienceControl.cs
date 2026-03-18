@@ -1440,6 +1440,33 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
             }
 
+            var helperInfos = PythonRunner.GetHelperFunctionInfos();
+            if (helperInfos.Count > 0)
+            {
+                var matchingHelpers = new List<PythonRunner.HelperFunctionInfo>();
+                bool headerMatches = "Helper Functions".IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+                foreach (var info in helperInfos)
+                {
+                    if (headerMatches || info.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        info.Signature.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        info.Docstring.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                        matchingHelpers.Add(info);
+                }
+                if (matchingHelpers.Count > 0)
+                {
+                    var helpNode = refTreeView.Nodes.Add("Helper Functions  (" + matchingHelpers.Count + ")");
+                    helpNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                    helpNode.Tag = "helperfuncs";
+                    foreach (var info in matchingHelpers)
+                    {
+                        var child = helpNode.Nodes.Add(info.Name);
+                        child.Tag = "helper_" + info.Name;
+                        child.ForeColor = Color.FromArgb(0, 128, 128);
+                    }
+                    helpNode.Expand();
+                }
+            }
+
             refTreeView.EndUpdate();
         }
 
@@ -1580,6 +1607,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 ctxNode.Expand();
             }
 
+            var helperInfos = PythonRunner.GetHelperFunctionInfos();
+            if (helperInfos.Count > 0)
+            {
+                var helpNode = refTreeView.Nodes.Add("Helper Functions  (" + helperInfos.Count + ")");
+                helpNode.NodeFont = new Font(refTreeView.Font, FontStyle.Bold);
+                helpNode.Tag = "helperfuncs";
+                foreach (var info in helperInfos)
+                {
+                    var child = helpNode.Nodes.Add(info.Name);
+                    child.Tag = "helper_" + info.Name;
+                    child.ForeColor = Color.FromArgb(0, 128, 128);
+                }
+                helpNode.Expand();
+            }
+
             if (refTreeView.Nodes.Count > 0)
                 refTreeView.SelectedNode = refTreeView.Nodes[0];
         }
@@ -1629,6 +1671,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (tag == "contexthub" || tag.StartsWith("ctx_"))
             {
                 ShowContextDetail(tag);
+                return;
+            }
+
+            if (tag == "helperfuncs" || tag.StartsWith("helper_"))
+            {
+                ShowHelperFunctionDetail(tag);
                 return;
             }
 
@@ -2100,6 +2148,82 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         AppendRefText("for item in " + key + ":\n    print(item)\n", Color.FromArgb(60, 60, 60), false, 10);
                     else if (cv.TypeDescription == "dict")
                         AppendRefText("for k, v in " + key + ".items():\n    print(k, v)\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
+            }
+
+            refDetailBox.SelectionStart = 0;
+            SafeScrollToCaret(refDetailBox);
+        }
+
+        private void ShowHelperFunctionDetail(string tag)
+        {
+            refDetailBox.Clear();
+            var helperInfos = PythonRunner.GetHelperFunctionInfos();
+
+            if (tag == "helperfuncs")
+            {
+                AppendRefText("Helper Functions\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                AppendRefText("Built-in helper functions available via DotNetData.\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Import with:  ", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("from DotNetData import <function>\n\n", Color.FromArgb(0, 100, 160), false, 10);
+
+                foreach (var info in helperInfos)
+                {
+                    AppendRefText("  " + info.Name, Color.FromArgb(0, 128, 128), true, 10);
+                    string firstLine = info.Docstring;
+                    int nlIdx = firstLine.IndexOf('\n');
+                    if (nlIdx >= 0) firstLine = firstLine.Substring(0, nlIdx);
+                    if (!string.IsNullOrEmpty(firstLine))
+                        AppendRefText("  \u2014 " + firstLine, Color.FromArgb(130, 130, 130), false, 10);
+                    AppendRefText("\n", Color.Black, false, 10);
+                }
+
+                AppendRefText("\n", Color.Black, false, 10);
+                AppendRefText("Usage\n", Color.FromArgb(0, 100, 0), true, 10);
+                AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                AppendRefText("from DotNetData import display_images\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("display_images(my_image_list)\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else
+            {
+                string funcName = tag.Substring("helper_".Length);
+                PythonRunner.HelperFunctionInfo found = null;
+                foreach (var info in helperInfos)
+                {
+                    if (info.Name == funcName) { found = info; break; }
+                }
+
+                if (found != null)
+                {
+                    AppendRefText(found.Name + "  (Helper Function)\n\n", Color.FromArgb(0, 0, 180), true, 12);
+
+                    AppendRefText("Signature\n", Color.FromArgb(0, 100, 0), true, 10);
+                    AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                    AppendRefText(found.Signature + "\n\n", Color.FromArgb(0, 100, 160), false, 10);
+
+                    if (!string.IsNullOrEmpty(found.Docstring))
+                    {
+                        AppendRefText("Description\n", Color.FromArgb(0, 100, 0), true, 10);
+                        AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                        foreach (string line in found.Docstring.Split('\n'))
+                        {
+                            string trimmed = line.TrimStart();
+                            if (trimmed.StartsWith("Args:") || trimmed.StartsWith("Returns:"))
+                                AppendRefText(line + "\n", Color.FromArgb(0, 100, 0), true, 10);
+                            else
+                                AppendRefText(line + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                        }
+                        AppendRefText("\n", Color.Black, false, 10);
+                    }
+
+                    AppendRefText("Import\n", Color.FromArgb(0, 100, 0), true, 10);
+                    AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                    AppendRefText("from DotNetData import " + found.Name + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
+                else
+                {
+                    AppendRefText(funcName + "  (Helper Function)\n\n", Color.FromArgb(0, 0, 180), true, 12);
+                    AppendRefText("No details available for this function.\n", Color.FromArgb(150, 150, 150), false, 10);
                 }
             }
 
@@ -3751,7 +3875,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             tips.SetToolTip(packageNameBox, "Type a package name to install (e.g. scikit-learn, seaborn)");
             tips.SetToolTip(pkgSearchBox, "Filter the package list by name");
             tips.SetToolTip(refSearchBox, "Filter datasets, columns, classes, and variables by name");
-            tips.SetToolTip(refTreeView, "Browse available datasets, columns, registered classes, and context variables");
+            tips.SetToolTip(refTreeView, "Browse available datasets, columns, registered classes, context variables, and helper functions");
             tips.SetToolTip(quickCombo, "Select a commonly used package to install");
             tips.SetToolTip(quickInstallBtn, "Install the selected quick-install package");
         }

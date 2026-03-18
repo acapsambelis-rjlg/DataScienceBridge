@@ -590,6 +590,90 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine();
         }
 
+        public class HelperFunctionInfo
+        {
+            public string Name;
+            public string Signature;
+            public string Docstring;
+        }
+
+        private static List<HelperFunctionInfo> _helperFunctionInfos;
+
+        public static List<HelperFunctionInfo> GetHelperFunctionInfos()
+        {
+            if (_helperFunctionInfos == null)
+                _helperFunctionInfos = LoadHelperFunctionInfos();
+            return _helperFunctionInfos;
+        }
+
+        private static List<HelperFunctionInfo> LoadHelperFunctionInfos()
+        {
+            var results = new List<HelperFunctionInfo>();
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            foreach (var resName in assembly.GetManifestResourceNames())
+            {
+                if (!resName.EndsWith(".py")) continue;
+                string code;
+                using (var stream = assembly.GetManifestResourceStream(resName))
+                using (var reader = new System.IO.StreamReader(stream))
+                    code = reader.ReadToEnd();
+
+                string firstLine = code.Substring(0, code.IndexOf('\n')).Trim();
+                if (!firstLine.StartsWith("# exports:")) continue;
+
+                var exportNames = new HashSet<string>();
+                foreach (var n in firstLine.Substring(10).Split(','))
+                {
+                    string t = n.Trim();
+                    if (t.Length > 0) exportNames.Add(t);
+                }
+
+                int searchFrom = 0;
+                while (true)
+                {
+                    int defIdx = code.IndexOf("\ndef ", searchFrom);
+                    if (defIdx < 0) break;
+                    defIdx++;
+                    int lineEnd = code.IndexOf('\n', defIdx);
+                    if (lineEnd < 0) lineEnd = code.Length;
+                    string defLine = code.Substring(defIdx, lineEnd - defIdx).Trim();
+                    if (!defLine.StartsWith("def ")) { searchFrom = lineEnd; continue; }
+
+                    int parenOpen = defLine.IndexOf('(');
+                    if (parenOpen < 0) { searchFrom = lineEnd; continue; }
+                    string funcName = defLine.Substring(4, parenOpen - 4).Trim();
+
+                    if (!exportNames.Contains(funcName)) { searchFrom = lineEnd; continue; }
+
+                    string sig = defLine.TrimEnd(':').Substring(4);
+
+                    string docstring = "";
+                    int afterDef = lineEnd + 1;
+                    if (afterDef < code.Length)
+                    {
+                        string rest = code.Substring(afterDef).TrimStart();
+                        if (rest.StartsWith("\"\"\""))
+                        {
+                            int docEnd = rest.IndexOf("\"\"\"", 3);
+                            if (docEnd >= 0)
+                                docstring = rest.Substring(3, docEnd - 3).Trim();
+                        }
+                    }
+
+                    results.Add(new HelperFunctionInfo
+                    {
+                        Name = funcName,
+                        Signature = sig,
+                        Docstring = docstring
+                    });
+
+                    searchFrom = lineEnd;
+                }
+            }
+            results.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+            return results;
+        }
+
         private static List<string> _builtInHelperNames;
 
         public static string[] BuiltInHelperNames
