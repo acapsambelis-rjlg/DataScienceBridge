@@ -1769,12 +1769,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 bool isSorted = PythonVisibleHelper.IsSortedDictionaryType(fp.LeafType);
                 AppendRefText(isSorted ? "Sorted Dictionary\n" : "Dictionary\n", Color.FromArgb(0, 100, 0), true, 10);
                 AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                AppendRefText("Serialized as a Python dict" + (isSorted ? " (key-sorted)" : "") + ". Key type: " + PythonVisibleHelper.GetPythonTypeName(genArgs[0])
-                    + ", Value type: " + PythonVisibleHelper.GetPythonTypeName(genArgs[1]) + ".\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Serialized as a Python dict" + (isSorted ? " (key-sorted)" : "") + ".\n", Color.FromArgb(60, 60, 60), false, 10);
                 if (isSorted)
-                    AppendRefText("Keys are ordered by .NET sort guarantees.\n\n", Color.FromArgb(100, 100, 100), false, 10);
-                else
-                    AppendRefText("\n", Color.FromArgb(100, 100, 100), false, 10);
+                    AppendRefText("Keys are ordered by .NET sort guarantees.\n", Color.FromArgb(100, 100, 100), false, 10);
+                AppendRefText("\n", Color.FromArgb(100, 100, 100), false, 10);
+                AppendDictTypeDetail("Key", genArgs[0]);
+                AppendDictTypeDetail("Value", genArgs[1]);
             }
 
             AppendRefText("Dataset\n", Color.FromArgb(0, 100, 0), true, 10);
@@ -1985,6 +1985,60 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             refDetailBox.SelectionStart = 0;
             SafeScrollToCaret(refDetailBox);
+        }
+
+        private void AppendDictTypeDetail(string role, Type t)
+        {
+            string pyType = PythonVisibleHelper.GetPythonTypeName(t);
+            AppendRefText("  " + role + " Type:  ", Color.FromArgb(100, 100, 100), true, 10);
+            AppendRefText(pyType, Color.FromArgb(0, 100, 160), false, 10);
+            Type underlying = t;
+            if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+                underlying = Nullable.GetUnderlyingType(t);
+            if (!string.IsNullOrEmpty(underlying.Namespace) && underlying.Namespace.StartsWith("System"))
+            {
+                AppendRefText("\n", Color.Black, false, 10);
+                return;
+            }
+            AppendRefText("  (" + underlying.Name + ")\n", Color.FromArgb(150, 150, 150), false, 10);
+            if (underlying.IsEnum)
+            {
+                string[] names = Enum.GetNames(underlying);
+                AppendRefText("    Possible values:\n", Color.FromArgb(100, 100, 100), false, 10);
+                foreach (string name in names)
+                    AppendRefText("      \u2022 " + name + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("\n", Color.Black, false, 10);
+            }
+            else if (underlying.IsClass && underlying != typeof(string))
+            {
+                var props = PythonVisibleHelper.GetVisibleProperties(underlying);
+                if (props.Count > 0)
+                {
+                    AppendRefText("    Properties:\n", Color.FromArgb(100, 100, 100), false, 10);
+                    foreach (var p in props)
+                    {
+                        string pType = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
+                        AppendRefText("      \u2022 " + p.Name, Color.FromArgb(60, 60, 60), false, 10);
+                        AppendRefText("  :  " + pType + "\n", Color.FromArgb(130, 130, 130), false, 10);
+                    }
+                    AppendRefText("\n", Color.Black, false, 10);
+                }
+            }
+            else if (underlying.IsValueType && !underlying.IsPrimitive)
+            {
+                var props = PythonVisibleHelper.GetVisibleProperties(underlying);
+                if (props.Count > 0)
+                {
+                    AppendRefText("    Properties:\n", Color.FromArgb(100, 100, 100), false, 10);
+                    foreach (var p in props)
+                    {
+                        string pType = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
+                        AppendRefText("      \u2022 " + p.Name, Color.FromArgb(60, 60, 60), false, 10);
+                        AppendRefText("  :  " + pType + "\n", Color.FromArgb(130, 130, 130), false, 10);
+                    }
+                    AppendRefText("\n", Color.Black, false, 10);
+                }
+            }
         }
 
         private void ShowDatasetDetail(string tag)
