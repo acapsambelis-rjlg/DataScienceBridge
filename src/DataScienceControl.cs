@@ -1548,6 +1548,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var child = parentNode.Nodes.Add(leafName + "  \u2192  " + fp.ColumnName + "  :  " + typeName);
                 child.Tag = new string[] { "field", datasetName, fp.ColumnName };
                 child.ForeColor = Color.FromArgb(80, 80, 80);
+
+                if (PythonVisibleHelper.IsDictionaryType(fp.LeafType))
+                    AddDictClassChildren(child, datasetName, fp.ColumnName, fp.LeafType);
             }
 
             foreach (var kvp in subGroups)
