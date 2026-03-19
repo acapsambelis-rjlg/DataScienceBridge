@@ -180,6 +180,10 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     {
                         s = PythonVisibleHelper.DictionaryToJson(val);
                     }
+                    else if (fp.IsSubObject)
+                    {
+                        s = PythonVisibleHelper.SubObjectToJson(val);
+                    }
                     else
                         s = val != null ? val.ToString() : "";
                     if (s.Contains(",") || s.Contains("\"") || s.Contains("\n") || s.Contains("\r"))

@@ -1039,13 +1039,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             symbolAnalyzer.SetDynamicKnownSymbols(names);
 
             var colMap = new Dictionary<string, List<string>>();
+            var subObjMap = new Dictionary<string, Dictionary<string, List<string>>>();
             foreach (var kvp in inMemoryDataTypes)
             {
                 var flatProps = PythonVisibleHelper.GetFlattenedProperties(kvp.Value);
                 var colNames = new List<string>();
+                var dsSubObjs = new Dictionary<string, List<string>>();
                 foreach (var fp in flatProps)
+                {
                     colNames.Add(fp.ColumnName);
+                    if (fp.IsSubObject)
+                        CollectSubObjectProps(fp.ColumnName, fp.LeafType, dsSubObjs);
+                }
                 colMap[kvp.Key] = colNames;
+                if (dsSubObjs.Count > 0)
+                    subObjMap[kvp.Key] = dsSubObjs;
             }
             symbolAnalyzer.SetDatasetColumns(colMap);
 
@@ -1055,9 +1063,24 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 allNames.AddRange(inMemoryDataTypes.Keys);
                 completionProvider.SetDynamicSymbols(allNames);
                 completionProvider.SetDataSources(colMap);
+                completionProvider.SetSubObjectProperties(subObjMap);
                 completionProvider.SetRegisteredClasses(registeredPythonClasses);
                 completionProvider.SetContextVariables(contextVariables);
             }
+        }
+
+        private void CollectSubObjectProps(string path, Type type, Dictionary<string, List<string>> map)
+        {
+            var props = PythonVisibleHelper.GetVisibleProperties(type);
+            var propNames = new List<string>();
+            foreach (var p in props)
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                propNames.Add(p.Name);
+                if (PythonVisibleHelper.IsSubObjectType(p.PropertyType))
+                    CollectSubObjectProps(path + "." + p.Name, p.PropertyType, map);
+            }
+            map[path] = propNames;
         }
 
         private Dictionary<string, IInMemoryDataSource> SerializeInMemoryData()
@@ -1499,6 +1522,18 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             foreach (var fp in directProps)
             {
+                if (fp.IsSubObject)
+                {
+                    string groupTypeName = fp.LeafType.Name;
+                    var groupNode = new RadTreeNode(fp.ColumnName + "  (" + groupTypeName + ")");
+                    groupNode.Tag = new string[] { "subobject", datasetName, fp.ColumnName };
+                    groupNode.ForeColor = Color.FromArgb(0, 100, 130);
+                    groupNode.Font = new Font(refTreeView.Font, FontStyle.Italic);
+                    parentNode.Nodes.Add(groupNode);
+                    AddSubObjectChildren(groupNode, datasetName, fp.ColumnName, fp.LeafType);
+                    continue;
+                }
+
                 string typeName = PythonVisibleHelper.GetPythonTypeName(fp.LeafType);
                 if (fp.IsComputed) typeName += " (computed)";
                 var child = new RadTreeNode(fp.ColumnName + "  :  " + typeName);
@@ -1573,6 +1608,38 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 parentNode.Nodes.Add(subGroupNode);
 
                 AddSubclassChildren(subGroupNode, datasetName, subGroupProps, depth + 1, filterColumns, subPrefix);
+            }
+        }
+
+        private void AddSubObjectChildren(RadTreeNode parentNode, string datasetName, string columnName, Type subObjType)
+        {
+            var props = PythonVisibleHelper.GetVisibleProperties(subObjType);
+            foreach (var p in props)
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                string typeName = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
+                bool isComputed = p.GetSetMethod() == null;
+                if (isComputed) typeName += " (computed)";
+
+                if (PythonVisibleHelper.IsSubObjectType(p.PropertyType))
+                {
+                    var subNode = new RadTreeNode(p.Name + "  (" + p.PropertyType.Name + ")");
+                    subNode.Tag = new string[] { "subobject", datasetName, columnName + "." + p.Name };
+                    subNode.ForeColor = Color.FromArgb(0, 100, 130);
+                    subNode.Font = new Font(refTreeView.Font, FontStyle.Italic);
+                    parentNode.Nodes.Add(subNode);
+                    AddSubObjectChildren(subNode, datasetName, columnName + "." + p.Name, p.PropertyType);
+                }
+                else
+                {
+                    var child = new RadTreeNode(p.Name + "  :  " + typeName);
+                    child.Tag = new string[] { "subobjprop", datasetName, columnName, p.Name };
+                    child.ForeColor = Color.FromArgb(80, 80, 80);
+                    parentNode.Nodes.Add(child);
+
+                    if (PythonVisibleHelper.IsDictionaryType(p.PropertyType))
+                        AddDictClassChildren(child, datasetName, columnName + "." + p.Name, p.PropertyType);
+                }
             }
         }
 
@@ -1715,6 +1782,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "subclass")
             {
                 ShowSubclassDetail(tagArr[1], tagArr[2], e.Node);
+                return;
+            }
+            if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "subobject")
+            {
+                ShowSubObjectDetail(tagArr[1], tagArr[2]);
+                return;
+            }
+            if (tagArr != null && tagArr.Length == 4 && tagArr[0] == "subobjprop")
+            {
+                ShowSubObjectPropDetail(tagArr[1], tagArr[2], tagArr[3]);
                 return;
             }
             if (tagArr != null && tagArr.Length == 5 && tagArr[0] == "dictclass")
@@ -2034,6 +2111,139 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 AppendRefText("# Access a specific column\n", Color.FromArgb(0, 128, 0), false, 10);
                 AppendRefText(datasetName + "." + subProps[0].ColumnName + "\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            refDetailBox.SelectionStart = 0;
+            SafeScrollToCaret(refDetailBox);
+        }
+
+        private void ShowSubObjectDetail(string datasetName, string dotPath)
+        {
+            Type type;
+            if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
+
+            string[] segments = dotPath.Split('.');
+            Type currentType = type;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var prop = currentType.GetProperty(segments[i]);
+                if (prop == null) return;
+                currentType = prop.PropertyType;
+            }
+
+            string displayName = segments[segments.Length - 1];
+            string subObjTypeName = currentType.Name;
+
+            refDetailBox.Clear();
+
+            AppendRefText(displayName, Color.FromArgb(0, 100, 130), true, 12);
+            AppendRefText("  (" + subObjTypeName + ")\n\n", Color.FromArgb(100, 100, 100), false, 12);
+
+            AppendRefText("Nested object from ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(datasetName, Color.FromArgb(0, 0, 180), true, 10);
+            AppendRefText("\n", Color.Black, false, 10);
+            AppendRefText("Access via dot notation: ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(datasetName + "[i]." + dotPath + "\n\n", Color.FromArgb(128, 0, 0), false, 10);
+
+            var props = PythonVisibleHelper.GetVisibleProperties(currentType);
+            AppendRefText("Properties (" + props.Count + ")\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+
+            int maxLen = 0;
+            foreach (var p in props)
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                if (p.Name.Length > maxLen) maxLen = p.Name.Length;
+            }
+            foreach (var p in props)
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                string typeName = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
+                if (p.GetSetMethod() == null) typeName += " (computed)";
+                AppendRefText("  " + p.Name.PadRight(maxLen + 2), Color.FromArgb(0, 0, 0), false, 10);
+                AppendRefText(":  " + typeName + "\n", Color.FromArgb(100, 100, 100), false, 10);
+            }
+
+            AppendRefText("\n", Color.Black, false, 10);
+            AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            AppendRefText("# Access a property\n", Color.FromArgb(0, 128, 0), false, 10);
+            if (props.Count > 0)
+            {
+                string firstProp = props[0].Name;
+                AppendRefText(datasetName + "[0]." + dotPath + "." + firstProp + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            AppendRefText("# Iterate over rows\n", Color.FromArgb(0, 128, 0), false, 10);
+            AppendRefText("for row in " + datasetName + ":\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("    print(row." + dotPath + ")\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            AppendRefText("# Extract column for analysis\n", Color.FromArgb(0, 128, 0), false, 10);
+            if (props.Count > 0)
+            {
+                string firstProp = props[0].Name;
+                AppendRefText(datasetName + "." + segments[0] + ".apply(lambda x: x." + string.Join(".", segments, 1, segments.Length - 1) + (segments.Length > 1 ? "." : "") + firstProp + ")\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            refDetailBox.SelectionStart = 0;
+            SafeScrollToCaret(refDetailBox);
+        }
+
+        private void ShowSubObjectPropDetail(string datasetName, string columnPath, string propName)
+        {
+            Type type;
+            if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return;
+
+            string[] segments = columnPath.Split('.');
+            Type currentType = type;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var prop = currentType.GetProperty(segments[i]);
+                if (prop == null) return;
+                currentType = prop.PropertyType;
+            }
+
+            var propInfo = currentType.GetProperty(propName);
+            if (propInfo == null) return;
+
+            string typeName = PythonVisibleHelper.GetPythonTypeName(propInfo.PropertyType);
+            bool isComputed = propInfo.GetSetMethod() == null;
+            if (isComputed) typeName += " (computed)";
+
+            refDetailBox.Clear();
+
+            AppendRefText(propName, Color.FromArgb(0, 0, 180), true, 12);
+            AppendRefText("  :  " + typeName + "\n\n", Color.FromArgb(100, 100, 100), false, 12);
+
+            string fullPath = columnPath + "." + propName;
+            AppendRefText("Property of ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(segments[segments.Length - 1], Color.FromArgb(0, 100, 130), true, 10);
+            AppendRefText(" in ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(datasetName + "\n\n", Color.FromArgb(0, 0, 180), true, 10);
+
+            AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            AppendRefText("# Access from a row\n", Color.FromArgb(0, 128, 0), false, 10);
+            AppendRefText(datasetName + "[0]." + fullPath + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            AppendRefText("# Extract as a series\n", Color.FromArgb(0, 128, 0), false, 10);
+            AppendRefText(datasetName + "." + segments[0] + ".apply(lambda x: x." + string.Join(".", segments, 1, segments.Length - 1) + (segments.Length > 1 ? "." : "") + propName + ")\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            if (PythonVisibleHelper.IsEnumType(propInfo.PropertyType))
+            {
+                Type enumType = PythonVisibleHelper.GetUnderlyingEnumType(propInfo.PropertyType);
+                if (enumType != null)
+                {
+                    string[] names = Enum.GetNames(enumType);
+                    AppendRefText("Possible Values\n", Color.FromArgb(0, 100, 0), true, 10);
+                    AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+                    foreach (string name in names)
+                        AppendRefText("  \u2022 " + name + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                }
             }
 
             refDetailBox.SelectionStart = 0;

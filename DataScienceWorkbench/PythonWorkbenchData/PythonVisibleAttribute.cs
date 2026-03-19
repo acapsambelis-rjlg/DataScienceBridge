@@ -24,6 +24,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         public System.Reflection.PropertyInfo[] PropertyPath { get; set; }
         public Type LeafType { get; set; }
         public bool IsComputed { get; set; }
+        public bool IsSubObject { get; set; }
 
         public object GetValue(object root)
         {
@@ -58,7 +59,6 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                 if (p.GetIndexParameters().Length > 0) continue;
                 if (p.PropertyType.IsGenericType && p.PropertyType.GetGenericTypeDefinition() == typeof(List<>)) continue;
                 if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsDictionaryType(p.PropertyType) && !IsPythonVisibleClass(p.PropertyType)) continue;
-                if (p.PropertyType.IsClass && p.PropertyType != typeof(string) && !IsImageType(p.PropertyType) && !IsDictionaryType(p.PropertyType) && IsPythonVisibleClass(p.PropertyType)) continue;
 
                 if (p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0)
                 {
@@ -119,11 +119,19 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     bool propMarked = p.GetCustomAttributes(typeof(PythonVisibleAttribute), true).Length > 0;
                     if (anyMarked && !propMarked) continue;
 
-                    string nestedPrefix = string.IsNullOrEmpty(prefix) ? p.Name + "_" : prefix + p.Name + "_";
+                    string subColName = string.IsNullOrEmpty(prefix) ? p.Name : prefix + p.Name;
                     var newPath = new System.Reflection.PropertyInfo[parentPath.Length + 1];
                     Array.Copy(parentPath, newPath, parentPath.Length);
                     newPath[parentPath.Length] = p;
-                    CollectFlattened(p.PropertyType, nestedPrefix, newPath, result, depth + 1);
+
+                    result.Add(new FlattenedProperty
+                    {
+                        ColumnName = subColName,
+                        PropertyPath = newPath,
+                        LeafType = p.PropertyType,
+                        IsComputed = p.GetSetMethod() == null,
+                        IsSubObject = true
+                    });
                     continue;
                 }
 
@@ -247,9 +255,46 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             if (val is int iv) { sb.Append(iv); return; }
             if (val is long lv) { sb.Append(lv); return; }
             if (val is bool bv) { sb.Append(bv ? "true" : "false"); return; }
+            Type vType = val.GetType();
+            if (val is System.Collections.IDictionary dict)
+            {
+                sb.Append("{");
+                bool df = true;
+                foreach (System.Collections.DictionaryEntry entry in dict)
+                {
+                    if (!df) sb.Append(",");
+                    df = false;
+                    sb.Append("\"");
+                    sb.Append(JsonEscapeString(entry.Key?.ToString() ?? ""));
+                    sb.Append("\":");
+                    AppendValueJson(sb, entry.Value);
+                }
+                sb.Append("}");
+                return;
+            }
+            if ((vType.IsClass && vType != typeof(string) && !IsImageType(vType))
+                || (vType.IsValueType && !vType.IsPrimitive && !vType.IsEnum))
+            {
+                AppendObjectJson(sb, val, vType);
+                return;
+            }
             sb.Append("\"");
             sb.Append(JsonEscapeString(val.ToString()));
             sb.Append("\"");
+        }
+
+        public static string SubObjectToJson(object obj)
+        {
+            if (obj == null) return "";
+            var sb = new System.Text.StringBuilder();
+            sb.Append("__OBJ__:");
+            AppendObjectJson(sb, obj, obj.GetType());
+            return sb.ToString();
+        }
+
+        public static bool IsSubObjectType(Type t)
+        {
+            return t.IsClass && t != typeof(string) && !IsImageType(t) && !IsDictionaryType(t) && IsPythonVisibleClass(t);
         }
 
         private static string JsonEscapeString(string s)

@@ -33,6 +33,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         private List<string> _dynamicSymbols = new List<string>();
         private Dictionary<string, List<string>> _datasetColumns = new Dictionary<string, List<string>>();
+        private Dictionary<string, Dictionary<string, List<string>>> _subObjectProperties = new Dictionary<string, Dictionary<string, List<string>>>();
         private Dictionary<string, PythonClassInfo> _registeredClasses = new Dictionary<string, PythonClassInfo>();
         private Dictionary<string, ContextVariable> _contextVariables = new Dictionary<string, ContextVariable>();
         private List<string> _helperFunctions = new List<string>();
@@ -60,6 +61,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         public void SetDataSources(Dictionary<string, List<string>> datasetColumns)
         {
             _datasetColumns = new Dictionary<string, List<string>>(datasetColumns);
+        }
+
+        public void SetSubObjectProperties(Dictionary<string, Dictionary<string, List<string>>> subObjProps)
+        {
+            _subObjectProperties = subObjProps ?? new Dictionary<string, Dictionary<string, List<string>>>();
         }
 
         public void SetRegisteredClasses(Dictionary<string, PythonClassInfo> classes)
@@ -193,7 +199,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 isRowAccess = true;
             }
 
-            if (objectName == "DotNetData")
+            var subObjMembers = TryResolveSubObjectMembers(objectName, baseName, isRowAccess);
+            if (subObjMembers != null)
+            {
+                members.AddRange(subObjMembers);
+            }
+            else if (objectName == "DotNetData")
             {
                 members.AddRange(_datasetColumns.Keys);
                 members.AddRange(_helperFunctions);
@@ -267,6 +278,56 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 return CompletionItemKind.Function;
             return CompletionItemKind.Property;
         }
+
+        private List<string> TryResolveSubObjectMembers(string objectName, string baseName, bool isRowAccess)
+        {
+            foreach (var dsKvp in _subObjectProperties)
+            {
+                string dsName = dsKvp.Key;
+                var subObjs = dsKvp.Value;
+
+                string subPath = null;
+
+                if (isRowAccess && baseName == dsName)
+                {
+                    int dotIdx = objectName.IndexOf('.');
+                    if (dotIdx >= 0)
+                        subPath = objectName.Substring(dotIdx + 1);
+                }
+                else
+                {
+                    var bracketDsMatch = BracketIndexRegex2.Match(objectName);
+                    if (bracketDsMatch.Success)
+                    {
+                        string leadDs = bracketDsMatch.Groups[1].Value;
+                        if (leadDs != dsName) continue;
+                        string trail = bracketDsMatch.Groups[2].Value;
+                        if (trail.Length > 0)
+                            subPath = trail.Substring(1);
+                    }
+                    else
+                    {
+                        string bestMatch = null;
+                        foreach (var soPath in subObjs.Keys)
+                        {
+                            string suffix = "." + soPath;
+                            if (objectName.EndsWith(suffix))
+                            {
+                                if (bestMatch == null || soPath.Length > bestMatch.Length)
+                                    bestMatch = soPath;
+                            }
+                        }
+                        subPath = bestMatch;
+                    }
+                }
+
+                if (subPath != null && subObjs.ContainsKey(subPath))
+                    return new List<string>(subObjs[subPath]);
+            }
+            return null;
+        }
+
+        private static readonly Regex BracketIndexRegex2 = new Regex(@"^(\w+)\[.+?\](\..*)?$", RegexOptions.Compiled);
 
         private static readonly Regex BracketIndexRegex = new Regex(@"^(\w+)\[.+\]$", RegexOptions.Compiled);
 
