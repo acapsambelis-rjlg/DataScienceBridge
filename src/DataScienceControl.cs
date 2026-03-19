@@ -1156,7 +1156,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private void SetupToolbarActions()
         {
             clearOutputBtn.Click += (s, e) => outputBox.Clear();
-            viewDataRefBtn.Click += (s, e) => FloatPanel(referenceDockContent);
+            viewDataRefBtn.Click += (s, e) => TogglePanel(referenceDockContent);
             resetLayoutBtn.Click += (s, e) => ResetDockLayout();
         }
 
@@ -2527,9 +2527,14 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             panel.Activate();
         }
 
-        private void FloatPanel(ToolDockContent panel)
+        private void TogglePanel(ToolDockContent panel)
         {
-            panel.Show(dockPanel, DockState.Float);
+            if (panel.DockPanel != null && panel.DockState != DockState.Hidden && panel.DockState != DockState.Unknown)
+            {
+                panel.DockPanel = null;
+                return;
+            }
+            panel.Show(dockPanel, DockState.DockRight);
             panel.Activate();
         }
 
