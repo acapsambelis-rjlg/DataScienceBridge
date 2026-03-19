@@ -192,7 +192,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             string baseName = objectName;
             bool isRowAccess = false;
-            var bracketMatch = BracketIndexRegex.Match(objectName);
+            var bracketMatch = RowAccessPattern.Match(objectName);
             if (bracketMatch.Success)
             {
                 baseName = bracketMatch.Groups[1].Value;
@@ -296,7 +296,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }
                 else
                 {
-                    var bracketDsMatch = BracketIndexRegex2.Match(objectName);
+                    var bracketDsMatch = RowAccessDotChainPattern.Match(objectName);
                     if (bracketDsMatch.Success)
                     {
                         string leadDs = bracketDsMatch.Groups[1].Value;
@@ -327,9 +327,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             return null;
         }
 
-        private static readonly Regex BracketIndexRegex2 = new Regex(@"^(\w+)\[.+?\](\..*)?$", RegexOptions.Compiled);
+        private static readonly Regex RowAccessDotChainPattern = new Regex(@"^(\w+)\[.+?\](\..*)?$", RegexOptions.Compiled);
 
-        private static readonly Regex BracketIndexRegex = new Regex(@"^(\w+)\[.+\]$", RegexOptions.Compiled);
+        private static readonly Regex RowAccessPattern = new Regex(@"^(\w+)\[.+\]$", RegexOptions.Compiled);
 
         private List<string> ResolveModuleMembers(string objectName)
         {
