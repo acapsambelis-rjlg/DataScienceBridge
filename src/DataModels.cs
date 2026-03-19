@@ -376,6 +376,9 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
         public List<Order> Orders { get; set; }
 
+        [PythonVisible("Cumulative spending amount per loyalty tier")]
+        public Dictionary<LoyaltyTier, double> TierSpending { get; set; }
+
         [PythonVisible("Computed full name (FirstName + LastName)")]
         public string FullName { get { return FirstName + " " + LastName; } }
 
@@ -643,6 +646,19 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             return history;
         }
 
+        private Dictionary<LoyaltyTier, double> GenerateTierSpending(LoyaltyTier currentTier)
+        {
+            var spending = new Dictionary<LoyaltyTier, double>();
+            foreach (LoyaltyTier t in Enum.GetValues(typeof(LoyaltyTier)))
+            {
+                if (t <= currentTier)
+                    spending[t] = Math.Round(RandDouble(100, 5000), 2);
+                else
+                    spending[t] = 0;
+            }
+            return spending;
+        }
+
         private double Clamp(double val, double min, double max)
         {
             if (val < min) return min;
@@ -730,7 +746,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                         Longitude = Math.Round(RandDouble(-125, -70), 6)
                     },
                     Logo = GenerateLogo(i),
-                    Orders = new List<Order>()
+                    Orders = new List<Order>(),
+                    TierSpending = GenerateTierSpending(tier)
                 };
                 customers.Add(cust);
             }
