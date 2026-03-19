@@ -7,6 +7,17 @@ using System.Linq;
 namespace RJLG.IntelliSEM.Data.PythonDataScience
 {
 
+    [PythonVisible("Rewards summary for a loyalty tier")]
+    public class TierReward
+    {
+        [PythonVisible("Total spending amount in dollars")]
+        public double Spending { get; set; }
+        [PythonVisible("Accumulated reward points")]
+        public int Points { get; set; }
+        [PythonVisible("Discount percentage earned (0.0 to 1.0)")]
+        public double DiscountRate { get; set; }
+    }
+
     public enum LoyaltyTier
     {
         Bronze,
@@ -84,8 +95,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
 
         public List<Order> Orders { get; set; }
 
-        [PythonVisible("Cumulative spending amount per loyalty tier")]
-        public Dictionary<LoyaltyTier, double> TierSpending { get; set; }
+        [PythonVisible("Rewards summary per loyalty tier")]
+        public Dictionary<LoyaltyTier, TierReward> TierSpending { get; set; }
 
         [PythonVisible("Computed full name (FirstName + LastName)")]
         public string FullName { get { return FirstName + " " + LastName; } }
@@ -354,15 +365,25 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             return history;
         }
 
-        private Dictionary<LoyaltyTier, double> GenerateTierSpending(LoyaltyTier currentTier)
+        private Dictionary<LoyaltyTier, TierReward> GenerateTierSpending(LoyaltyTier currentTier)
         {
-            var spending = new Dictionary<LoyaltyTier, double>();
+            var spending = new Dictionary<LoyaltyTier, TierReward>();
             foreach (LoyaltyTier t in Enum.GetValues(typeof(LoyaltyTier)))
             {
                 if (t <= currentTier)
-                    spending[t] = Math.Round(RandDouble(100, 5000), 2);
+                {
+                    double amt = Math.Round(RandDouble(100, 5000), 2);
+                    spending[t] = new TierReward
+                    {
+                        Spending = amt,
+                        Points = (int)(amt * RandDouble(0.5, 2.0)),
+                        DiscountRate = Math.Round(RandDouble(0.01, 0.15), 3)
+                    };
+                }
                 else
-                    spending[t] = 0;
+                {
+                    spending[t] = new TierReward { Spending = 0, Points = 0, DiscountRate = 0 };
+                }
             }
             return spending;
         }

@@ -201,13 +201,55 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     sb.Append("null");
                 else
                 {
-                    sb.Append("\"");
-                    sb.Append(JsonEscapeString(entry.Value.ToString()));
-                    sb.Append("\"");
+                    Type vType = entry.Value.GetType();
+                    if ((vType.IsClass && vType != typeof(string)) || (vType.IsValueType && !vType.IsPrimitive && !vType.IsEnum))
+                    {
+                        AppendObjectJson(sb, entry.Value, vType);
+                    }
+                    else
+                    {
+                        sb.Append("\"");
+                        sb.Append(JsonEscapeString(entry.Value.ToString()));
+                        sb.Append("\"");
+                    }
                 }
             }
             sb.Append("}");
             return sb.ToString();
+        }
+
+        private static void AppendObjectJson(System.Text.StringBuilder sb, object obj, Type type)
+        {
+            sb.Append("{");
+            var props = GetVisibleProperties(type);
+            bool first = true;
+            foreach (var p in props)
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                object val;
+                try { val = p.GetValue(obj); } catch { continue; }
+                if (!first) sb.Append(",");
+                first = false;
+                sb.Append("\"");
+                sb.Append(JsonEscapeString(p.Name));
+                sb.Append("\":");
+                AppendValueJson(sb, val);
+            }
+            sb.Append("}");
+        }
+
+        private static void AppendValueJson(System.Text.StringBuilder sb, object val)
+        {
+            if (val == null) { sb.Append("null"); return; }
+            if (val is double d) { sb.Append(d.ToString("G", System.Globalization.CultureInfo.InvariantCulture)); return; }
+            if (val is float f) { sb.Append(f.ToString("G", System.Globalization.CultureInfo.InvariantCulture)); return; }
+            if (val is decimal dec) { sb.Append(dec.ToString(System.Globalization.CultureInfo.InvariantCulture)); return; }
+            if (val is int iv) { sb.Append(iv); return; }
+            if (val is long lv) { sb.Append(lv); return; }
+            if (val is bool bv) { sb.Append(bv ? "true" : "false"); return; }
+            sb.Append("\"");
+            sb.Append(JsonEscapeString(val.ToString()));
+            sb.Append("\"");
         }
 
         private static string JsonEscapeString(string s)

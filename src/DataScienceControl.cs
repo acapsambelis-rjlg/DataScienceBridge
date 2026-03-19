@@ -1500,6 +1500,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 var child = parentNode.Nodes.Add(fp.ColumnName + "  :  " + typeName);
                 child.Tag = new string[] { "field", datasetName, fp.ColumnName };
                 child.ForeColor = Color.FromArgb(80, 80, 80);
+
+                if (PythonVisibleHelper.IsDictionaryType(fp.LeafType))
+                    AddDictClassChildren(child, datasetName, fp.ColumnName, fp.LeafType);
             }
 
             foreach (var kvp in groupChildren)
@@ -1559,6 +1562,41 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 subGroupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
 
                 AddSubclassChildren(subGroupNode, datasetName, subGroupProps, depth + 1, filterColumns, subPrefix);
+            }
+        }
+
+        private void AddDictClassChildren(TreeNode fieldNode, string datasetName, string fieldName, Type dictType)
+        {
+            var genArgs = dictType.GetGenericArguments();
+            if (genArgs.Length != 2) return;
+
+            for (int i = 0; i < 2; i++)
+            {
+                string role = i == 0 ? "Key" : "Value";
+                Type argType = genArgs[i];
+                Type underlying = argType;
+                if (argType.IsGenericType && argType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    underlying = Nullable.GetUnderlyingType(argType);
+
+                bool isExpandableClass = (underlying.IsClass && underlying != typeof(string))
+                    || (underlying.IsValueType && !underlying.IsPrimitive && !underlying.IsEnum);
+                if (!isExpandableClass) continue;
+
+                var props = PythonVisibleHelper.GetVisibleProperties(underlying);
+                if (props.Count == 0) continue;
+
+                var groupNode = fieldNode.Nodes.Add(role + "  (" + underlying.Name + ")");
+                groupNode.Tag = new string[] { "dictclass", datasetName, fieldName, role, underlying.Name };
+                groupNode.ForeColor = Color.FromArgb(0, 100, 130);
+                groupNode.NodeFont = new Font(refTreeView.Font, FontStyle.Italic);
+
+                foreach (var p in props)
+                {
+                    string pType = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
+                    var propNode = groupNode.Nodes.Add(p.Name + "  :  " + pType);
+                    propNode.Tag = new string[] { "dictclassprop", datasetName, fieldName, role, p.Name };
+                    propNode.ForeColor = Color.FromArgb(80, 80, 80);
+                }
             }
         }
 
@@ -1657,6 +1695,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (tagArr != null && tagArr.Length == 3 && tagArr[0] == "subclass")
             {
                 ShowSubclassDetail(tagArr[1], tagArr[2], e.Node);
+                return;
+            }
+            if (tagArr != null && tagArr.Length == 5 && tagArr[0] == "dictclass")
+            {
+                ShowDictClassDetail(tagArr[1], tagArr[2], tagArr[3], tagArr[4]);
+                return;
+            }
+            if (tagArr != null && tagArr.Length == 5 && tagArr[0] == "dictclassprop")
+            {
+                ShowDictClassPropDetail(tagArr[1], tagArr[2], tagArr[3], tagArr[4]);
                 return;
             }
 
@@ -2024,6 +2072,139 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     AppendRefText("\n", Color.Black, false, 10);
                 }
             }
+        }
+
+        private Type ResolveDictArgType(string datasetName, string fieldName, string role)
+        {
+            Type type;
+            if (!inMemoryDataTypes.TryGetValue(datasetName, out type)) return null;
+
+            var flatProps = PythonVisibleHelper.GetFlattenedProperties(type);
+            foreach (var fp in flatProps)
+            {
+                if (fp.ColumnName == fieldName && PythonVisibleHelper.IsDictionaryType(fp.LeafType))
+                {
+                    var genArgs = fp.LeafType.GetGenericArguments();
+                    if (genArgs.Length == 2)
+                    {
+                        Type argType = role == "Key" ? genArgs[0] : genArgs[1];
+                        if (argType.IsGenericType && argType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                            argType = Nullable.GetUnderlyingType(argType);
+                        return argType;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private void ShowDictClassDetail(string datasetName, string fieldName, string role, string className)
+        {
+            Type argType = ResolveDictArgType(datasetName, fieldName, role);
+
+            refDetailBox.Clear();
+            AppendRefText(className, Color.FromArgb(0, 100, 130), true, 12);
+            AppendRefText("  (" + role.ToLower() + " type)\n\n", Color.FromArgb(100, 100, 100), false, 12);
+
+            AppendRefText("Dictionary " + role + "\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText(role + " type for ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(fieldName, Color.FromArgb(0, 0, 180), true, 10);
+            AppendRefText(" in ", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText(datasetName, Color.FromArgb(0, 0, 180), true, 10);
+            AppendRefText(".\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            if (argType != null)
+            {
+                var props = PythonVisibleHelper.GetVisibleProperties(argType);
+                if (props.Count > 0)
+                {
+                    AppendRefText("Properties (" + props.Count + ")\n", Color.FromArgb(0, 100, 0), true, 10);
+                    AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+
+                    int maxLen = 0;
+                    foreach (var p in props)
+                        if (p.Name.Length > maxLen) maxLen = p.Name.Length;
+
+                    foreach (var p in props)
+                    {
+                        string pType = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
+                        AppendRefText("  " + p.Name.PadRight(maxLen + 2), Color.FromArgb(0, 0, 0), false, 10);
+                        AppendRefText(":  " + pType + "\n", Color.FromArgb(100, 100, 100), false, 10);
+                    }
+                    AppendRefText("\n", Color.Black, false, 10);
+                }
+            }
+
+            AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("# Access dict " + role.ToLower() + "s\n", Color.FromArgb(0, 128, 0), false, 10);
+            if (role == "Key")
+                AppendRefText("keys = " + datasetName + "." + fieldName + ".iloc[0].keys()\n", Color.FromArgb(60, 60, 60), false, 10);
+            else
+                AppendRefText("val = " + datasetName + "." + fieldName + ".iloc[0][some_key]\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            refDetailBox.SelectionStart = 0;
+            SafeScrollToCaret(refDetailBox);
+        }
+
+        private void ShowDictClassPropDetail(string datasetName, string fieldName, string role, string propName)
+        {
+            Type argType = ResolveDictArgType(datasetName, fieldName, role);
+
+            refDetailBox.Clear();
+            AppendRefText(propName, Color.FromArgb(0, 0, 180), true, 12);
+
+            string pTypeName = "";
+            string desc = "";
+            if (argType != null)
+            {
+                foreach (var p in PythonVisibleHelper.GetVisibleProperties(argType))
+                {
+                    if (p.Name == propName)
+                    {
+                        pTypeName = PythonVisibleHelper.GetPythonTypeName(p.PropertyType);
+                        var attrs = p.GetCustomAttributes(typeof(PythonVisibleAttribute), true);
+                        if (attrs.Length > 0)
+                            desc = ((PythonVisibleAttribute)attrs[0]).Description;
+                        break;
+                    }
+                }
+            }
+
+            AppendRefText("  :  " + pTypeName + "\n\n", Color.FromArgb(100, 100, 100), false, 12);
+
+            AppendRefText("Description\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            if (!string.IsNullOrEmpty(desc))
+                AppendRefText(desc + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            else
+                AppendRefText("Property of " + role.ToLower() + " type in dictionary " + fieldName + ".\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            AppendRefText("Context\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText("  Dictionary field:  " + fieldName + "\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("  " + role + " type:  " + (argType != null ? argType.Name : "?") + "\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("  Dataset:  " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+
+            AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
+            AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
+            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            if (role == "Value")
+            {
+                AppendRefText("# Access " + propName + " from a dict value\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("val = " + datasetName + "." + fieldName + ".iloc[0][some_key]\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("print(val['" + propName + "'])\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+            else
+            {
+                AppendRefText("# Access " + propName + " from a dict key\n", Color.FromArgb(0, 128, 0), false, 10);
+                AppendRefText("for key in " + datasetName + "." + fieldName + ".iloc[0]:\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("    print(key['" + propName + "'])\n", Color.FromArgb(60, 60, 60), false, 10);
+            }
+
+            refDetailBox.SelectionStart = 0;
+            SafeScrollToCaret(refDetailBox);
         }
 
         private void ShowDatasetDetail(string tag)
