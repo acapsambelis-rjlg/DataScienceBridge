@@ -441,7 +441,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("    if not isinstance(s, str) or s == '': return None");
             sb.AppendLine("    if not s.startswith('__DICT__:'): return s");
             sb.AppendLine("    try:");
-            sb.AppendLine("        return _json.loads(s[8:])");
+            sb.AppendLine("        return _json.loads(s[9:])");
             sb.AppendLine("    except Exception:");
             sb.AppendLine("        return s");
             sb.AppendLine("def _decode_dict_columns(df):");

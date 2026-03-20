@@ -693,9 +693,17 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                                 else
                                     s = "";
                             }
+                            else if (PythonVisibleHelper.IsDictionaryType(fp.LeafType))
+                            {
+                                s = PythonVisibleHelper.DictionaryToJson(val);
+                            }
+                            else if (fp.IsSubObject)
+                            {
+                                s = PythonVisibleHelper.SubObjectToJson(val);
+                            }
                             else
                                 s = val != null ? val.ToString() : "";
-                            if (s.Contains(",") || s.Contains("\"") || s.Contains("\n"))
+                            if (s.Contains(",") || s.Contains("\"") || s.Contains("\n") || s.Contains("\r"))
                                 s = "\"" + s.Replace("\"", "\"\"") + "\"";
                             vals.Add(s);
                         }
