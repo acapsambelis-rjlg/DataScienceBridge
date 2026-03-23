@@ -1061,6 +1061,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     colNames.Add(fp.ColumnName);
                     if (fp.IsSubObject)
                         CollectSubObjectProps(fp.ColumnName, fp.LeafType, dsSubObjs);
+                    else if (PythonVisibleHelper.IsDictionaryType(fp.LeafType))
+                        CollectDictValueProps(fp.ColumnName, fp.LeafType, dsSubObjs);
                 }
                 colMap[kvp.Key] = colNames;
                 if (dsSubObjs.Count > 0)
@@ -1090,8 +1092,25 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 propNames.Add(p.Name);
                 if (PythonVisibleHelper.IsSubObjectType(p.PropertyType))
                     CollectSubObjectProps(path + "." + p.Name, p.PropertyType, map);
+                else if (PythonVisibleHelper.IsDictionaryType(p.PropertyType))
+                    CollectDictValueProps(path + "." + p.Name, p.PropertyType, map);
             }
             map[path] = propNames;
+        }
+
+        private void CollectDictValueProps(string path, Type dictType, Dictionary<string, List<string>> map)
+        {
+            var genArgs = dictType.GetGenericArguments();
+            if (genArgs.Length < 2) return;
+            Type valueType = genArgs[1];
+            if (valueType.IsClass && valueType != typeof(string) && !PythonVisibleHelper.IsImageType(valueType))
+            {
+                CollectSubObjectProps(path, valueType, map);
+            }
+            else if (valueType.IsValueType && !valueType.IsPrimitive && !valueType.IsEnum)
+            {
+                CollectSubObjectProps(path, valueType, map);
+            }
         }
 
         private Dictionary<string, IInMemoryDataSource> SerializeInMemoryData()

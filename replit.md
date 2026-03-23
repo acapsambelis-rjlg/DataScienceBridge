@@ -43,6 +43,7 @@ Namespaces are `RJLG.IntelliSEM.UI.Controls.PythonDataScience`, `RJLG.IntelliSEM
 - **Python Class Registration and Context Hub:** APIs for injecting Python class definitions and named variables.
 - **Public API (`DataScienceControl`):** Methods for data loading, registration, context setting, script execution, and environment reset.
 - **Custom Keyboard Shortcuts:** For line manipulation and navigation.
+- **Dictionary Value Completions:** When a dictionary column has a complex value type (class or struct), the completion provider offers dot-completions for the value's properties after bracket access (e.g., `row.TierSpending['Bronze'].` shows `Spending`, `Points`, `DiscountRate`). `CollectDictValueProps` extracts the value type's generic argument and feeds its visible properties into the same `_subObjectProperties` map used by sub-objects. `TryResolveSubObjectMembers` normalizes bracket expressions in dot-chain paths via `BracketStripPattern` (`\[.*?\]`) so `TierSpending['key']` resolves as `TierSpending`. The backward character scan in `GetCompletions` includes `'` and `"` to capture quoted dictionary keys in the prefix. Works with single-quoted, double-quoted, and integer keys, and composes with sub-object chains (e.g., `row.SubObj.Dict['k'].Prop`).
 
 ## External Dependencies
 - **System:** Mono runtime, libgdiplus, X11 libraries, gtk2, cairo, pango, fontconfig

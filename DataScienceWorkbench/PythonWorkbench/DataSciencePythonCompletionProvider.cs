@@ -87,7 +87,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             int wordStart = pos - 1;
             while (wordStart >= 0 && (char.IsLetterOrDigit(text[wordStart]) || text[wordStart] == '_' || text[wordStart] == '.'
-                || text[wordStart] == '[' || text[wordStart] == ']' || text[wordStart] == ':'))
+                || text[wordStart] == '[' || text[wordStart] == ']' || text[wordStart] == ':'
+                || text[wordStart] == '\'' || text[wordStart] == '"'))
                 wordStart--;
             wordStart++;
 
@@ -307,11 +308,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                     else
                     {
+                        string normalizedObj = BracketStripPattern.Replace(objectName, "");
                         string bestMatch = null;
                         foreach (var soPath in subObjs.Keys)
                         {
                             string suffix = "." + soPath;
-                            if (objectName.EndsWith(suffix))
+                            if (objectName.EndsWith(suffix) || normalizedObj.EndsWith(suffix))
                             {
                                 if (bestMatch == null || soPath.Length > bestMatch.Length)
                                     bestMatch = soPath;
@@ -321,13 +323,21 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                     }
                 }
 
-                if (subPath != null && subObjs.ContainsKey(subPath))
-                    return new List<string>(subObjs[subPath]);
+                if (subPath != null)
+                {
+                    if (subObjs.ContainsKey(subPath))
+                        return new List<string>(subObjs[subPath]);
+
+                    string normalized = BracketStripPattern.Replace(subPath, "");
+                    if (normalized != subPath && subObjs.ContainsKey(normalized))
+                        return new List<string>(subObjs[normalized]);
+                }
             }
             return null;
         }
 
         private static readonly Regex RowAccessDotChainPattern = new Regex(@"^(\w+)\[.+?\](\..*)?$", RegexOptions.Compiled);
+        private static readonly Regex BracketStripPattern = new Regex(@"\[.*?\]", RegexOptions.Compiled);
 
         private static readonly Regex RowAccessPattern = new Regex(@"^(\w+)\[.+\]$", RegexOptions.Compiled);
 
