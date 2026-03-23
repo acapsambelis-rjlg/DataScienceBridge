@@ -415,192 +415,28 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             stderr = capturedStderr ?? "";
         }
 
+        private string LoadEmbeddedPython(string resourceSuffix)
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            foreach (var resName in assembly.GetManifestResourceNames())
+            {
+                if (resName.EndsWith(resourceSuffix))
+                {
+                    using (var stream = assembly.GetManifestResourceStream(resName))
+                    using (var reader = new System.IO.StreamReader(stream))
+                        return reader.ReadToEnd();
+                }
+            }
+            return null;
+        }
+
         private void AppendBootstrapCode(StringBuilder sb, bool hasMemData, bool hasStreamData)
         {
-            sb.AppendLine("import sys, io, base64, json as _json, pandas as pd");
-            sb.AppendLine("import numpy as np");
-            sb.AppendLine("from PIL import Image as _PILImage");
-            sb.AppendLine("import csv as _csv");
-            sb.AppendLine("def _decode_img(s):");
-            sb.AppendLine("    if s is None or (isinstance(s, float) and s != s): return None");
-            sb.AppendLine("    if not isinstance(s, str) or s == '': return None");
-            sb.AppendLine("    if not s.startswith('__IMG__:'): return s");
-            sb.AppendLine("    try:");
-            sb.AppendLine("        b = base64.b64decode(s[7:])");
-            sb.AppendLine("        return _PILImage.open(io.BytesIO(b))");
-            sb.AppendLine("    except Exception:");
-            sb.AppendLine("        return None");
-            sb.AppendLine("def _decode_img_columns(df):");
-            sb.AppendLine("    for col in df.columns:");
-            sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
-            sb.AppendLine("        if isinstance(first, str) and first.startswith('__IMG__:'):");
-            sb.AppendLine("            df[col] = df[col].apply(_decode_img)");
-            sb.AppendLine("    return df");
-            sb.AppendLine("def _decode_dict(s):");
-            sb.AppendLine("    if s is None or (isinstance(s, float) and s != s): return None");
-            sb.AppendLine("    if not isinstance(s, str) or s == '': return None");
-            sb.AppendLine("    if not s.startswith('__DICT__:'): return s");
-            sb.AppendLine("    try:");
-            sb.AppendLine("        d = _json.loads(s[9:])");
-            sb.AppendLine("        return _NestedObject(d) if isinstance(d, dict) else d");
-            sb.AppendLine("    except Exception:");
-            sb.AppendLine("        return s");
-            sb.AppendLine("def _decode_dict_columns(df):");
-            sb.AppendLine("    for col in df.columns:");
-            sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
-            sb.AppendLine("        if isinstance(first, str) and first.startswith('__DICT__:'):");
-            sb.AppendLine("            df[col] = df[col].apply(_decode_dict)");
-            sb.AppendLine("    return df");
-            sb.AppendLine("class _NestedObject:");
-            sb.AppendLine("    def __init__(self, data):");
-            sb.AppendLine("        object.__setattr__(self, '_data', data if isinstance(data, dict) else {})");
-            sb.AppendLine("    @staticmethod");
-            sb.AppendLine("    def _wrap(v):");
-            sb.AppendLine("        return _NestedObject(v) if isinstance(v, dict) else v");
-            sb.AppendLine("    def __getattr__(self, name):");
-            sb.AppendLine("        _data = object.__getattribute__(self, '_data')");
-            sb.AppendLine("        if name in _data:");
-            sb.AppendLine("            return _NestedObject._wrap(_data[name])");
-            sb.AppendLine("        raise AttributeError(f\"Object has no property '{name}'\")");
-            sb.AppendLine("    def __getitem__(self, key):");
-            sb.AppendLine("        _data = object.__getattribute__(self, '_data')");
-            sb.AppendLine("        return _NestedObject._wrap(_data[key])");
-            sb.AppendLine("    def __contains__(self, key):");
-            sb.AppendLine("        return key in object.__getattribute__(self, '_data')");
-            sb.AppendLine("    def __len__(self):");
-            sb.AppendLine("        return len(object.__getattribute__(self, '_data'))");
-            sb.AppendLine("    def __iter__(self):");
-            sb.AppendLine("        return iter(object.__getattribute__(self, '_data'))");
-            sb.AppendLine("    def keys(self):");
-            sb.AppendLine("        return object.__getattribute__(self, '_data').keys()");
-            sb.AppendLine("    def values(self):");
-            sb.AppendLine("        return [_NestedObject._wrap(v) for v in object.__getattribute__(self, '_data').values()]");
-            sb.AppendLine("    def items(self):");
-            sb.AppendLine("        return [(k, _NestedObject._wrap(v)) for k, v in object.__getattribute__(self, '_data').items()]");
-            sb.AppendLine("    def get(self, key, default=None):");
-            sb.AppendLine("        _data = object.__getattribute__(self, '_data')");
-            sb.AppendLine("        return _NestedObject._wrap(_data[key]) if key in _data else default");
-            sb.AppendLine("    def __repr__(self):");
-            sb.AppendLine("        return repr(object.__getattribute__(self, '_data'))");
-            sb.AppendLine("    def __dir__(self):");
-            sb.AppendLine("        return list(object.__getattribute__(self, '_data').keys())");
-            sb.AppendLine("    def __eq__(self, other):");
-            sb.AppendLine("        if isinstance(other, _NestedObject):");
-            sb.AppendLine("            return object.__getattribute__(self, '_data') == object.__getattribute__(other, '_data')");
-            sb.AppendLine("        return NotImplemented");
-            sb.AppendLine("    def __hash__(self):");
-            sb.AppendLine("        return id(self)");
-            sb.AppendLine("def _decode_obj(s):");
-            sb.AppendLine("    if s is None or (isinstance(s, float) and s != s): return None");
-            sb.AppendLine("    if not isinstance(s, str) or s == '': return None");
-            sb.AppendLine("    if not s.startswith('__OBJ__:'): return s");
-            sb.AppendLine("    try:");
-            sb.AppendLine("        return _NestedObject(_json.loads(s[8:]))");
-            sb.AppendLine("    except Exception:");
-            sb.AppendLine("        return s");
-            sb.AppendLine("def _decode_obj_columns(df):");
-            sb.AppendLine("    for col in df.columns:");
-            sb.AppendLine("        first = df[col].dropna().iloc[0] if len(df[col].dropna()) > 0 else None");
-            sb.AppendLine("        if isinstance(first, str) and first.startswith('__OBJ__:'):");
-            sb.AppendLine("            df[col] = df[col].apply(_decode_obj)");
-            sb.AppendLine("    return df");
-            sb.AppendLine("class _DatasetRow:");
-            sb.AppendLine("    def __init__(self, series):");
-            sb.AppendLine("        object.__setattr__(self, '_s', series)");
-            sb.AppendLine("    def __getattr__(self, name):");
-            sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
-            sb.AppendLine("        if name in _s.index:");
-            sb.AppendLine("            return _s[name]");
-            sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
-            sb.AppendLine("    def __repr__(self):");
-            sb.AppendLine("        return repr(object.__getattribute__(self, '_s'))");
-            sb.AppendLine("    def __dir__(self):");
-            sb.AppendLine("        _s = object.__getattribute__(self, '_s')");
-            sb.AppendLine("        return list(_s.index)");
-            sb.AppendLine("class _DotNetDataset:");
-            sb.AppendLine("    def __init__(self, df):");
-            sb.AppendLine("        object.__setattr__(self, '_df', df)");
-            sb.AppendLine("    def __getattr__(self, name):");
-            sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-            sb.AppendLine("        if name in _df.columns:");
-            sb.AppendLine("            return _df[name]");
-            sb.AppendLine("        return getattr(_df, name)");
-            sb.AppendLine("    def __repr__(self):");
-            sb.AppendLine("        return repr(object.__getattribute__(self, '_df'))");
-            sb.AppendLine("    def __len__(self):");
-            sb.AppendLine("        return len(object.__getattribute__(self, '_df'))");
-            sb.AppendLine("    def __getitem__(self, key):");
-            sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-            sb.AppendLine("        if isinstance(key, (int, slice)):");
-            sb.AppendLine("            result = _df.iloc[key]");
-            sb.AppendLine("            if isinstance(result, pd.Series):");
-            sb.AppendLine("                return _DatasetRow(result)");
-            sb.AppendLine("            return _DotNetDataset(result.reset_index(drop=True))");
-            sb.AppendLine("        return _df[key]");
-            sb.AppendLine("    def __iter__(self):");
-            sb.AppendLine("        _df = object.__getattribute__(self, '_df')");
-            sb.AppendLine("        for i in range(len(_df)):");
-            sb.AppendLine("            yield _DatasetRow(_df.iloc[i])");
-            sb.AppendLine("    @property");
-            sb.AppendLine("    def df(self):");
-            sb.AppendLine("        return object.__getattribute__(self, '_df')");
+            sb.AppendLine(LoadEmbeddedPython("dotnet_data_bootstrap.py"));
 
             if (hasStreamData)
             {
-                sb.AppendLine("class _StreamRow:");
-                sb.AppendLine("    __slots__ = ('_data',)");
-                sb.AppendLine("    def __init__(self, data):");
-                sb.AppendLine("        object.__setattr__(self, '_data', data)");
-                sb.AppendLine("    def __getattr__(self, name):");
-                sb.AppendLine("        _data = object.__getattribute__(self, '_data')");
-                sb.AppendLine("        if name in _data:");
-                sb.AppendLine("            return _data[name]");
-                sb.AppendLine("        raise AttributeError(f\"Row has no field '{name}'\")");
-                sb.AppendLine("    def __getitem__(self, key):");
-                sb.AppendLine("        return object.__getattribute__(self, '_data')[key]");
-                sb.AppendLine("    def __repr__(self):");
-                sb.AppendLine("        return repr(object.__getattribute__(self, '_data'))");
-                sb.AppendLine("    def __dir__(self):");
-                sb.AppendLine("        return list(object.__getattribute__(self, '_data').keys())");
-                sb.AppendLine("class _DotNetStream:");
-                sb.AppendLine("    def __init__(self, name, columns):");
-                sb.AppendLine("        object.__setattr__(self, '_name', name)");
-                sb.AppendLine("        object.__setattr__(self, '_columns', columns)");
-                sb.AppendLine("        object.__setattr__(self, '_consumed', False)");
-                sb.AppendLine("    @property");
-                sb.AppendLine("    def columns(self):");
-                sb.AppendLine("        return list(object.__getattribute__(self, '_columns'))");
-                sb.AppendLine("    @property");
-                sb.AppendLine("    def name(self):");
-                sb.AppendLine("        return object.__getattribute__(self, '_name')");
-                sb.AppendLine("    def __repr__(self):");
-                sb.AppendLine("        _n = object.__getattribute__(self, '_name')");
-                sb.AppendLine("        _c = object.__getattribute__(self, '_consumed')");
-                sb.AppendLine("        return f'DotNetStream({_n}, columns={self.columns}, consumed={_c})'");
-                sb.AppendLine("    def __iter__(self):");
-                sb.AppendLine("        if object.__getattribute__(self, '_consumed'):");
-                sb.AppendLine("            raise RuntimeError('Stream has already been consumed. Re-register the data source for another pass.')");
-                sb.AppendLine("        object.__setattr__(self, '_consumed', True)");
-                sb.AppendLine("        _cols = object.__getattribute__(self, '_columns')");
-                sb.AppendLine("        while True:");
-                sb.AppendLine("            _raw = sys.stdin.readline()");
-                sb.AppendLine("            if not _raw:");
-                sb.AppendLine("                break");
-                sb.AppendLine("            _raw = _raw.rstrip('\\n')");
-                sb.AppendLine("            if _raw == '__STREAM_END__':");
-                sb.AppendLine("                break");
-                sb.AppendLine("            _row_vals = list(_csv.reader([_raw]))[0]");
-                sb.AppendLine("            _data = {}");
-                sb.AppendLine("            for _i, _col in enumerate(_cols):");
-                sb.AppendLine("                _v = _row_vals[_i] if _i < len(_row_vals) else ''");
-                sb.AppendLine("                if isinstance(_v, str) and _v.startswith('__IMG__:'):");
-                sb.AppendLine("                    _v = _decode_img(_v)");
-                sb.AppendLine("                elif isinstance(_v, str) and _v.startswith('__DICT__:'):");
-                sb.AppendLine("                    _v = _decode_dict(_v)");
-                sb.AppendLine("                elif isinstance(_v, str) and _v.startswith('__OBJ__:'):");
-                sb.AppendLine("                    _v = _decode_obj(_v)");
-                sb.AppendLine("                _data[_col] = _v");
-                sb.AppendLine("            yield _StreamRow(_data)");
+                sb.AppendLine(LoadEmbeddedPython("dotnet_data_streaming.py"));
             }
 
             sb.AppendLine("import types as _types");

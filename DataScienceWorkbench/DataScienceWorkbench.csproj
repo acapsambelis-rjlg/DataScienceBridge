@@ -117,6 +117,8 @@
     <EmbeddedResource Include="PythonWorkbench\RunConfigurationDialog.resx">
       <DependentUpon>RunConfigurationDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PythonWorkbench\Helpers\dotnet_data_bootstrap.py" />
+    <EmbeddedResource Include="PythonWorkbench\Helpers\dotnet_data_streaming.py" />
     <EmbeddedResource Include="PythonWorkbench\Helpers\display_images.py" />
     <EmbeddedResource Include="PythonWorkbench\Helpers\image_stats.py" />
     <EmbeddedResource Include="PythonWorkbench\Helpers\introspect_modules.py" />
