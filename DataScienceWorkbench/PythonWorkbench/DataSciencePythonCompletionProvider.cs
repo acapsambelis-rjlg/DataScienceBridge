@@ -94,8 +94,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             string prefix = text.Substring(wordStart, pos - wordStart);
 #if DEBUG
-            if (prefix.Contains("TierSpending") || prefix.Contains("Dict"))
-                System.Diagnostics.Debug.WriteLine("[Completion] prefix='" + prefix + "'");
+            int dotIdx = prefix.LastIndexOf('.');
+            if (dotIdx >= 0)
+                System.Diagnostics.Debug.WriteLine("[Completion] prefix='" + prefix + "' objectName='" + prefix.Substring(0, dotIdx) + "'");
 #endif
 
             string lineText = GetCurrentLine(text, pos);
