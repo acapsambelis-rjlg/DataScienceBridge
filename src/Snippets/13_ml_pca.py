@@ -1,5 +1,5 @@
 # snippet: ML: Customer Segmentation (PCA)
-from DotNetData import customers
+from IntelliSEM import customers
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 import matplotlib.pyplot as plt

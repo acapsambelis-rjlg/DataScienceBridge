@@ -34,8 +34,8 @@ Namespaces are `RJLG.IntelliSEM.UI.Controls.PythonDataScience`, `RJLG.IntelliSEM
 - **Package Manager Panel:** Facilitates pip package installation and uninstallation within an isolated Python virtual environment.
 - **Interactive Script Execution:** Asynchronous script execution with real-time output, interactive input, and cancellation.
 - **Run Configurations:** PyCharm-style run configurations for specifying scripts, arguments, and input files, persisted in `python/run_configurations.ini`.
-- **In-memory Data Bridge:** Streams .NET data to Python via a virtual `DotNetData` module, supporting fixed and streaming datasets. Handles serialization of bitmaps, images, dictionaries, and nested objects (`__OBJ__:{...}` JSON prefix) into Python-accessible structures with dot-notation access.
-- **Python Bootstrap & Helper Functions:** Embedded Python resources (`dotnet_data_bootstrap.py`, `dotnet_data_streaming.py`) provide core functionality. Helper functions are stored as embedded `.py` files, exported to the `DotNetData` module (e.g., `display_images`, `compare_images`).
+- **In-memory Data Bridge:** Streams .NET data to Python via a virtual `IntelliSEM` module, supporting fixed and streaming datasets. Handles serialization of bitmaps, images, dictionaries, and nested objects (`__OBJ__:{...}` JSON prefix) into Python-accessible structures with dot-notation access.
+- **Python Bootstrap & Helper Functions:** Embedded Python resources (`dotnet_data_bootstrap.py`, `dotnet_data_streaming.py`) provide core functionality. Helper functions are stored as embedded `.py` files, exported to the `IntelliSEM` module (e.g., `display_images`, `compare_images`).
 - **Toolbar-Only UI:** All actions are accessible via the `editorToolBar`, with no traditional menu bar.
 - **Code Snippets:** Dynamically loaded from embedded `.py` files, providing predefined code insertions via a dropdown menu.
 - **Virtual Environment Management:** Automatic creation and management of an isolated Python virtual environment.

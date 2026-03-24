@@ -1,5 +1,5 @@
 # snippet: ML: Employee Clustering (K-Means)
-from DotNetData import employees
+from IntelliSEM import employees
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt

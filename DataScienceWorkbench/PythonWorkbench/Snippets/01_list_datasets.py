@@ -1,5 +1,5 @@
 # snippet: List Datasets
-from DotNetData import customers, employees, customer_stream
+from IntelliSEM import customers, employees, customer_stream
 
 for name, ds in [('customers', customers), ('employees', employees)]:
     print(f'  {name}: {len(ds)} rows, {len(ds.df.columns)} columns')

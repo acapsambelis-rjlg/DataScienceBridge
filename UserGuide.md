@@ -10,7 +10,7 @@ This guide covers all three tabs of the workbench: the **Python Editor**, the **
 
 ## Getting Started
 
-When you open the workbench, you'll see a Python script editor with some sample code already loaded. Import your datasets with `from DotNetData import customers, employees` and they're ready to use.
+When you open the workbench, you'll see a Python script editor with some sample code already loaded. Import your datasets with `from IntelliSEM import customers, employees` and they're ready to use.
 
 To run your first script:
 1. Click in the editor area
@@ -34,10 +34,10 @@ The editor works like a standard code editor with features designed for Python:
 
 ### Using Your Data
 
-Import datasets from the `DotNetData` module, then use them directly:
+Import datasets from the `IntelliSEM` module, then use them directly:
 
 ```python
-from DotNetData import customers, employees
+from IntelliSEM import customers, employees
 
 # See how many records are in a dataset
 print(len(customers))
@@ -58,7 +58,7 @@ print(customers.df.groupby('Region')['CreditLimit'].mean())
 The workbench supports matplotlib plotting. When your script calls `plt.show()`, a viewer window opens with your plot:
 
 ```python
-from DotNetData import customers
+from IntelliSEM import customers
 import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 6))

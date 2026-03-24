@@ -1,5 +1,5 @@
 # snippet: Group By Analysis
-from DotNetData import employees
+from IntelliSEM import employees
 
 print('=== Average Salary by Department ===')
 group = employees.df.groupby('Department').agg(

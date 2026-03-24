@@ -1,5 +1,5 @@
 # snippet: Stream Data (Lazy)
-from DotNetData import customer_stream
+from IntelliSEM import customer_stream
 
 print('=== Streaming Data Demo ===')
 print(f'Stream: {customer_stream}')

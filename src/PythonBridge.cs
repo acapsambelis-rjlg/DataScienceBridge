@@ -440,10 +440,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             }
 
             sb.AppendLine("import types as _types");
-            sb.AppendLine("_dotnet_mod = _types.ModuleType('DotNetData')");
+            sb.AppendLine("_dotnet_mod = _types.ModuleType('IntelliSEM')");
             sb.AppendLine("_dotnet_mod.__doc__ = 'Datasets piped from the .NET host application.'");
             sb.AppendLine("_dotnet_mod.__all__ = []");
-            sb.AppendLine("sys.modules['DotNetData'] = _dotnet_mod");
+            sb.AppendLine("sys.modules['IntelliSEM'] = _dotnet_mod");
             sb.AppendLine("while True:");
             sb.AppendLine("    _hdr = sys.stdin.readline().rstrip('\\n')");
             sb.AppendLine("    if _hdr == '__DONE__': break");
@@ -464,7 +464,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             sb.AppendLine("            _tmpdf = _decode_img_columns(_tmpdf)");
             sb.AppendLine("        _tmpdf = _decode_dict_columns(_tmpdf)");
             sb.AppendLine("        _tmpdf = _decode_obj_columns(_tmpdf)");
-            sb.AppendLine("        setattr(_dotnet_mod, _name, _DotNetDataset(_tmpdf))");
+            sb.AppendLine("        setattr(_dotnet_mod, _name, _IntelliSEMDataset(_tmpdf))");
             sb.AppendLine("        _dotnet_mod.__all__.append(_name)");
 
             if (hasStreamData)

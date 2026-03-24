@@ -1,5 +1,5 @@
 # snippet: Time Series Plot
-from DotNetData import customers
+from IntelliSEM import customers
 import pandas as pd
 import matplotlib.pyplot as plt
 

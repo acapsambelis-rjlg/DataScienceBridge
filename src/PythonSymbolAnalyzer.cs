@@ -200,7 +200,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             "decimal", "fractions", "statistics",
             "calendar", "locale", "gettext",
             "operator", "contextlib",
-            "data_dir", "DotNetData",
+            "data_dir", "IntelliSEM",
             "self", "cls"
         };
 
@@ -663,7 +663,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             {
                 string cl = i < codeLines.Length ? codeLines[i] : "";
 
-                var fromImport = Regex.Match(cl, @"^\s*from\s+DotNetData\s+import\s+(.+)$");
+                var fromImport = Regex.Match(cl, @"^\s*from\s+IntelliSEM\s+import\s+(.+)$");
                 if (fromImport.Success)
                 {
                     foreach (string part in fromImport.Groups[1].Value.Split(','))

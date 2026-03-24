@@ -1,5 +1,5 @@
 # snippet: Basic Statistics
-from DotNetData import customers
+from IntelliSEM import customers
 
 print('=== Descriptive Statistics ===')
 print(customers.df.describe())

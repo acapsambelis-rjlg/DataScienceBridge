@@ -1,5 +1,5 @@
 # snippet: Correlation Matrix
-from DotNetData import employees
+from IntelliSEM import employees
 import matplotlib.pyplot as plt
 
 numeric_cols = employees.df.select_dtypes(include='number')

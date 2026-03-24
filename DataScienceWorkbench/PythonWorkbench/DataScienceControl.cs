@@ -1957,7 +1957,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             string customExample = attr != null ? attr.Example : null;
             string baseTypeName = typeName;
@@ -2134,7 +2134,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AppendRefText("\n", Color.Black, false, 10);
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             AppendRefText("# Select all " + displayName + " columns\n", Color.FromArgb(0, 128, 0), false, 10);
             AppendRefText(datasetName + "[[c for c in " + datasetName + ".columns if c.startswith('" + prefix + "')]]\n\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -2199,7 +2199,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AppendRefText("\n", Color.Black, false, 10);
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             AppendRefText("# Access a property\n", Color.FromArgb(0, 128, 0), false, 10);
             if (props.Count > 0)
@@ -2257,7 +2257,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
 
             AppendRefText("# Access from a row\n", Color.FromArgb(0, 128, 0), false, 10);
             AppendRefText(datasetName + "[0]." + fullPath + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -2399,7 +2399,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
             AppendRefText("# Access dict " + role.ToLower() + "s\n", Color.FromArgb(0, 128, 0), false, 10);
             if (role == "Key")
                 AppendRefText("keys = " + datasetName + "." + fieldName + ".iloc[0].keys()\n", Color.FromArgb(60, 60, 60), false, 10);
@@ -2451,7 +2451,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             AppendRefText("Example Python Code\n", Color.FromArgb(0, 100, 0), true, 10);
             AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-            AppendRefText("from DotNetData import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
+            AppendRefText("from IntelliSEM import " + datasetName + "\n\n", Color.FromArgb(60, 60, 60), false, 10);
             if (role == "Value")
             {
                 AppendRefText("# Access " + propName + " from a dict value\n", Color.FromArgb(0, 128, 0), false, 10);
@@ -2486,7 +2486,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             AppendRefText(count.ToString("N0") + "\n", Color.FromArgb(0, 0, 0), false, 10);
 
             AppendRefText("Import:    ", Color.FromArgb(100, 100, 100), false, 10);
-            AppendRefText("from DotNetData import " + tag + "\n", Color.FromArgb(0, 0, 0), false, 10);
+            AppendRefText("from IntelliSEM import " + tag + "\n", Color.FromArgb(0, 0, 0), false, 10);
 
             AppendRefText("Access:    ", Color.FromArgb(100, 100, 100), false, 10);
             AppendRefText(tag + ".column_name  (e.g. " + tag + ".head())\n\n", Color.FromArgb(0, 0, 0), false, 10);
@@ -2660,9 +2660,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (tag == "helperfuncs")
             {
                 AppendRefText("Helper Functions\n\n", Color.FromArgb(0, 0, 180), true, 12);
-                AppendRefText("Built-in helper functions available via DotNetData.\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("Built-in helper functions available via IntelliSEM.\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("Import with:  ", Color.FromArgb(60, 60, 60), false, 10);
-                AppendRefText("from DotNetData import <function>\n\n", Color.FromArgb(0, 100, 160), false, 10);
+                AppendRefText("from IntelliSEM import <function>\n\n", Color.FromArgb(0, 100, 160), false, 10);
 
                 foreach (var info in helperInfos)
                 {
@@ -2678,7 +2678,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 AppendRefText("\n", Color.Black, false, 10);
                 AppendRefText("Usage\n", Color.FromArgb(0, 100, 0), true, 10);
                 AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                AppendRefText("from DotNetData import display_images\n", Color.FromArgb(60, 60, 60), false, 10);
+                AppendRefText("from IntelliSEM import display_images\n", Color.FromArgb(60, 60, 60), false, 10);
                 AppendRefText("display_images(my_image_list)\n", Color.FromArgb(60, 60, 60), false, 10);
             }
             else
@@ -2715,7 +2715,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                     AppendRefText("Import\n", Color.FromArgb(0, 100, 0), true, 10);
                     AppendRefText(new string('\u2500', 50) + "\n", Color.FromArgb(200, 200, 200), false, 10);
-                    AppendRefText("from DotNetData import " + found.Name + "\n", Color.FromArgb(60, 60, 60), false, 10);
+                    AppendRefText("from IntelliSEM import " + found.Name + "\n", Color.FromArgb(60, 60, 60), false, 10);
                 }
                 else
                 {
@@ -2766,11 +2766,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             switch (tag)
             {
                 case "customers":
-                    return "from DotNetData import customers\n\n# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
+                    return "from IntelliSEM import customers\n\n# Customer count by tier\nprint(customers.Tier.value_counts())\n\n# Average credit limit by tier\nprint(customers.df.groupby('Tier')['CreditLimit'].mean())";
                 case "employees":
-                    return "from DotNetData import employees\n\n# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
+                    return "from IntelliSEM import employees\n\n# Average salary by department\nprint(employees.df.groupby('Department')['Salary'].mean().sort_values(ascending=False))\n\n# Remote vs office distribution\nprint(employees.IsRemote.value_counts())";
                 default:
-                    return "from DotNetData import " + tag + "\n\nprint(" + tag + ".head())\nprint(" + tag + ".describe())";
+                    return "from IntelliSEM import " + tag + "\n\nprint(" + tag + ".head())\nprint(" + tag + ".describe())";
             }
         }
 
@@ -4430,7 +4430,7 @@ AVAILABLE DATASETS:
   employees        - 100 employees with salary, dept
 
 HOW TO USE:
-  1. Import datasets: from DotNetData import customers, employees
+  1. Import datasets: from IntelliSEM import customers, employees
   2. Write Python code in the editor
   3. Press F5 or click Run to execute
   4. Access columns directly: customers.CreditLimit.mean()
@@ -4440,7 +4440,7 @@ HOW TO USE:
   8. Install packages via Package Manager tab
 
 EXAMPLE:
-  from DotNetData import customers
+  from IntelliSEM import customers
   print(customers[0].FullName)
   print(customers.CreditLimit.mean())
 
@@ -4496,7 +4496,7 @@ SYNTAX HIGHLIGHTING
 AUTOCOMPLETE
   Displays suggestions as you type, including:
   - Python keywords and built-in functions
-  - Dataset names after 'from DotNetData import'
+  - Dataset names after 'from IntelliSEM import'
   - Dataset column names (e.g. customers.CreditLimit)
   - Row indexing (e.g. customers[0].FullName, customers[0:5])
   - DataFrame methods (after .df.)
@@ -4573,7 +4573,7 @@ PLOT VIEWER
 
         private string GetDefaultScript()
         {
-            return @"from DotNetData import customers, employees
+            return @"from IntelliSEM import customers, employees
 
 # Access columns directly: customers.CreditLimit.mean()
 # Access rows by index: customers[0].FullName

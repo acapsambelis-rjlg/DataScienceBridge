@@ -98,7 +98,7 @@ class _DatasetRow:
     def __dir__(self):
         _s = object.__getattribute__(self, '_s')
         return list(_s.index)
-class _DotNetDataset:
+class _IntelliSEMDataset:
     def __init__(self, df):
         object.__setattr__(self, '_df', df)
     def __getattr__(self, name):
@@ -116,7 +116,7 @@ class _DotNetDataset:
             result = _df.iloc[key]
             if isinstance(result, pd.Series):
                 return _DatasetRow(result)
-            return _DotNetDataset(result.reset_index(drop=True))
+            return _IntelliSEMDataset(result.reset_index(drop=True))
         return _df[key]
     def __iter__(self):
         _df = object.__getattribute__(self, '_df')

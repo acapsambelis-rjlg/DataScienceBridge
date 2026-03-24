@@ -1,5 +1,5 @@
 # snippet: Scatter Plot
-from DotNetData import employees
+from IntelliSEM import employees
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(10, 6))

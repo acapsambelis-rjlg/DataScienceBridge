@@ -1,5 +1,5 @@
 # snippet: Display Images
-from DotNetData import customers
+from IntelliSEM import customers
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image

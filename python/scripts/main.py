@@ -1,4 +1,4 @@
-from DotNetData import customers, employees
+from IntelliSEM import customers, employees
 
 # Access columns directly: customers.CreditLimit.mean()
 # Access rows by index: customers[0].FullName
