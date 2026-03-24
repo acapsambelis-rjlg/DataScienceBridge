@@ -1064,6 +1064,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 colMap[kvp.Key] = colNames;
                 if (dsSubObjs.Count > 0)
                     subObjMap[kvp.Key] = dsSubObjs;
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine("[DSC] Dataset '" + kvp.Key + "': " + dsSubObjs.Count + " sub-object paths");
+                foreach (var so in dsSubObjs)
+                    System.Diagnostics.Debug.WriteLine("[DSC]   '" + so.Key + "' => [" + string.Join(", ", so.Value) + "]");
+#endif
             }
             symbolAnalyzer.SetDatasetColumns(colMap);
 

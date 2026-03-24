@@ -93,6 +93,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             wordStart++;
 
             string prefix = text.Substring(wordStart, pos - wordStart);
+#if DEBUG
+            if (prefix.Contains("TierSpending") || prefix.Contains("Dict"))
+                System.Diagnostics.Debug.WriteLine("[Completion] prefix='" + prefix + "'");
+#endif
 
             string lineText = GetCurrentLine(text, pos);
             var fromImportMatch = Regex.Match(lineText, @"^\s*from\s+DotNetData\s+import\s+(.*)$");
@@ -325,10 +329,16 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 if (subPath != null)
                 {
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine("[Completion] TryResolve: dsName='" + dsName + "', subPath='" + subPath + "', containsKey=" + subObjs.ContainsKey(subPath));
+#endif
                     if (subObjs.ContainsKey(subPath))
                         return new List<string>(subObjs[subPath]);
 
                     string normalized = BracketStripPattern.Replace(subPath, "");
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine("[Completion] TryResolve normalized: '" + normalized + "', containsKey=" + subObjs.ContainsKey(normalized));
+#endif
                     if (normalized != subPath && subObjs.ContainsKey(normalized))
                         return new List<string>(subObjs[normalized]);
                 }
