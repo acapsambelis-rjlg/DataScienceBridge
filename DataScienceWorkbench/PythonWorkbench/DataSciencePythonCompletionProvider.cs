@@ -80,6 +80,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
         public List<CompletionItem> GetCompletions(string text, TextPosition caret, string partialWord)
         {
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("[Completion] ENTER GetCompletions partialWord='" + (partialWord ?? "") + "' caret=(" + caret.Line + "," + caret.Column + ")");
+#endif
             if (caret.Line < 0) return new List<CompletionItem>();
 
             int pos = GetAbsolutePosition(text, caret);
@@ -94,9 +97,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
             string prefix = text.Substring(wordStart, pos - wordStart);
 #if DEBUG
-            int dotIdx = prefix.LastIndexOf('.');
-            if (dotIdx >= 0)
-                System.Diagnostics.Debug.WriteLine("[Completion] prefix='" + prefix + "' objectName='" + prefix.Substring(0, dotIdx) + "'");
+            System.Diagnostics.Debug.WriteLine("[Completion] prefix='" + prefix + "' len=" + prefix.Length + " charBefore=" + (pos > 0 ? text[pos-1].ToString() : "BOF"));
 #endif
 
             string lineText = GetCurrentLine(text, pos);
@@ -195,6 +196,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
         private List<CompletionItem> GetDotCompletions(string objectName, string memberPrefix, string code, int cursorPos)
         {
             var members = new List<string>();
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("[Completion] GetDotCompletions objectName='" + objectName + "' memberPrefix='" + memberPrefix + "'");
+#endif
 
             string baseName = objectName;
             bool isRowAccess = false;
@@ -204,6 +208,9 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 baseName = bracketMatch.Groups[1].Value;
                 isRowAccess = true;
             }
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine("[Completion] baseName='" + baseName + "' isRowAccess=" + isRowAccess);
+#endif
 
             var subObjMembers = TryResolveSubObjectMembers(objectName, baseName, isRowAccess);
             if (subObjMembers != null)
