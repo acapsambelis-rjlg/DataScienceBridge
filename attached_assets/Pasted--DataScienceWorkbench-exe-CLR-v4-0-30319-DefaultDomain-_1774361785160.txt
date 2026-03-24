@@ -1,0 +1,49 @@
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DefaultDomain): Loaded 'C:\WINDOWS\Microsoft.Net\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DefaultDomain): Loaded 'C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\DataScienceWorkbench\bin\Debug\DataScienceWorkbench.exe'. Symbols loaded.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Windows.Forms\v4.0_4.0.0.0__b77a5c561934e089\System.Windows.Forms.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System\v4.0_4.0.0.0__b77a5c561934e089\System.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Drawing\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Drawing.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Configuration\v4.0_4.0.0.0__b03f5f7f11d50a3a\System.Configuration.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Core\v4.0_4.0.0.0__b77a5c561934e089\System.Core.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\Microsoft.Net\assembly\GAC_MSIL\System.Xml\v4.0_4.0.0.0__b77a5c561934e089\System.Xml.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\DataScienceWorkbench\bin\Debug\SyntaxEditor.exe'. Symbols loaded.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\Users\acapsambelis\source\repos\acapsambelis-rjlg\DataScienceBridge\DataScienceWorkbench\bin\Debug\WeifenLuo.WinFormsUI.Docking.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\assembly\GAC_MSIL\Telerik.WinControls.UI\2019.3.1022.20__5bb2a467cbec794e\Telerik.WinControls.UI.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\assembly\GAC_MSIL\Telerik.WinControls\2019.3.1022.20__5bb2a467cbec794e\Telerik.WinControls.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+'DataScienceWorkbench.exe' (CLR v4.0.30319: DataScienceWorkbench.exe): Loaded 'C:\WINDOWS\assembly\GAC_MSIL\TelerikCommon\2019.3.1022.20__5bb2a467cbec794e\TelerikCommon.dll'. Skipped loading symbols. Module is optimized and the debugger option 'Just My Code' is enabled.
+The thread 23272 has exited with code 0 (0x0).
+[DSC] Dataset 'customers': 2 sub-object paths
+[DSC]   'Address' => [Street, City, State, ZipCode, Country, Latitude, Longitude]
+[DSC]   'TierSpending' => [Spending, Points, DiscountRate]
+The thread 35048 has exited with code 0 (0x0).
+The thread 25304 has exited with code 0 (0x0).
+[DSC] Dataset 'customers': 2 sub-object paths
+[DSC]   'Address' => [Street, City, State, ZipCode, Country, Latitude, Longitude]
+[DSC]   'TierSpending' => [Spending, Points, DiscountRate]
+[DSC] Dataset 'employees': 0 sub-object paths
+[DSC] Dataset 'customers': 2 sub-object paths
+[DSC]   'Address' => [Street, City, State, ZipCode, Country, Latitude, Longitude]
+[DSC]   'TierSpending' => [Spending, Points, DiscountRate]
+[DSC] Dataset 'employees': 0 sub-object paths
+[DSC] Dataset 'customer_stream': 2 sub-object paths
+[DSC]   'Address' => [Street, City, State, ZipCode, Country, Latitude, Longitude]
+[DSC]   'TierSpending' => [Spending, Points, DiscountRate]
+The thread 16312 has exited with code 0 (0x0).
+The thread 21468 has exited with code 0 (0x0).
+The thread 17316 has exited with code 0 (0x0).
+The thread 28788 has exited with code 0 (0x0).
+The thread 15688 has exited with code 0 (0x0).
+The thread 36216 has exited with code 0 (0x0).
+The thread 25160 has exited with code 0 (0x0).
+The thread 33428 has exited with code 0 (0x0).
+The thread 1952 has exited with code 0 (0x0).
+[Completion] prefix='customers[0].TierSpending['B'
+[Completion] prefix='customers[0].TierSpending['Br'
+[Completion] prefix='customers[0].TierSpending['Bro'
+[Completion] prefix='customers[0].TierSpending['Bron'
+[Completion] prefix='customers[0].TierSpending['Bronz'
+[Completion] prefix='customers[0].TierSpending['Bronze'
+The thread 35604 has exited with code 0 (0x0).
+The thread 6584 has exited with code 0 (0x0).
+The thread 34496 has exited with code 0 (0x0).
+The thread 32464 has exited with code 0 (0x0).
