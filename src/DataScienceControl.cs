@@ -2903,14 +2903,6 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 }),
                 result => RunOnUIThread(() =>
                 {
-                    if (!string.IsNullOrEmpty(result.Error))
-                    {
-                        if (result.Success)
-                            AppendOutput(result.Error, Color.FromArgb(140, 120, 0));
-                        else
-                            AppendOutput("ERROR:\n" + result.Error, Color.FromArgb(200, 0, 0));
-                    }
-
                     if (result.PlotPaths != null && result.PlotPaths.Count > 0)
                     {
                         AppendOutput("Generated " + result.PlotPaths.Count + " plot(s).\n", Color.FromArgb(0, 128, 0));
