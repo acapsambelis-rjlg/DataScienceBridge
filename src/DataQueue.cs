@@ -17,6 +17,8 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         string GetCsvHeader();
         IEnumerable<string> StreamCsvRows();
         string[] GetImageColumnNames();
+        bool CanRestream { get; }
+        IEnumerable<string> RestreamCsvRows();
     }
 
     internal class StringDataSource : IInMemoryDataSource
@@ -52,6 +54,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
     {
         private readonly Queue<T> _items = new Queue<T>();
         private IEnumerable<T> _lazySource;
+        private Func<IEnumerable<T>> _sourceFactory;
         private FlattenedProperty[] _flatProps;
         private bool _locked;
         private int _snapshotCount;
@@ -82,13 +85,24 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
             if (_locked)
                 throw new InvalidOperationException("Cannot set source while the DataQueue is being streamed.");
             _lazySource = source;
+            _sourceFactory = null;
+        }
+
+        public void SetSource(Func<IEnumerable<T>> sourceFactory)
+        {
+            if (_locked)
+                throw new InvalidOperationException("Cannot set source while the DataQueue is being streamed.");
+            _sourceFactory = sourceFactory;
+            _lazySource = null;
         }
 
         public int Count { get { return _items.Count; } }
 
         public Type ItemType { get { return typeof(T); } }
 
-        public bool IsConsumed { get { return _snapshotCount > 0 && _items.Count == 0 && _lazySource == null; } }
+        public bool IsConsumed { get { return _snapshotCount > 0 && _items.Count == 0 && _lazySource == null && _sourceFactory == null; } }
+
+        public bool CanRestream { get { return _sourceFactory != null; } }
 
         public void Clear()
         {
@@ -96,6 +110,7 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                 throw new InvalidOperationException("Cannot clear while the DataQueue is being streamed.");
             _items.Clear();
             _lazySource = null;
+            _sourceFactory = null;
             _snapshotCount = 0;
         }
 
@@ -138,9 +153,11 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
         {
             _locked = true;
 
-            if (_lazySource != null)
+            IEnumerable<T> source = _lazySource ?? (_sourceFactory != null ? _sourceFactory() : null);
+
+            if (source != null)
             {
-                foreach (var item in _lazySource)
+                foreach (var item in source)
                     yield return SerializeRow(item);
             }
             else
@@ -151,6 +168,19 @@ namespace RJLG.IntelliSEM.Data.PythonDataScience
                     yield return SerializeRow(item);
                 }
             }
+
+            _locked = false;
+        }
+
+        public IEnumerable<string> RestreamCsvRows()
+        {
+            if (_sourceFactory == null)
+                throw new InvalidOperationException("Cannot restream: no source factory was provided. Use SetSource(Func<IEnumerable<T>>) for multi-pass streaming.");
+
+            _locked = true;
+
+            foreach (var item in _sourceFactory())
+                yield return SerializeRow(item);
 
             _locked = false;
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -473,7 +474,8 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 sb.AppendLine("        _parts = _hdr.split('||')");
                 sb.AppendLine("        _sname = _parts[1]");
                 sb.AppendLine("        _scols = _parts[2].split(',')");
-                sb.AppendLine("        setattr(_dotnet_mod, _sname, _DotNetStream(_sname, _scols))");
+                sb.AppendLine("        _can_restream = len(_parts) > 3 and _parts[3] == '1'");
+                sb.AppendLine("        setattr(_dotnet_mod, _sname, _IntelliSEMStream(_sname, _scols, _can_restream))");
                 sb.AppendLine("        _dotnet_mod.__all__.append(_sname)");
             }
 
@@ -783,7 +785,10 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
             if (hasStreamData)
             {
                 foreach (var kvp in streamingData)
-                    proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader());
+                {
+                    string canRestream = kvp.Value.CanRestream ? "1" : "0";
+                    proc.StandardInput.WriteLine("__STREAM__||" + kvp.Key + "||" + kvp.Value.GetCsvHeader() + "||" + canRestream);
+                }
             }
             proc.StandardInput.WriteLine("__DONE__");
             proc.StandardInput.Flush();
@@ -824,24 +829,40 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                 cleanOutput += "\n";
         }
 
-        private void ProcessStreamingLine(string line, List<string> plotPaths, Action<string> onOutputLine)
+        private bool ProcessStreamingLine(string line, List<string> plotPaths, Action<string> onOutputLine,
+            ConcurrentQueue<string> restreamQueue = null, AutoResetEvent restreamSignal = null)
         {
             if (line.StartsWith("__PLOT__:"))
             {
                 string path = line.Substring(9).Trim();
                 if (File.Exists(path))
                     plotPaths.Add(path);
+                return false;
+            }
+            else if (line.StartsWith("__RESTREAM__:") && restreamQueue != null && restreamSignal != null)
+            {
+                string streamName = line.Substring(13).Trim();
+                restreamQueue.Enqueue(streamName);
+                restreamSignal.Set();
+                return true;
             }
             else if (onOutputLine != null)
             {
                 onOutputLine(line + "\n");
             }
+            return false;
         }
 
         private static bool CouldBePlotMarker(string partial)
         {
             return partial.StartsWith("__PLOT__:") ||
                 (partial.Length < 9 && "__PLOT__:".StartsWith(partial));
+        }
+
+        private static bool CouldBeRestreamMarker(string partial)
+        {
+            return partial.StartsWith("__RESTREAM__:") ||
+                (partial.Length < 13 && "__RESTREAM__:".StartsWith(partial));
         }
 
         public PythonResult Execute(string script, Dictionary<string, IInMemoryDataSource> inMemoryData, Dictionary<string, IStreamingDataSource> streamingData, string preamble = null)
@@ -990,7 +1011,12 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
 
                 bool hasData = (inMemoryData != null && inMemoryData.Count > 0) ||
                                (streamingData != null && streamingData.Count > 0);
+                bool hasStreamData = streamingData != null && streamingData.Count > 0;
                 var capturedInputLines = (inputFileLines != null && inputFileLines.Length > 0) ? inputFileLines : null;
+
+                var restreamQueue = new ConcurrentQueue<string>();
+                var restreamSignal = new AutoResetEvent(false);
+                int[] processDoneFlag = new int[] { 0 };
 
                 var stdinThread = new Thread(() =>
                 {
@@ -1012,12 +1038,51 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                                 catch { break; }
                             }
                         }
-                        else if (hasData)
+
+                        if (hasStreamData)
+                        {
+                            while (Thread.VolatileRead(ref processDoneFlag[0]) == 0)
+                            {
+                                restreamSignal.WaitOne(500);
+                                string streamName;
+                                while (restreamQueue.TryDequeue(out streamName))
+                                {
+                                    if (streamingData.ContainsKey(streamName))
+                                    {
+                                        var source = streamingData[streamName];
+                                        if (source.CanRestream)
+                                        {
+                                            try
+                                            {
+                                                foreach (var row in source.RestreamCsvRows())
+                                                    proc.StandardInput.WriteLine(row);
+                                            }
+                                            catch { }
+                                            finally
+                                            {
+                                                try
+                                                {
+                                                    proc.StandardInput.WriteLine("__STREAM_END__");
+                                                    proc.StandardInput.Flush();
+                                                }
+                                                catch { }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!hasStreamData || capturedInputLines != null)
                         {
                             try { proc.StandardInput.Close(); } catch { }
                         }
                     }
                     catch { }
+                    finally
+                    {
+                        try { proc.StandardInput.Close(); } catch { }
+                    }
                 });
                 stdinThread.IsBackground = true;
                 stdinThread.Start();
@@ -1041,7 +1106,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                                 if (c == '\n')
                                 {
                                     string line = lineBuilder.ToString().TrimEnd('\r');
-                                    ProcessStreamingLine(line, plotPaths, onOutputLine);
+                                    ProcessStreamingLine(line, plotPaths, onOutputLine, restreamQueue, restreamSignal);
                                     lineBuilder.Clear();
                                 }
                                 else
@@ -1053,7 +1118,7 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                             if (lineBuilder.Length > 0 && onOutputLine != null)
                             {
                                 string partial = lineBuilder.ToString();
-                                if (!CouldBePlotMarker(partial))
+                                if (!CouldBePlotMarker(partial) && !CouldBeRestreamMarker(partial))
                                 {
                                     onOutputLine(partial);
                                     lineBuilder.Clear();
@@ -1064,17 +1129,11 @@ namespace RJLG.IntelliSEM.UI.Controls.PythonDataScience
                         if (lineBuilder.Length > 0)
                         {
                             string remaining = lineBuilder.ToString().TrimEnd('\r');
-                            if (remaining.StartsWith("__PLOT__:"))
-                            {
-                                string path = remaining.Substring(9).Trim();
-                                if (File.Exists(path))
-                                    plotPaths.Add(path);
-                            }
-                            else if (onOutputLine != null)
-                            {
-                                onOutputLine(remaining);
-                            }
+                            ProcessStreamingLine(remaining, plotPaths, onOutputLine, restreamQueue, restreamSignal);
                         }
+
+                        Thread.VolatileWrite(ref processDoneFlag[0], 1);
+                        restreamSignal.Set();
 
                         proc.WaitForExit();
 
