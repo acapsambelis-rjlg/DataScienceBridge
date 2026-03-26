@@ -65,12 +65,27 @@ class _StreamColumnAccessor:
                 except (ValueError, TypeError):
                     pass
         return result if result is not None else float('nan')
+    def apply(self, func, *args, **kwargs):
+        return pd.Series(list(self)).apply(func, *args, **kwargs)
+    def map(self, arg, na_action=None):
+        return pd.Series(list(self)).map(arg, na_action=na_action)
+    def tolist(self):
+        return list(self)
+    def to_series(self):
+        return pd.Series(list(self), name=object.__getattribute__(self, '_col'))
+    def unique(self):
+        return pd.Series(list(self)).unique()
+    def nunique(self):
+        return len(self.unique())
     def value_counts(self):
         counts = {}
         for v in self:
             key = v if not (isinstance(v, float) and v != v) else None
             counts[key] = counts.get(key, 0) + 1
         return pd.Series(counts).sort_values(ascending=False)
+    def __repr__(self):
+        _c = object.__getattribute__(self, '_col')
+        return f'StreamColumn({_c})'
     def __gt__(self, other):
         return _StreamFilter(object.__getattribute__(self, '_stream'), object.__getattribute__(self, '_col'), '>', other)
     def __ge__(self, other):
