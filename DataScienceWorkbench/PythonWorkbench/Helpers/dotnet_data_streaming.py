@@ -1,3 +1,4 @@
+_csv.field_size_limit(2**31 - 1)
 class _StreamRow:
     __slots__ = ('_data',)
     def __init__(self, data):

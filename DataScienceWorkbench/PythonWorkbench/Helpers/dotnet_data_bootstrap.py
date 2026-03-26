@@ -2,6 +2,7 @@ import sys, io, base64, json as _json, pandas as pd
 import numpy as np
 from PIL import Image as _PILImage
 import csv as _csv
+_csv.field_size_limit(2**31 - 1)
 def _decode_img(s):
     if s is None or (isinstance(s, float) and s != s): return None
     if not isinstance(s, str) or s == '': return None
