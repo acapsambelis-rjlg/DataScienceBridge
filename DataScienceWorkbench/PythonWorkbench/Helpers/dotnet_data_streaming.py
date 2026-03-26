@@ -207,8 +207,12 @@ class _IntelliSEMStream:
             for row_data in _cached:
                 yield _StreamRow(row_data)
             return
+        rows = []
         for row_data in self._raw_iter():
+            rows.append(row_data)
             yield _StreamRow(row_data)
+        object.__setattr__(self, '_cached_rows', rows)
+        object.__setattr__(self, '_cached_len', len(rows))
     def __len__(self):
         _cached_len = object.__getattribute__(self, '_cached_len')
         if _cached_len is not None:
